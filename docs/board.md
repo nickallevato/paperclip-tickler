@@ -109,6 +109,24 @@ The list scrolls inside the height the rail gave it rather than growing with the
 fleet, so a run starting or finishing never shoves Portfolio and Routines down
 the page. When more tasks were touched today than fit, the footer says how many.
 
+### Expanding it
+
+Last in the Recent header is a toggle that gives the list **roughly twice the
+rows**. The height has to come from somewhere, so pressing it folds
+**Portfolio** and **Routines** to a single header line each — they keep their
+digests (`35 open · 5 blocked`, `3 need attention`), so nothing they were
+telling you goes away, it is just no longer drawn a row at a time. Orgs is left
+alone: it is how you steer the board, and on most screens it gains a row from
+the height freed below it.
+
+On a 1512×790 laptop that is 4 visible rows becoming 11. One column there is no
+rail height to trade — every pane sizes itself and the page scrolls — so the
+toggle doubles Recent's own cap instead, 4 rows to 8, and still folds the two
+panes under it.
+
+Like the pane order and the age chips, the state is saved **in that browser
+only**.
+
 ## Ordering companies
 
 Two controls sit in the Orgs header:

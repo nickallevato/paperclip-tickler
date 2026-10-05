@@ -26,7 +26,9 @@ import {
   TICKLER_QUEUE_AGE_FILTER_STORAGE_KEY,
   TICKLER_QUEUE_GROUPING_STORAGE_KEY,
   TICKLER_QUEUE_SORT_STORAGE_KEY,
+  TICKLER_RECENT_EXPANDED_STORAGE_KEY,
   normalizePortfolioSort,
+  normalizeRecentExpanded,
   normalizeQueueAgeFilter,
   normalizeQueueGrouping,
   normalizeQueueSort,
@@ -179,6 +181,18 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
   const selectPortfolioSort = (sort: TicklerPortfolioSort) => {
     setPortfolioSort(sort);
     writeStored(TICKLER_PORTFOLIO_SORT_STORAGE_KEY, sort);
+  };
+
+  // Recent, doubled, with Portfolio and Routines folded to their headers to pay
+  // for it. Persisted for the same reason the age chips are: which pane of the
+  // rail you actually read is a habit, and re-expanding it on every visit is the
+  // friction the button exists to remove.
+  const [recentExpanded, setRecentExpanded] = useState<boolean>(() =>
+    normalizeRecentExpanded(readStored(TICKLER_RECENT_EXPANDED_STORAGE_KEY)),
+  );
+  const selectRecentExpanded = (expanded: boolean) => {
+    setRecentExpanded(expanded);
+    writeStored(TICKLER_RECENT_EXPANDED_STORAGE_KEY, expanded ? "on" : "off");
   };
 
   // The narrow board's stack order. Per-browser and only that: a plugin has no
@@ -461,6 +475,8 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
           onAgeFilter={selectAgeFilter}
           portfolioSort={portfolioSort}
           onPortfolioSort={selectPortfolioSort}
+          recentExpanded={recentExpanded}
+          onRecentExpanded={selectRecentExpanded}
           paneOrder={paneOrder}
           onNarrow={reportBoardNarrow}
           footer={
