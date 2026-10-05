@@ -56,7 +56,7 @@ describe("TicklerRecentTasks", () => {
     model: TicklerRecentTasksModel,
     budget?: TicklerRailPaneBudget,
     narrow?: boolean,
-    expand?: { expanded?: boolean; onExpanded?: (expanded: boolean) => void },
+    expand?: { expanded?: boolean; expandable?: boolean; onExpanded?: (expanded: boolean) => void },
   ) {
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -70,6 +70,7 @@ describe("TicklerRecentTasks", () => {
             budget={budget}
             narrow={narrow}
             expanded={expand?.expanded}
+            expandable={expand?.expandable}
             onExpanded={expand?.onExpanded}
           />
         </MemoryRouter>,
@@ -231,7 +232,52 @@ describe("TicklerRecentTasks", () => {
     // the whole of what expanding can mean: eight rows instead of four.
     const root = render(tasks(many(12), { hidden: 5 }), undefined, true, { expanded: true, onExpanded: () => {} });
     expect(container.querySelectorAll("li")).toHaveLength(8);
-    expect(container.textContent).toContain("9 more touched today");
+    expect(container.textContent).toContain("9 more touched this week");
+    act(() => root.unmount());
+  });
+
+  // PLI-271 came back: expanding doubled the pane and the row cap and left the
+  // list a day deep, so on a board with four tasks in a day it folded two panes
+  // to seat rows that did not exist. The pane says which window it is on, and
+  // the toggle refuses the trade when a week holds no more than a day.
+  it("says it is on the week once it is expanded", () => {
+    const root = render(tasks(many(20)), undefined, false, { expanded: true, onExpanded: () => {} });
+    expect(container.querySelector("[data-recent-window]")?.textContent).toBe("7 days");
+    act(() => root.unmount());
+  });
+
+  it("does not claim the week while it is collapsed", () => {
+    const root = render(tasks(many(20)), undefined, false, { expanded: false, onExpanded: () => {} });
+    expect(container.querySelector("[data-recent-window]")).toBeNull();
+    act(() => root.unmount());
+  });
+
+  it("refuses the press when a week would show no more than the day already does", () => {
+    const pressed: boolean[] = [];
+    const root = render(tasks(many(3)), undefined, false, {
+      expanded: false,
+      expandable: false,
+      onExpanded: (next) => pressed.push(next),
+    });
+    const button = container.querySelector<HTMLButtonElement>("[data-recent-expand]")!;
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute("title")).toContain("Nothing to expand");
+    act(() => button.click());
+    expect(pressed).toEqual([]);
+    act(() => root.unmount());
+  });
+
+  it("still collapses when it is expanded and the board has since gone quiet", () => {
+    const pressed: boolean[] = [];
+    const root = render(tasks(many(3)), undefined, false, {
+      expanded: true,
+      expandable: false,
+      onExpanded: (next) => pressed.push(next),
+    });
+    const button = container.querySelector<HTMLButtonElement>("[data-recent-expand]")!;
+    expect(button.disabled).toBe(false);
+    act(() => button.click());
+    expect(pressed).toEqual([false]);
     act(() => root.unmount());
   });
 

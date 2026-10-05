@@ -722,7 +722,7 @@ export const TICKLER_RECENT_LIMIT = 16;
  * What the cap becomes with Recent expanded: twice the rows, so twice the list.
  *
  * The pane is given roughly double the rail's height when Portfolio and
- * Routines fold (see `RAIL_PANES`), and a doubled pane fed the same sixteen
+ * Routines fold (see `railPanes`), and a doubled pane fed the same sixteen
  * rows would simply run out of list halfway down its new height.
  */
 export const TICKLER_RECENT_EXPANDED_LIMIT = TICKLER_RECENT_LIMIT * 2;
@@ -737,6 +737,24 @@ export function normalizeRecentExpanded(value: string | null | undefined): boole
 
 /** How far back "recent" reaches for a task with no run on it. */
 export const TICKLER_RECENT_WINDOW_MS = 24 * 60 * 60_000;
+
+/**
+ * How far back it reaches expanded, which is the whole of what expanding means.
+ *
+ * The first cut of the expand toggle doubled the pane's height and the row cap
+ * and left this at a day, on the assumption that the cap was what bounded the
+ * list. On a real board it is not: a day of activity is three or four tasks, so
+ * Recent was already drawing every row it had, and a pane twice as tall drew
+ * the same four rows against twice as much nothing — while the height the fold
+ * freed went to the pane next to it. That was the whole of the bug behind
+ * "expand only expands the orgs list".
+ *
+ * A week, because that is the next unit anybody thinks in and it is what makes
+ * the list long enough to be worth the fold: the same board that has four
+ * tasks in a day has twenty-eight in a week. The cap above is then what bounds
+ * it again, which is where it belongs.
+ */
+export const TICKLER_RECENT_EXPANDED_WINDOW_MS = 7 * TICKLER_RECENT_WINDOW_MS;
 
 /**
  * What the fleet is on, newest first: every live run, then the tasks touched

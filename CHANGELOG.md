@@ -5,6 +5,27 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Expanding Recent now actually lengthens Recent.** Two things were wrong with
+  the toggle 0.11.0 shipped, and on a quiet board they cancelled out to "the
+  expand only expands the orgs list".
+
+  The pane got twice the height and twice the row cap, but the list still only
+  reached back **one day** — and a day is three or four tasks on a real board, so
+  Recent was already showing everything it had and the extra height went to
+  rows that did not exist. Expanded, it now reaches back **seven days**, which is
+  where the rows come from; the same board that has four tasks in a day has
+  nearly thirty in a week. The header says which window it is on (`7 days`), the
+  footer counts what is left over "this week", and when a week holds no more than
+  the day already shows, the toggle is disabled rather than folding two panes to
+  make room for nothing.
+
+  And the height the fold freed was not going to the pane that asked for it.
+  **Orgs** has no row cap — it wants every org you watch — so it could always
+  take another row, and the budget hands the spare height out one row at a time
+  to every pane that can still grow. Half of what the fold freed went to Orgs, at
+  half again the price, an org row being taller than a Recent row. Recent is now
+  filled to its rows first; Orgs keeps its minimum and takes what is left.
+
 ## 0.11.0
 
 - **Recent can be expanded to twice the list, and the two panes under it fold to

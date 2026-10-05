@@ -189,6 +189,42 @@ describe("distributeRailHeight", () => {
     expect(spent(folded, boxes)).toBeLessThanOrEqual(790);
   });
 
+  // The half of PLI-271 that came back as a bug report: "the expand only expands
+  // the orgs list". Orgs has no ideal — it wants every org it has — so it could
+  // always take another row, and the round-robin gave it every other row of the
+  // surplus the fold had just freed. These are the measured heights of the real
+  // rail, where an org row costs two thirds again what a Recent row does, so each
+  // row Orgs took was a row and a half Recent did not get.
+  it("spends a fold on the pane it was freed for, not on the pane with no ideal", () => {
+    const boxes: Record<string, TicklerRailPaneMetrics> = {
+      orgs: box(12, { head: 32.297, foot: 25.5, row: 47.297, frame: 2 }),
+      recent: box(32, { head: 32.297, foot: 0, row: 28.297, frame: 2 }),
+      portfolio: box(9, { head: 36.297, foot: 21.5, row: 42.297, frame: 2 }),
+      routines: box(3, { head: 32.297, foot: 0, row: 28.297, frame: 2 }),
+    };
+    // Exactly what `railPanes(true)` says: Recent doubled and served first, the
+    // two below folded.
+    const expanded: TicklerRailPaneSpec[] = [
+      { key: "orgs", minRows: 3, idealRows: Infinity, priority: 1 },
+      { key: "recent", minRows: 3, idealRows: 24, priority: 1, first: true },
+      { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: true },
+      { key: "routines", minRows: 2, idealRows: 4, priority: 2, collapsed: true },
+    ];
+    for (const available of [790, 1000, 1308]) {
+      const settled = distributeRailHeight(PANES, boxes, { available, gap: GAP });
+      const folded = distributeRailHeight(expanded, boxes, { available, gap: GAP });
+      // The point of the press: more rows of Recent, and no fewer of them than
+      // the fold's own arithmetic could seat.
+      expect(folded.recent!.rows, `recent at ${available}`).toBeGreaterThan(settled.recent!.rows);
+      // And not at the price of handing them to the pane above: Orgs keeps its
+      // minimum and takes the leftovers, but it does not grow on a press that
+      // was not about it.
+      expect(folded.orgs!.rows, `orgs at ${available}`).toBeLessThanOrEqual(settled.orgs!.rows);
+      expect(folded.orgs!.rows, `orgs at ${available}`).toBeGreaterThanOrEqual(3);
+      expect(spent(folded, boxes), `rail at ${available}`).toBeLessThanOrEqual(available);
+    }
+  });
+
   it("keeps a folded pane folded however tall the rail gets", () => {
     const boxes = metrics({ orgs: 12, portfolio: 11, recent: 24, routines: 3 });
     const folded = distributeRailHeight(

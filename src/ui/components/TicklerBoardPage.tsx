@@ -22,6 +22,7 @@ import {
   summarizeDecide,
   summarizeQueue,
   TICKLER_RECENT_EXPANDED_LIMIT,
+  TICKLER_RECENT_EXPANDED_WINDOW_MS,
   upcomingProjects,
   upcomingRoutines,
   type TicklerPortfolioSort,
@@ -64,13 +65,28 @@ const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
  *
  * `recentExpanded` is the reader's own override of that settlement (PLI-271):
  * Recent's ideal doubles and the two panes under it fold to their headers, which
- * is where the height for the extra rows comes from. Orgs is left alone — it is
- * navigation, and a board you cannot steer is not a trade anyone asked for.
+ * is where the height for the extra rows comes from.
+ *
+ * And while it is expanded Recent is served `first` — the half of this the first
+ * cut got wrong. Priority alone could not do it: it orders the panes inside each
+ * turn of the surplus round-robin, and Orgs, which has no ideal and so can always
+ * take another row, took every other row the fold had just freed — at half again
+ * the price, an org row being taller than a Recent row. Pressing a button on
+ * Recent grew Orgs, which is what the bug report said. Filled first, Recent gets
+ * the rows it asked for and Orgs takes what is left over, which on a tall screen
+ * is still most of what it had. What it loses is the right to outbid the pane the
+ * height was freed for.
  */
 function railPanes(recentExpanded: boolean): readonly TicklerRailPaneSpec[] {
   return [
     { key: "orgs", minRows: 3, idealRows: Infinity, priority: 1 },
-    { key: "recent", minRows: 3, idealRows: recentExpanded ? RECENT_EXPANDED_ROWS : RECENT_ROWS, priority: 1 },
+    {
+      key: "recent",
+      minRows: 3,
+      idealRows: recentExpanded ? RECENT_EXPANDED_ROWS : RECENT_ROWS,
+      priority: 1,
+      first: recentExpanded,
+    },
     { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: recentExpanded },
     { key: "routines", minRows: 2, idealRows: 4, priority: 2, collapsed: recentExpanded },
   ];
@@ -230,16 +246,37 @@ export function TicklerBoardPage({
     () => summarizeQueue(visibleItems.filter((item) => !isSnoozed(item, nowMs)), nowMs),
     [visibleItems, nowMs],
   );
-  const recent = useMemo(
-    () =>
-      recentTasks(
-        loaded.map(({ company, data }) => ({ company, runs: data.liveRuns, issues: data.issues })),
-        // Expanded, the cap doubles with the pane: the rows have to exist before
-        // the rail can seat them.
-        { nowMs, limit: recentExpanded ? TICKLER_RECENT_EXPANDED_LIMIT : undefined },
-      ),
-    [loaded, nowMs, recentExpanded],
+  const recentEntries = useMemo(
+    () => loaded.map(({ company, data }) => ({ company, runs: data.liveRuns, issues: data.issues })),
+    [loaded],
   );
+  const recent = useMemo(
+    () => recentTasks(recentEntries, { nowMs }),
+    [recentEntries, nowMs],
+  );
+  /**
+   * The same list, a week deep and capped at twice the rows.
+   *
+   * Built whether or not Recent is expanded, because whether expanding would
+   * show anything is the one thing the button has to know before it is pressed —
+   * see `expandable` below. It is the same walk over the same issues the list
+   * above already does, so the cost of knowing is a second pass over a few
+   * hundred tickets.
+   */
+  const recentDeep = useMemo(
+    () =>
+      recentTasks(recentEntries, {
+        nowMs,
+        limit: TICKLER_RECENT_EXPANDED_LIMIT,
+        windowMs: TICKLER_RECENT_EXPANDED_WINDOW_MS,
+      }),
+    [recentEntries, nowMs],
+  );
+  // Nothing to expand into: a board quiet enough that a week holds no more than
+  // a day is a board where the fold would buy blank height, and the toggle says
+  // so rather than appearing to do nothing — which is exactly how the first cut
+  // read from the outside.
+  const recentExpandable = recentDeep.items.length > recent.items.length;
   const routines = useMemo(
     () => upcomingRoutines(loaded.map(({ company, data }) => ({ company, routines: data.routines })), nowMs),
     [loaded, nowMs],
@@ -401,11 +438,12 @@ export function TicklerBoardPage({
               Narrow there is no budget — see `narrow` on `useRailBudget` — and
               this is the one pane long enough to matter, so it is told. */}
           <TicklerRecentTasks
-            tasks={recent}
+            tasks={recentExpanded ? recentDeep : recent}
             nowMs={nowMs}
             budget={budget.recent}
             narrow={narrow}
             expanded={recentExpanded}
+            expandable={recentExpandable}
             onExpanded={onRecentExpanded}
             className={cn(paneOrderClass(paneOrder, "recent"), "min-w-0 @[64rem]/board:order-none")}
           />
