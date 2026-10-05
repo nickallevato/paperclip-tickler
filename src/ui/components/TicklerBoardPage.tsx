@@ -21,6 +21,7 @@ import {
   recentTasks,
   summarizeDecide,
   summarizeQueue,
+  TICKLER_RECENT_EXPANDED_LIMIT,
   upcomingProjects,
   upcomingRoutines,
   type TicklerPortfolioSort,
@@ -29,7 +30,7 @@ import {
   type TicklerQueueSort,
 } from "../lib/queue";
 import { paneOrderClass, type TicklerPaneKey } from "../lib/pane-order";
-import type { TicklerRailPaneSpec } from "../lib/rail-budget";
+import { collapsedPane, type TicklerRailPaneSpec } from "../lib/rail-budget";
 import { TicklerCompanySlot } from "./TicklerCompanySlot";
 import { TicklerPortfolio } from "./TicklerPortfolio";
 import { railPaneBox, TicklerRailMore } from "./TicklerRailPane";
@@ -60,13 +61,26 @@ const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
  * has no exceptions at all and the header alone is the answer.
  *
  * Ranks tie by the order written here, which is the only thing this order does.
+ *
+ * `recentExpanded` is the reader's own override of that settlement (PLI-271):
+ * Recent's ideal doubles and the two panes under it fold to their headers, which
+ * is where the height for the extra rows comes from. Orgs is left alone — it is
+ * navigation, and a board you cannot steer is not a trade anyone asked for.
  */
-const RAIL_PANES: readonly TicklerRailPaneSpec[] = [
-  { key: "orgs", minRows: 3, idealRows: Infinity, priority: 1 },
-  { key: "recent", minRows: 3, idealRows: 12, priority: 1 },
-  { key: "portfolio", minRows: 3, idealRows: 11, priority: 2 },
-  { key: "routines", minRows: 2, idealRows: 4, priority: 2 },
-];
+function railPanes(recentExpanded: boolean): readonly TicklerRailPaneSpec[] {
+  return [
+    { key: "orgs", minRows: 3, idealRows: Infinity, priority: 1 },
+    { key: "recent", minRows: 3, idealRows: recentExpanded ? RECENT_EXPANDED_ROWS : RECENT_ROWS, priority: 1 },
+    { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: recentExpanded },
+    { key: "routines", minRows: 2, idealRows: 4, priority: 2, collapsed: recentExpanded },
+  ];
+}
+
+/** Past twelve, Recent is a log rather than a glance — unless asked for. */
+const RECENT_ROWS = 12;
+
+/** "Double the list", literally: the point of the fold below it. */
+const RECENT_EXPANDED_ROWS = RECENT_ROWS * 2;
 
 /** Re-render on a slow clock so ages and countdowns don't freeze between polls. */
 function useNowMs(intervalMs = 30_000): number {
@@ -108,6 +122,8 @@ export function TicklerBoardPage({
   onAgeFilter,
   portfolioSort,
   onPortfolioSort,
+  recentExpanded,
+  onRecentExpanded,
   paneOrder,
   onNarrow,
   footer,
@@ -134,6 +150,9 @@ export function TicklerBoardPage({
   onAgeFilter: (filter: TicklerQueueAgeFilter) => void;
   portfolioSort: TicklerPortfolioSort;
   onPortfolioSort: (sort: TicklerPortfolioSort) => void;
+  /** Recent doubled, with Portfolio and Routines folded to pay for it. */
+  recentExpanded: boolean;
+  onRecentExpanded: (expanded: boolean) => void;
   /** The narrow stack's order. Ignored wide, where `order` is overridden away. */
   paneOrder: readonly TicklerPaneKey[];
   /**
@@ -215,9 +234,11 @@ export function TicklerBoardPage({
     () =>
       recentTasks(
         loaded.map(({ company, data }) => ({ company, runs: data.liveRuns, issues: data.issues })),
-        { nowMs },
+        // Expanded, the cap doubles with the pane: the rows have to exist before
+        // the rail can seat them.
+        { nowMs, limit: recentExpanded ? TICKLER_RECENT_EXPANDED_LIMIT : undefined },
       ),
-    [loaded, nowMs],
+    [loaded, nowMs, recentExpanded],
   );
   const routines = useMemo(
     () => upcomingRoutines(loaded.map(({ company, data }) => ({ company, routines: data.routines })), nowMs),
@@ -243,8 +264,12 @@ export function TicklerBoardPage({
   );
 
   // The rail's height, shared out. Orgs is read back here because its markup
-  // lives on this page rather than in a component of its own.
-  const { railRef, budget, narrow } = useRailBudget(RAIL_PANES);
+  // lives on this page rather than in a component of its own. Memoised on the
+  // one thing that changes the specs: the hook keys its measurement callback on
+  // their identity, so a fresh array per render would re-measure the rail every
+  // render instead of every layout change.
+  const specs = useMemo(() => railPanes(recentExpanded), [recentExpanded]);
+  const { railRef, budget, narrow } = useRailBudget(specs);
   // `narrow` is measured rather than guessed, and is false for the one pre-paint
   // frame before the first measurement, so the header's Pane order button is
   // never briefly offered on a desktop.
@@ -380,6 +405,8 @@ export function TicklerBoardPage({
             nowMs={nowMs}
             budget={budget.recent}
             narrow={narrow}
+            expanded={recentExpanded}
+            onExpanded={onRecentExpanded}
             className={cn(paneOrderClass(paneOrder, "recent"), "min-w-0 @[64rem]/board:order-none")}
           />
           <TicklerPortfolio
@@ -392,13 +419,16 @@ export function TicklerBoardPage({
             // from being squeezed to nothing by a tall stack of orgs — it is
             // given a height of its own, or demoted to its header, rather than
             // left to fight the panes above it for the leftovers.
-            budget={budget.portfolio}
+            // Folded when Recent is expanded. Wide the spec has already said so
+            // and this changes nothing; narrow there is no budget to say it in,
+            // and the fold is the reader's choice at either width.
+            budget={recentExpanded ? collapsedPane(budget.portfolio) : budget.portfolio}
             className={cn(paneOrderClass(paneOrder, "portfolio"), "min-h-0 min-w-0 flex-1 @[64rem]/board:order-none")}
           />
           <TicklerRoutineExceptions
             items={routines}
             nowMs={nowMs}
-            budget={budget.routines}
+            budget={recentExpanded ? collapsedPane(budget.routines) : budget.routines}
             className={cn(paneOrderClass(paneOrder, "routines"), "min-w-0 @[64rem]/board:order-none")}
           />
         </div>

@@ -1,3 +1,4 @@
+import { ChevronsUpDown } from "lucide-react";
 import {
   CompanyPatternIcon,
   HoverCard,
@@ -34,6 +35,16 @@ const BODY = "text-[length:var(--tickler-fs-body,14px)] leading-[1.45]";
  * height to divide, and no answer from the one column but "all of it".
  */
 const NARROW_ROWS = 4;
+
+/**
+ * And expanded, narrow: double, for the same reason the wide pane doubles.
+ *
+ * Narrow the fold cannot buy the height back — the rail is `display: contents`
+ * and the panes below are not competing for anything — so this is the one thing
+ * expanding can still mean down here. The page scrolls, so the cost is the
+ * queue sitting four rows further down rather than off a fixed column.
+ */
+const NARROW_ROWS_EXPANDED = NARROW_ROWS * 2;
 
 /** Markdown emphasis/headings/code marks read as noise in a four-line excerpt. */
 function plainText(markdown: string): string {
@@ -194,6 +205,8 @@ export function TicklerRecentTasks({
   nowMs,
   budget,
   narrow,
+  expanded = false,
+  onExpanded,
   className,
 }: {
   tasks: TicklerRecentTasksModel;
@@ -201,13 +214,17 @@ export function TicklerRecentTasks({
   budget?: TicklerRailPaneBudget;
   /** One column: no rail height, so the pane caps its own rows. */
   narrow?: boolean;
+  /** The reader has traded Portfolio and Routines for twice this list. */
+  expanded?: boolean;
+  /** Absent hides the toggle — the pane is then exactly what it was. */
+  onExpanded?: (expanded: boolean) => void;
   className?: string;
 }) {
   const { items, working, queued, hidden } = tasks;
   const box = railPaneBox(budget);
   // Wide, this is every row and the model's own count — the budget scrolls the
   // pane rather than dropping rows, and that path is untouched.
-  const rows = narrow ? items.slice(0, NARROW_ROWS) : items;
+  const rows = narrow ? items.slice(0, expanded ? NARROW_ROWS_EXPANDED : NARROW_ROWS) : items;
   const withheld = hidden + (items.length - rows.length);
   return (
     <section
@@ -236,6 +253,35 @@ export function TicklerRecentTasks({
           )}
         </span>
         <TicklerRailMore budget={budget} />
+        {onExpanded && (
+          /* Last in the header, past the counts and the "+N more" those counts
+             qualify: it is the one thing here that changes the page rather than
+             describing it. `aria-pressed` rather than two labels doing the same
+             job — the title says what the press costs, which is the part that is
+             not obvious from the icon. */
+          <button
+            type="button"
+            data-recent-expand
+            aria-pressed={expanded}
+            aria-label={expanded ? "Collapse Recent" : "Expand Recent"}
+            title={
+              expanded
+                ? "Collapse Recent — gives Portfolio and Routines their rows back"
+                : "Expand Recent — twice the list, with Portfolio and Routines folded to their headers"
+            }
+            onClick={() => onExpanded(!expanded)}
+            className={cn(
+              "-my-0.5 shrink-0 rounded border p-0.5",
+              expanded ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {/* One icon in both states, like the header's own toggles: the
+                obvious second icon is `ChevronsDownUp`, and at 12px inside a
+                bordered square it reads as a close button. The pressed
+                background is what says which state this is. */}
+            <ChevronsUpDown className="h-3 w-3" />
+          </button>
+        )}
       </h3>
 
       {items.length === 0 ? (

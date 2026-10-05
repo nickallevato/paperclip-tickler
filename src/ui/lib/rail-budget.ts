@@ -41,6 +41,16 @@ export interface TicklerRailPaneSpec {
    * "these two matter and the rest are equal" is written down.
    */
   priority: number;
+  /**
+   * Folded to its header by the reader, not by the arithmetic. It draws no rows
+   * whatever the rail's height, and the rows it would have taken are surplus for
+   * everyone else — which is how one pane is given a taller list than the rail
+   * could otherwise seat (PLI-271).
+   *
+   * Distinct from `minRows: 0`: a pane with no floor still joins the surplus
+   * round-robin and would quietly grow back the moment the window did.
+   */
+  collapsed?: boolean;
 }
 
 /** One pane, as the page actually drew it. */
@@ -142,7 +152,10 @@ export function distributeRailHeight(
 
   const order = [...specs].sort((a, b) => a.priority - b.priority);
   for (const spec of order) {
-    if (empty(spec.key)) continue;
+    // A folded pane is never given a floor, and the surplus loop below skips
+    // anything still at zero rows, so it stays a header for as long as it is
+    // folded however much height turns up.
+    if (empty(spec.key) || spec.collapsed) continue;
     afford(spec.key, floor(spec));
   }
   // The surplus, one row at a time, cycling the panes in priority order and
@@ -161,6 +174,10 @@ export function distributeRailHeight(
     specs.map((spec) => {
       const box = boxes[spec.key];
       const drawn = rows[spec.key];
+      // Folded reads as demoted to the pane itself — header only — because that
+      // is the state it already knows how to draw. It is told how many rows it
+      // is holding so the header can say so.
+      if (spec.collapsed) return [spec.key, { rows: 0, height: null, hidden: box.total, demoted: true }];
       if (empty(spec.key)) return [spec.key, UNBUDGETED];
       if (drawn === 0) return [spec.key, { rows: 0, height: null, hidden: box.total, demoted: true }];
       return [
@@ -176,6 +193,19 @@ export function distributeRailHeight(
       ];
     }),
   );
+}
+
+/**
+ * The budget of a folded pane, for a rail that has no budget to fold.
+ *
+ * Wide, `collapsed` on the spec does this and frees the height besides. Narrow
+ * there is nothing to free — the rail is `display: contents` and every pane
+ * sizes itself — but the fold is the reader's choice either way, so it is
+ * applied to the pane directly. Whatever the budget knew about rows held back
+ * is carried through.
+ */
+export function collapsedPane(budget: TicklerRailPaneBudget | undefined): TicklerRailPaneBudget {
+  return { rows: 0, height: null, hidden: budget?.hidden ?? 0, demoted: true };
 }
 
 /** Two budgets that would draw the same rail, so the hook can skip a re-render. */

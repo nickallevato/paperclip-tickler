@@ -16,6 +16,10 @@ export function railPaneBox(budget: TicklerRailPaneBudget | undefined): {
   className: string | undefined;
   style: CSSProperties | undefined;
 } {
+  // A pane folded to its header does not flex either: `flex-1` on Portfolio is
+  // there to spend the rail's leftovers on bars, and a Portfolio with no bars
+  // left to draw would spend them on an empty card (PLI-271).
+  if (budget?.demoted) return { className: "flex-none", style: undefined };
   if (!budget || budget.height === null) return { className: undefined, style: undefined };
   return { className: "flex-none", style: { height: budget.height } };
 }

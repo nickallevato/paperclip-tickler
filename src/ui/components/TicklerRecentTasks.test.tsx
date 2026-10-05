@@ -52,14 +52,26 @@ describe("TicklerRecentTasks", () => {
     document.body.innerHTML = "";
   });
 
-  function render(model: TicklerRecentTasksModel, budget?: TicklerRailPaneBudget, narrow?: boolean) {
+  function render(
+    model: TicklerRecentTasksModel,
+    budget?: TicklerRailPaneBudget,
+    narrow?: boolean,
+    expand?: { expanded?: boolean; onExpanded?: (expanded: boolean) => void },
+  ) {
     container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
     act(() => {
       root.render(
         <MemoryRouter>
-          <TicklerRecentTasks tasks={model} nowMs={NOW} budget={budget} narrow={narrow} />
+          <TicklerRecentTasks
+            tasks={model}
+            nowMs={NOW}
+            budget={budget}
+            narrow={narrow}
+            expanded={expand?.expanded}
+            onExpanded={expand?.onExpanded}
+          />
         </MemoryRouter>,
       );
     });
@@ -183,6 +195,55 @@ describe("TicklerRecentTasks", () => {
     const root = render(tasks(many(3)), undefined, true);
     expect(container.querySelectorAll("li")).toHaveLength(3);
     expect(container.querySelector("[data-rail-foot]")).toBeNull();
+    act(() => root.unmount());
+  });
+
+  it("has no expand button at all unless it is given somewhere to report the press", () => {
+    const root = render(tasks(many(3)));
+    expect(container.querySelector("[data-recent-expand]")).toBeNull();
+    act(() => root.unmount());
+  });
+
+  it("reports the press, and says which state it is in", () => {
+    const pressed: boolean[] = [];
+    const root = render(tasks(many(3)), undefined, false, { expanded: false, onExpanded: (next) => pressed.push(next) });
+    const button = container.querySelector<HTMLButtonElement>("[data-recent-expand]")!;
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+    expect(button.getAttribute("aria-label")).toBe("Expand Recent");
+    act(() => button.click());
+    expect(pressed).toEqual([true]);
+    act(() => root.unmount());
+  });
+
+  it("offers the way back out when it is expanded", () => {
+    const pressed: boolean[] = [];
+    const root = render(tasks(many(3)), undefined, false, { expanded: true, onExpanded: (next) => pressed.push(next) });
+    const button = container.querySelector<HTMLButtonElement>("[data-recent-expand]")!;
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+    expect(button.getAttribute("aria-label")).toBe("Collapse Recent");
+    act(() => button.click());
+    expect(pressed).toEqual([false]);
+    act(() => root.unmount());
+  });
+
+  it("doubles its own cap when it is expanded and the board is one column", () => {
+    // Narrow there is no rail height for the fold below to free up, so this is
+    // the whole of what expanding can mean: eight rows instead of four.
+    const root = render(tasks(many(12), { hidden: 5 }), undefined, true, { expanded: true, onExpanded: () => {} });
+    expect(container.querySelectorAll("li")).toHaveLength(8);
+    expect(container.textContent).toContain("9 more touched today");
+    act(() => root.unmount());
+  });
+
+  it("keeps the button reachable while it is demoted to its header", () => {
+    // The pane the rail could not seat is exactly the one somebody wants to
+    // expand, so the toggle lives in the header rather than with the rows.
+    const root = render(tasks(many(9)), { rows: 0, height: null, hidden: 9, demoted: true }, false, {
+      expanded: false,
+      onExpanded: () => {},
+    });
+    expect(container.querySelectorAll("li")).toHaveLength(0);
+    expect(container.querySelector("[data-recent-expand]")).not.toBeNull();
     act(() => root.unmount());
   });
 

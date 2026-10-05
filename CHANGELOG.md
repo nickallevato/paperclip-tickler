@@ -5,6 +5,25 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Recent can be expanded to twice the list, and the two panes under it fold to
+  pay for it.** A toggle at the end of the Recent header. The rail's height is
+  fixed and shared out, so a longer list is not free: pressing it folds
+  **Portfolio** and **Routines** to a single header line each, keeping their
+  digests — `35 open · 5 blocked`, `3 need attention` — so what they were
+  telling you survives the fold without being drawn a row at a time. On a
+  1512×790 laptop that is 4 visible Recent rows becoming 11. The model's own cap
+  doubles with the pane (16 rows to 32), because a doubled pane fed the same
+  sixteen would run out of list halfway down its new height. **Orgs** is left
+  alone — it is how you steer the board — and on most screens it picks up a row
+  from the height freed below it. One column there is no rail height to trade, so
+  the toggle doubles Recent's own cap instead, 4 rows to 8. Saved in that browser
+  only, like the pane order.
+
+  No new layout machinery: a pane spec gained a "header only, whatever the
+  height" flag, which is the state the height budget already demotes a pane to on
+  a short screen. So Portfolio and Routines needed no second rendering path, and
+  a folded pane cannot quietly grow back when the window does.
+
 ## 0.10.0
 
 - **A `?` in the header, and one line at the top of the README: where to take a

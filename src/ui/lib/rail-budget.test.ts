@@ -166,6 +166,41 @@ describe("distributeRailHeight", () => {
     expect(spent(budget, boxes)).toBeLessThanOrEqual(790);
   });
 
+  // PLI-271: the reader's own trade. Folding the two lower panes is what pays
+  // for a Recent twice as long, and the arithmetic has to actually hand the
+  // freed height over rather than leave a gap at the bottom of the rail.
+  it("folds a collapsed pane to its header and spends the height on the pane that asked", () => {
+    const boxes = metrics({ orgs: 12, portfolio: 11, recent: 24, routines: 3 });
+    const settled = distributeRailHeight(PANES, boxes, { available: 790, gap: GAP });
+    const folded = distributeRailHeight(
+      PANES.map((spec) =>
+        spec.key === "recent"
+          ? { ...spec, idealRows: 24 }
+          : spec.key === "orgs"
+            ? spec
+            : { ...spec, collapsed: true },
+      ),
+      boxes,
+      { available: 790, gap: GAP },
+    );
+    expect(folded.portfolio).toEqual({ rows: 0, height: null, hidden: 11, demoted: true });
+    expect(folded.routines).toEqual({ rows: 0, height: null, hidden: 3, demoted: true });
+    expect(folded.recent!.rows).toBeGreaterThan(settled.recent!.rows);
+    expect(spent(folded, boxes)).toBeLessThanOrEqual(790);
+  });
+
+  it("keeps a folded pane folded however tall the rail gets", () => {
+    const boxes = metrics({ orgs: 12, portfolio: 11, recent: 24, routines: 3 });
+    const folded = distributeRailHeight(
+      PANES.map((spec) => (spec.key === "routines" ? { ...spec, collapsed: true } : spec)),
+      boxes,
+      { available: 4000, gap: GAP },
+    );
+    expect(folded.routines!.demoted).toBe(true);
+    expect(folded.routines!.rows).toBe(0);
+    expect(folded.portfolio!.demoted).toBe(false);
+  });
+
   it("charges the gap between panes", () => {
     const boxes = metrics({ orgs: 12, portfolio: 11, recent: 20, routines: 3 });
     const tight = distributeRailHeight(PANES, boxes, { available: 790, gap: 0 });

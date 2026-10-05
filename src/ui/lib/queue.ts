@@ -718,6 +718,23 @@ export interface TicklerRecentTasks {
  */
 export const TICKLER_RECENT_LIMIT = 16;
 
+/**
+ * What the cap becomes with Recent expanded: twice the rows, so twice the list.
+ *
+ * The pane is given roughly double the rail's height when Portfolio and
+ * Routines fold (see `RAIL_PANES`), and a doubled pane fed the same sixteen
+ * rows would simply run out of list halfway down its new height.
+ */
+export const TICKLER_RECENT_EXPANDED_LIMIT = TICKLER_RECENT_LIMIT * 2;
+
+/** Whether Recent is expanded. Per browser, like every other board preference. */
+export const TICKLER_RECENT_EXPANDED_STORAGE_KEY = "tickler.recentExpanded";
+
+/** Collapsed unless the reader has said otherwise; anything unparseable is collapsed. */
+export function normalizeRecentExpanded(value: string | null | undefined): boolean {
+  return value === "on";
+}
+
 /** How far back "recent" reaches for a task with no run on it. */
 export const TICKLER_RECENT_WINDOW_MS = 24 * 60 * 60_000;
 
