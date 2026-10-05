@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.11.0
+
 - **Recent can be expanded to twice the list, and the two panes under it fold to
   pay for it.** A toggle at the end of the Recent header. The rail's height is
   fixed and shared out, so a longer list is not free: pressing it folds

@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.11.0](0.11.0.md)
 - [0.10.0](0.10.0.md)
 - [0.9.2](0.9.2.md) — the board page no longer scrolls 8px over nothing.
 - [0.9.1](0.9.1.md) — a rail pane with nothing left to show no longer scrolls.
