@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.12.0
+
 - **Orgs can be expanded too, and the three panes under it fold to pay for it.**
   The same toggle Recent got in 0.11.0, at the end of the Orgs header. Orgs is
   the pane with no cap of its own — it wants every org you watch — so on a rail
