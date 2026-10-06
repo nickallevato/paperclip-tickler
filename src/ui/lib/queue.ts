@@ -731,9 +731,10 @@ export const TICKLER_RECENT_EXPANDED_LIMIT = TICKLER_RECENT_LIMIT * 2;
  * Which rail pane the reader has given the rail to, if any.
  *
  * One value and not a flag per pane, because the rail's height is one thing and
- * expanding a pane is spending it: Recent expanded folds Portfolio and Routines,
- * Orgs expanded folds all three, and two panes expanded at once would each be
- * asking for the height the other was just folded to free. The state the panes
+ * expanding a pane is spending it: either one folds Portfolio and Routines, and
+ * two panes expanded at once would both be asking for the same freed height —
+ * Recent served first to its doubled ideal, Orgs left with whatever that did not
+ * take, which is neither press doing what it says. The state the panes
  * can actually be in is "this one, or none", so that is the state that is
  * stored, and `railPanes` cannot be handed a contradiction.
  *

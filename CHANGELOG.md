@@ -5,6 +5,15 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Expanding Orgs no longer folds Recent.** 0.12.0's Orgs toggle folded Recent,
+  Portfolio and Routines; now it folds only Portfolio and Routines, the same two
+  Recent's toggle folds. Recent keeps its ordinary size, up to twelve rows, and
+  shares the freed height with Orgs — topped up to its twelve first, every row
+  after that going to Orgs. On a 2560×1400 desktop with 22 orgs that is 13 orgs
+  and 12 recent tasks, where 0.12.0 gave 21 orgs and no Recent; a 1512×790
+  laptop, where Portfolio is already folded, gains only a row each. Still one
+  pane expanded at a time.
+
 ## 0.12.0
 
 - **Orgs can be expanded too, and the three panes under it fold to pay for it.**

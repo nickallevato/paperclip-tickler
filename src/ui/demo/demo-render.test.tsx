@@ -112,7 +112,7 @@ describe("TicklerHud on demo data", () => {
     expect(container.querySelector("[data-rail-expand='recent']")).not.toBeNull();
     // jsdom measures every box as zero, so the rail is unbudgeted and Orgs is
     // holding nothing back — which is the state the button is meant to disable
-    // itself in rather than fold three panes for a list already complete.
+    // itself in rather than fold two panes for a list already complete.
     expect(orgs!.disabled).toBe(true);
     expect(orgs!.getAttribute("title")).toContain("Nothing to expand");
   });
