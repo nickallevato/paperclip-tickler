@@ -22,16 +22,18 @@ import { TicklerSelfUpdatePanel, TicklerUpdateChip } from "./components/TicklerS
 import { TicklerTokenSettingsPanel } from "./components/TicklerTokenSettings";
 import type { TicklerCompanyData } from "./components/useTicklerCompanyData";
 import {
+  TICKLER_EXPANDED_PANE_STORAGE_KEY,
   TICKLER_PORTFOLIO_SORT_STORAGE_KEY,
   TICKLER_QUEUE_AGE_FILTER_STORAGE_KEY,
   TICKLER_QUEUE_GROUPING_STORAGE_KEY,
   TICKLER_QUEUE_SORT_STORAGE_KEY,
   TICKLER_RECENT_EXPANDED_STORAGE_KEY,
+  normalizeExpandedPane,
   normalizePortfolioSort,
-  normalizeRecentExpanded,
   normalizeQueueAgeFilter,
   normalizeQueueGrouping,
   normalizeQueueSort,
+  type TicklerExpandedPane,
   type TicklerPortfolioSort,
   type TicklerQueueAgeFilter,
   type TicklerQueueGrouping,
@@ -183,16 +185,21 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
     writeStored(TICKLER_PORTFOLIO_SORT_STORAGE_KEY, sort);
   };
 
-  // Recent, doubled, with Portfolio and Routines folded to their headers to pay
-  // for it. Persisted for the same reason the age chips are: which pane of the
-  // rail you actually read is a habit, and re-expanding it on every visit is the
-  // friction the button exists to remove.
-  const [recentExpanded, setRecentExpanded] = useState<boolean>(() =>
-    normalizeRecentExpanded(readStored(TICKLER_RECENT_EXPANDED_STORAGE_KEY)),
+  // Which rail pane has been given the rail, the others folded to their headers
+  // to pay for it. Persisted for the same reason the age chips are: which pane of
+  // the rail you actually read is a habit, and re-expanding it on every visit is
+  // the friction the button exists to remove.
+  const [expandedPane, setExpandedPane] = useState<TicklerExpandedPane>(() =>
+    normalizeExpandedPane(
+      readStored(TICKLER_EXPANDED_PANE_STORAGE_KEY),
+      readStored(TICKLER_RECENT_EXPANDED_STORAGE_KEY),
+    ),
   );
-  const selectRecentExpanded = (expanded: boolean) => {
-    setRecentExpanded(expanded);
-    writeStored(TICKLER_RECENT_EXPANDED_STORAGE_KEY, expanded ? "on" : "off");
+  const selectExpandedPane = (pane: TicklerExpandedPane) => {
+    setExpandedPane(pane);
+    // "none" written out rather than the key removed, so that a collapse is a
+    // value this key holds and not an absence the old key gets to answer for.
+    writeStored(TICKLER_EXPANDED_PANE_STORAGE_KEY, pane ?? "none");
   };
 
   // The narrow board's stack order. Per-browser and only that: a plugin has no
@@ -475,8 +482,8 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
           onAgeFilter={selectAgeFilter}
           portfolioSort={portfolioSort}
           onPortfolioSort={selectPortfolioSort}
-          recentExpanded={recentExpanded}
-          onRecentExpanded={selectRecentExpanded}
+          expandedPane={expandedPane}
+          onExpandedPane={selectExpandedPane}
           paneOrder={paneOrder}
           onNarrow={reportBoardNarrow}
           footer={

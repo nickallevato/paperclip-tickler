@@ -1,4 +1,3 @@
-import { ChevronsUpDown } from "lucide-react";
 import {
   CompanyPatternIcon,
   HoverCard,
@@ -14,7 +13,7 @@ import type { TicklerRailPaneBudget } from "../lib/rail-budget";
 import { elapsedLabel, humanStatus, isStartingUp, runNarration } from "../lib/runs";
 import { LiveDot, QueuedDot } from "./LiveDot";
 import { TicklerLink } from "./TicklerLink";
-import { railPaneBox, TicklerRailMore } from "./TicklerRailPane";
+import { railPaneBox, TicklerRailExpand, TicklerRailMore } from "./TicklerRailPane";
 
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
 const BODY = "text-[length:var(--tickler-fs-body,14px)] leading-[1.45]";
@@ -269,20 +268,11 @@ export function TicklerRecentTasks({
         </span>
         <TicklerRailMore budget={budget} />
         {onExpanded && (
-          /* Last in the header, past the counts and the "+N more" those counts
-             qualify: it is the one thing here that changes the page rather than
-             describing it. `aria-pressed` rather than two labels doing the same
-             job — the title says what the press costs, which is the part that is
-             not obvious from the icon. */
-          <button
-            type="button"
-            data-recent-expand
-            aria-pressed={expanded}
-            aria-label={expanded ? "Collapse Recent" : "Expand Recent"}
-            // Disabled only on the way in: expanded is always collapsible, even
-            // on a board that has since gone quiet enough that there would be
-            // nothing to expand into again.
-            disabled={!expanded && !expandable}
+          <TicklerRailExpand
+            pane="recent"
+            label="Recent"
+            expanded={expanded}
+            expandable={expandable}
             title={
               expanded
                 ? "Collapse Recent — back to the last day, and Portfolio and Routines get their rows back"
@@ -290,19 +280,8 @@ export function TicklerRecentTasks({
                   ? "Expand Recent — the last 7 days instead of the last day, with Portfolio and Routines folded to their headers to make room"
                   : "Nothing to expand — the last 7 days hold no more than what is already listed"
             }
-            onClick={() => onExpanded(!expanded)}
-            className={cn(
-              "-my-0.5 shrink-0 rounded border p-0.5",
-              expanded ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
-              !expanded && !expandable && "cursor-not-allowed opacity-40 hover:text-muted-foreground",
-            )}
-          >
-            {/* One icon in both states, like the header's own toggles: the
-                obvious second icon is `ChevronsDownUp`, and at 12px inside a
-                bordered square it reads as a close button. The pressed
-                background is what says which state this is. */}
-            <ChevronsUpDown className="h-3 w-3" />
-          </button>
+            onExpanded={onExpanded}
+          />
         )}
       </h3>
 

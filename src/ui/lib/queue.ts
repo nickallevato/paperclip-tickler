@@ -727,12 +727,51 @@ export const TICKLER_RECENT_LIMIT = 16;
  */
 export const TICKLER_RECENT_EXPANDED_LIMIT = TICKLER_RECENT_LIMIT * 2;
 
-/** Whether Recent is expanded. Per browser, like every other board preference. */
+/**
+ * Which rail pane the reader has given the rail to, if any.
+ *
+ * One value and not a flag per pane, because the rail's height is one thing and
+ * expanding a pane is spending it: Recent expanded folds Portfolio and Routines,
+ * Orgs expanded folds all three, and two panes expanded at once would each be
+ * asking for the height the other was just folded to free. The state the panes
+ * can actually be in is "this one, or none", so that is the state that is
+ * stored, and `railPanes` cannot be handed a contradiction.
+ *
+ * Only these two are expandable. Queue is not in the rail; Portfolio and
+ * Routines are the panes that get folded, and both already stop at an ideal they
+ * reach on any ordinary screen — there is nothing under their fold to expand
+ * into.
+ */
+export type TicklerExpandedPane = "orgs" | "recent" | null;
+
+/** Which pane is expanded. Per browser, like every other board preference. */
+export const TICKLER_EXPANDED_PANE_STORAGE_KEY = "tickler.expandedPane";
+
+/**
+ * Whether Recent is expanded — 0.11's key, read once and only as a fallback.
+ *
+ * Superseded by {@link TICKLER_EXPANDED_PANE_STORAGE_KEY}, which can say "orgs"
+ * as well. Still read so that a reader who expanded Recent before this version
+ * opens with it expanded rather than having the preference silently dropped.
+ */
 export const TICKLER_RECENT_EXPANDED_STORAGE_KEY = "tickler.recentExpanded";
 
-/** Collapsed unless the reader has said otherwise; anything unparseable is collapsed. */
-export function normalizeRecentExpanded(value: string | null | undefined): boolean {
-  return value === "on";
+/**
+ * Nothing expanded unless the reader has said otherwise.
+ *
+ * Anything unrecognised is nothing — including the name of a pane that is in the
+ * rail but not expandable, and the name of one a later version dropped.
+ */
+export function normalizeExpandedPane(
+  value: string | null | undefined,
+  legacyRecent?: string | null | undefined,
+): TicklerExpandedPane {
+  if (value === "orgs" || value === "recent") return value;
+  // Only when the new key has never been written: an explicit "none" there is
+  // the reader collapsing the pane, and must not be undone by the stale "on"
+  // that the press left behind under the old key.
+  if (value === null || value === undefined) return legacyRecent === "on" ? "recent" : null;
+  return null;
 }
 
 /** How far back "recent" reaches for a task with no run on it. */

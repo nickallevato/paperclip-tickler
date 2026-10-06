@@ -225,6 +225,46 @@ describe("distributeRailHeight", () => {
     }
   });
 
+  // PLI-273: the same trade from the other side. Orgs is at the top of the rail
+  // and all three panes below it fold, which is the only thing that can pay for
+  // an org list the rail could not otherwise seat.
+  it("gives Orgs the rest of its list when the three panes below it fold", () => {
+    const boxes: Record<string, TicklerRailPaneMetrics> = {
+      // Twenty-two orgs at 47px is more than a 1308px rail can hold alongside
+      // anyone, so there is something under this fold to expand into.
+      orgs: box(22, { head: 32.297, foot: 25.5, row: 47.297, frame: 2 }),
+      recent: box(16, { head: 32.297, foot: 0, row: 28.297, frame: 2 }),
+      portfolio: box(9, { head: 36.297, foot: 21.5, row: 42.297, frame: 2 }),
+      routines: box(3, { head: 32.297, foot: 0, row: 28.297, frame: 2 }),
+    };
+    // Exactly what `railPanes("orgs")` says. Orgs' own spec is untouched: its
+    // ideal is already every org, so there is no number to double, and it needs
+    // no `first` because it is the only pane left drawing rows.
+    const expanded: TicklerRailPaneSpec[] = [
+      { key: "orgs", minRows: 3, idealRows: Infinity, priority: 1 },
+      { key: "recent", minRows: 3, idealRows: 12, priority: 1, collapsed: true },
+      { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: true },
+      { key: "routines", minRows: 2, idealRows: 4, priority: 2, collapsed: true },
+    ];
+    for (const available of [790, 1000, 1308]) {
+      const settled = distributeRailHeight(PANES, boxes, { available, gap: GAP });
+      const folded = distributeRailHeight(expanded, boxes, { available, gap: GAP });
+      expect(folded.recent, `recent at ${available}`).toEqual({ rows: 0, height: null, hidden: 16, demoted: true });
+      expect(folded.portfolio!.demoted, `portfolio at ${available}`).toBe(true);
+      expect(folded.routines!.demoted, `routines at ${available}`).toBe(true);
+      // The point of the press, and the press has to be worth making at every
+      // height the rail comes in at — not just the tall one.
+      expect(folded.orgs!.rows, `orgs at ${available}`).toBeGreaterThan(settled.orgs!.rows);
+      expect(folded.orgs!.height, `orgs at ${available}`).not.toBeNull();
+      expect(spent(folded, boxes), `rail at ${available}`).toBeLessThanOrEqual(available);
+    }
+    // And on a rail tall enough, the whole list — which is what the button's
+    // "every org you watch" claims, and the `+N more` beside it going away.
+    const whole = distributeRailHeight(expanded, boxes, { available: 1400, gap: GAP });
+    expect(whole.orgs!.rows).toBe(22);
+    expect(whole.orgs!.hidden).toBe(0);
+  });
+
   it("keeps a folded pane folded however tall the rail gets", () => {
     const boxes = metrics({ orgs: 12, portfolio: 11, recent: 24, routines: 3 });
     const folded = distributeRailHeight(

@@ -5,6 +5,25 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Orgs can be expanded too, and the three panes under it fold to pay for it.**
+  The same toggle Recent got in 0.11.0, at the end of the Orgs header. Orgs is
+  the pane with no cap of its own — it wants every org you watch — so on a rail
+  that cannot seat them all it has been saying `+15 more` and leaving you to
+  scroll. Pressing it folds **Recent**, **Portfolio** and **Routines** to a
+  single header line each, digests kept, and the height goes to the org list. On
+  a 2560×1400 desktop with 22 orgs that is 7 visible rows becoming 21; on a
+  1512×790 laptop, 4 becoming 8.
+
+  Three panes rather than Recent's two because Orgs is at the top of the rail,
+  so Recent is just the largest of its neighbours. When every org already fits
+  the toggle is **disabled** rather than folding three panes for a list that is
+  already complete — which is also the case one column, where the pane draws all
+  of them anyway.
+
+  **One pane at a time:** expanding Orgs collapses Recent and vice versa, since
+  the height either is asking for is the height the other would be folded to
+  free. A Recent expansion saved by 0.11 carries over.
+
 ## 0.11.1
 
 - **Expanding Recent now actually lengthens Recent.** Two things were wrong with
