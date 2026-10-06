@@ -93,6 +93,30 @@ describe("TicklerHud on demo data", () => {
     }
   });
 
+  /**
+   * PLI-273: the Orgs header carries the same expand toggle Recent has, wired to
+   * the same one-pane-at-a-time state. Checked through the real HUD rather than
+   * against the board page alone, because the wiring is the part that can be
+   * wrong — the button's own behaviour is covered on Recent.
+   */
+  it("offers the expand toggle in the Orgs header, and in Recent's", async () => {
+    const { container } = renderHud();
+    await screen.findByLabelText("Recent tasks");
+    const orgs = container.querySelector<HTMLButtonElement>("[data-rail-expand='orgs']");
+    expect(orgs).not.toBeNull();
+    expect(orgs!.getAttribute("aria-label")).toBe("Expand Orgs");
+    // It is in the Orgs header, not loose in the pane: the header is the whole
+    // of a folded pane, so a toggle anywhere else could not be pressed to
+    // unfold it.
+    expect(orgs!.closest("[data-rail-head]")).not.toBeNull();
+    expect(container.querySelector("[data-rail-expand='recent']")).not.toBeNull();
+    // jsdom measures every box as zero, so the rail is unbudgeted and Orgs is
+    // holding nothing back — which is the state the button is meant to disable
+    // itself in rather than fold three panes for a list already complete.
+    expect(orgs!.disabled).toBe(true);
+    expect(orgs!.getAttribute("title")).toContain("Nothing to expand");
+  });
+
   it("labels itself as demo data so a screenshot cannot be mistaken", async () => {
     renderHud();
     expect(await screen.findByText("Demo data")).toBeInTheDocument();

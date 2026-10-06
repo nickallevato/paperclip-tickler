@@ -137,6 +137,41 @@ the same seven days, and still folds the two panes under it.
 Like the pane order and the age chips, the state is saved **in that browser
 only**.
 
+**One pane at a time.** Orgs has the same toggle (below), and expanding either
+collapses the other — the height one of them is asking for is the height the
+other would have to be folded to free.
+
+## Expanding Orgs
+
+Orgs is the pane that has no cap of its own — it wants every org you watch — so
+on a rail that cannot seat them all it says how many it is holding back
+(`+15 more`) and scrolls to the rest. Last in its header is the same toggle
+Recent has, and it does the same thing from the other side: pressing it folds
+**Recent**, **Portfolio** and **Routines** to a single header line each, and the
+height goes to the org list.
+
+Three panes rather than Recent's two, because Orgs sits at the top of the rail —
+Recent is simply the largest of its neighbours, and leaving it standing leaves
+most of the height on the table. All three keep their digests, so nothing they
+were telling you goes away.
+
+Measured on the demo board with 22 orgs:
+
+| | 1512×790 laptop | 2560×1400 desktop |
+| --- | --- | --- |
+| collapsed | 4 orgs, `+18 more` | 7 orgs, `+15 more` |
+| expanded | 8 orgs, `+14 more` | 21 orgs, `+1 more` |
+
+So it is "as many as the rail can hold", not always the whole list — the
+`+N more` beside the button is what says whether any are still held back.
+
+When every org already fits, there is nothing under the fold and the toggle is
+**disabled** rather than folding three panes for a list that is already
+complete. That is also the answer one column, where the pane draws all of them
+anyway.
+
+Saved **in that browser only**, like Recent's.
+
 ## Ordering companies
 
 Two controls sit in the Orgs header:

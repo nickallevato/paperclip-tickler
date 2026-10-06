@@ -201,14 +201,14 @@ describe("TicklerRecentTasks", () => {
 
   it("has no expand button at all unless it is given somewhere to report the press", () => {
     const root = render(tasks(many(3)));
-    expect(container.querySelector("[data-recent-expand]")).toBeNull();
+    expect(container.querySelector("[data-rail-expand='recent']")).toBeNull();
     act(() => root.unmount());
   });
 
   it("reports the press, and says which state it is in", () => {
     const pressed: boolean[] = [];
     const root = render(tasks(many(3)), undefined, false, { expanded: false, onExpanded: (next) => pressed.push(next) });
-    const button = container.querySelector<HTMLButtonElement>("[data-recent-expand]")!;
+    const button = container.querySelector<HTMLButtonElement>("[data-rail-expand='recent']")!;
     expect(button.getAttribute("aria-pressed")).toBe("false");
     expect(button.getAttribute("aria-label")).toBe("Expand Recent");
     act(() => button.click());
@@ -219,7 +219,7 @@ describe("TicklerRecentTasks", () => {
   it("offers the way back out when it is expanded", () => {
     const pressed: boolean[] = [];
     const root = render(tasks(many(3)), undefined, false, { expanded: true, onExpanded: (next) => pressed.push(next) });
-    const button = container.querySelector<HTMLButtonElement>("[data-recent-expand]")!;
+    const button = container.querySelector<HTMLButtonElement>("[data-rail-expand='recent']")!;
     expect(button.getAttribute("aria-pressed")).toBe("true");
     expect(button.getAttribute("aria-label")).toBe("Collapse Recent");
     act(() => button.click());
@@ -259,7 +259,7 @@ describe("TicklerRecentTasks", () => {
       expandable: false,
       onExpanded: (next) => pressed.push(next),
     });
-    const button = container.querySelector<HTMLButtonElement>("[data-recent-expand]")!;
+    const button = container.querySelector<HTMLButtonElement>("[data-rail-expand='recent']")!;
     expect(button.disabled).toBe(true);
     expect(button.getAttribute("title")).toContain("Nothing to expand");
     act(() => button.click());
@@ -274,7 +274,7 @@ describe("TicklerRecentTasks", () => {
       expandable: false,
       onExpanded: (next) => pressed.push(next),
     });
-    const button = container.querySelector<HTMLButtonElement>("[data-recent-expand]")!;
+    const button = container.querySelector<HTMLButtonElement>("[data-rail-expand='recent']")!;
     expect(button.disabled).toBe(false);
     act(() => button.click());
     expect(pressed).toEqual([false]);
@@ -289,7 +289,7 @@ describe("TicklerRecentTasks", () => {
       onExpanded: () => {},
     });
     expect(container.querySelectorAll("li")).toHaveLength(0);
-    expect(container.querySelector("[data-recent-expand]")).not.toBeNull();
+    expect(container.querySelector("[data-rail-expand='recent']")).not.toBeNull();
     act(() => root.unmount());
   });
 
