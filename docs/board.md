@@ -111,18 +111,28 @@ the page. When more tasks were touched today than fit, the footer says how many.
 
 ### Expanding it
 
-Last in the Recent header is a toggle that gives the list **roughly twice the
-rows**. The height has to come from somewhere, so pressing it folds
-**Portfolio** and **Routines** to a single header line each — they keep their
-digests (`35 open · 5 blocked`, `3 need attention`), so nothing they were
-telling you goes away, it is just no longer drawn a row at a time. Orgs is left
-alone: it is how you steer the board, and on most screens it gains a row from
-the height freed below it.
+Last in the Recent header is a toggle that makes the list reach back **seven
+days instead of one**, and gives it the rows to show for it. The height has to
+come from somewhere, so pressing it folds **Portfolio** and **Routines** to a
+single header line each — they keep their digests (`35 open · 5 blocked`,
+`3 need attention`), so nothing they were telling you goes away, it is just no
+longer drawn a row at a time. The freed height goes to Recent first; **Orgs**
+keeps at least its three rows and takes whatever is left over, which on a tall
+screen is most of what it had.
 
-On a 1512×790 laptop that is 4 visible rows becoming 11. One column there is no
-rail height to trade — every pane sizes itself and the page scrolls — so the
-toggle doubles Recent's own cap instead, 4 rows to 8, and still folds the two
-panes under it.
+The window is the part that matters. A pane twice as tall only helps if there
+are rows to put in it, and on a quiet board a day holds three or four tasks —
+the same board holds nearly thirty in a week. So the header says which window it
+is on while the list is expanded:
+
+    RECENT    8 working · 2 queued · 7 days · +24 more
+
+If a week holds no more than the day already shows, the toggle is **disabled**
+rather than folding two panes to make room for nothing. Hovering it says so.
+
+One column there is no rail height to trade — every pane sizes itself and the
+page scrolls — so the toggle doubles Recent's own cap instead, 4 rows to 8, over
+the same seven days, and still folds the two panes under it.
 
 Like the pane order and the age chips, the state is saved **in that browser
 only**.

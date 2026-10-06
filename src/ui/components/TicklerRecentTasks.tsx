@@ -206,6 +206,7 @@ export function TicklerRecentTasks({
   budget,
   narrow,
   expanded = false,
+  expandable = true,
   onExpanded,
   className,
 }: {
@@ -216,6 +217,12 @@ export function TicklerRecentTasks({
   narrow?: boolean;
   /** The reader has traded Portfolio and Routines for twice this list. */
   expanded?: boolean;
+  /**
+   * Whether expanding would show anything: a week of activity is more than a
+   * day's. False on a board quiet enough that it is not, where the toggle says
+   * so instead of folding two panes to make room for nothing.
+   */
+  expandable?: boolean;
   /** Absent hides the toggle — the pane is then exactly what it was. */
   onExpanded?: (expanded: boolean) => void;
   className?: string;
@@ -251,6 +258,14 @@ export function TicklerRecentTasks({
               {queued} queued
             </span>
           )}
+          {/* What expanded actually changed, said out loud: the list reaches
+              back a week rather than a day, so a row dated "4d" below is the
+              list working rather than a stale row. */}
+          {expanded && (
+            <span data-recent-window title="Expanded: everything touched in the last 7 days">
+              7 days
+            </span>
+          )}
         </span>
         <TicklerRailMore budget={budget} />
         {onExpanded && (
@@ -264,15 +279,22 @@ export function TicklerRecentTasks({
             data-recent-expand
             aria-pressed={expanded}
             aria-label={expanded ? "Collapse Recent" : "Expand Recent"}
+            // Disabled only on the way in: expanded is always collapsible, even
+            // on a board that has since gone quiet enough that there would be
+            // nothing to expand into again.
+            disabled={!expanded && !expandable}
             title={
               expanded
-                ? "Collapse Recent — gives Portfolio and Routines their rows back"
-                : "Expand Recent — twice the list, with Portfolio and Routines folded to their headers"
+                ? "Collapse Recent — back to the last day, and Portfolio and Routines get their rows back"
+                : expandable
+                  ? "Expand Recent — the last 7 days instead of the last day, with Portfolio and Routines folded to their headers to make room"
+                  : "Nothing to expand — the last 7 days hold no more than what is already listed"
             }
             onClick={() => onExpanded(!expanded)}
             className={cn(
               "-my-0.5 shrink-0 rounded border p-0.5",
               expanded ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
+              !expanded && !expandable && "cursor-not-allowed opacity-40 hover:text-muted-foreground",
             )}
           >
             {/* One icon in both states, like the header's own toggles: the
@@ -286,7 +308,7 @@ export function TicklerRecentTasks({
 
       {items.length === 0 ? (
         <p data-rail-foot className={cn("px-3 pb-3 italic text-muted-foreground", MICRO)}>
-          nothing has moved today
+          {expanded ? "nothing has moved this week" : "nothing has moved today"}
         </p>
       ) : budget?.demoted ? (
         // Too short a rail to draw even three rows. The header above already
@@ -304,7 +326,7 @@ export function TicklerRecentTasks({
           </ul>
           {withheld > 0 && (
             <p data-rail-foot className={cn("shrink-0 border-t px-3 py-1.5 text-muted-foreground", MICRO)}>
-              {withheld} more touched today
+              {withheld} more touched {expanded ? "this week" : "today"}
             </p>
           )}
         </>

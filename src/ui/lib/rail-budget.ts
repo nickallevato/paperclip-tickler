@@ -15,7 +15,9 @@
  * row at a time in priority order, round-robin, so the pane that most wants
  * height gets it first and nothing starves. A pane that cannot afford its
  * minimum demotes to its header rather than being clipped, and a pane holding
- * rows back says how many.
+ * rows back says how many. One pane may be marked {@link TicklerRailPaneSpec.first}
+ * and is filled to its ideal before that round-robin starts, which is how the
+ * height another pane was folded to free reaches the pane that asked for it.
  *
  * Every height here is measured from the page ({@link useRailBudget}) rather
  * than assumed: a row's height depends on the theme's line height and on the
@@ -51,6 +53,23 @@ export interface TicklerRailPaneSpec {
    * round-robin and would quietly grow back the moment the window did.
    */
   collapsed?: boolean;
+  /**
+   * Filled to its ideal before the surplus goes round, because this pane is the
+   * reason there is a surplus (PLI-271).
+   *
+   * Priority is not enough for that: it orders the panes inside each turn of the
+   * round-robin, and every pane that can still grow takes a row every turn. So
+   * folding Portfolio and Routines to lengthen Recent handed Orgs — which has no
+   * ideal, and so can always grow — every other row of what the fold freed, and
+   * Orgs rows cost half again what Recent rows do. The reader pressed a button on
+   * Recent and watched Orgs grow, which is PLI-271's bug report.
+   *
+   * Only for a pane whose ideal is finite, and only worth setting when something
+   * else was folded to pay for it: an unconditional `first` is a pane that eats
+   * a short rail before anyone else is served their minimum — which the floors
+   * below already prevent, but it would still take every spare row on a tall one.
+   */
+  first?: boolean;
 }
 
 /** One pane, as the page actually drew it. */
@@ -157,6 +176,13 @@ export function distributeRailHeight(
     // folded however much height turns up.
     if (empty(spec.key) || spec.collapsed) continue;
     afford(spec.key, floor(spec));
+  }
+  // The pane the height was freed for, filled first and in one go — see `first`.
+  // After its minimum, so a rail too short for everyone's floor still spends
+  // itself the way it would have.
+  for (const spec of order) {
+    if (!spec.first || rows[spec.key] === 0) continue;
+    while (rows[spec.key] < ideal(spec) && afford(spec.key, rows[spec.key] + 1));
   }
   // The surplus, one row at a time, cycling the panes in priority order and
   // skipping any already at its ideal. Orgs is cheap and first, so it is whole

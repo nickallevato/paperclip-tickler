@@ -15,6 +15,8 @@ import {
   normalizeQueueAgeFilter,
   queueItemAge,
   recentTasks,
+  TICKLER_RECENT_EXPANDED_LIMIT,
+  TICKLER_RECENT_EXPANDED_WINDOW_MS,
   upcomingProjects,
   type TicklerProjectEntry,
   normalizeQueueGrouping,
@@ -346,6 +348,55 @@ describe("recentTasks", () => {
     );
     expect(items.map((item) => item.issue?.id)).toEqual(["i-live-1", "i-live-2", "i-idle-0", "i-idle-1"]);
     expect(hidden).toBe(6);
+  });
+
+  // PLI-271: what expanding Recent actually buys. The pane's height was never
+  // what bounded this list on a real board — the day-long window was. A board
+  // with four tasks in a day has twenty-eight in a week, so the expanded window
+  // is where the extra rows come from; the cap is what bounds it after that.
+  it("reaches back a week when it is given the expanded window", () => {
+    const hours = (n: number) => new Date(NOW - n * 60 * 60_000).toISOString();
+    const entries = [
+      {
+        company: company("c1"),
+        runs: [] as never,
+        issues: [
+          { id: "i-today", title: "Today", updatedAt: hours(3) },
+          { id: "i-yesterday", title: "Just inside a day", updatedAt: hours(23) },
+          { id: "i-3d", title: "Three days back", updatedAt: hours(72) },
+          { id: "i-6d", title: "Six days back", updatedAt: hours(144) },
+          { id: "i-8d", title: "Eight days back", updatedAt: hours(192) },
+        ] as never,
+      },
+    ];
+    const day = recentTasks(entries, { nowMs: NOW });
+    expect(day.items.map((item) => item.issue?.id)).toEqual(["i-today", "i-yesterday"]);
+    // Nothing is held back: the rows outside the window are not rows this list
+    // has, so the header must not offer to scroll to them.
+    expect(day.hidden).toBe(0);
+
+    const week = recentTasks(entries, {
+      nowMs: NOW,
+      limit: TICKLER_RECENT_EXPANDED_LIMIT,
+      windowMs: TICKLER_RECENT_EXPANDED_WINDOW_MS,
+    });
+    expect(week.items.map((item) => item.issue?.id)).toEqual(["i-today", "i-yesterday", "i-3d", "i-6d"]);
+    expect(week.hidden).toBe(0);
+  });
+
+  it("holds the expanded list to twice the cap", () => {
+    const issues = Array.from({ length: 40 }, (_, index) => ({
+      id: `i-${index}`,
+      title: `Touched ${index} hours ago`,
+      updatedAt: new Date(NOW - (index + 1) * 60 * 60_000).toISOString(),
+    }));
+    const week = recentTasks([{ company: company("c1"), runs: [] as never, issues: issues as never }], {
+      nowMs: NOW,
+      limit: TICKLER_RECENT_EXPANDED_LIMIT,
+      windowMs: TICKLER_RECENT_EXPANDED_WINDOW_MS,
+    });
+    expect(week.items).toHaveLength(TICKLER_RECENT_EXPANDED_LIMIT);
+    expect(week.hidden).toBe(40 - TICKLER_RECENT_EXPANDED_LIMIT);
   });
 
   it("keeps a run with no ticket, and skips hidden and archived tasks", () => {
