@@ -79,13 +79,16 @@ const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
  * the bug report said. Filled first, Recent gets the rows it asked for and Orgs
  * takes what is left over, which on a tall screen is still most of what it had.
  *
- * Orgs expanded (PLI-273) is the same trade from the other side, and folds all
- * three of the panes below it rather than two: Orgs sits at the top of the rail,
- * so Recent is simply the largest of its neighbours and leaving it standing is
- * leaving most of the height on the table. Nothing changes about Orgs' own spec —
- * its ideal is already every org you watch, so there is no number to double, and
- * being the one pane in the rail still drawing rows it takes every row the fold
- * freed without needing `first` to say so.
+ * Orgs expanded (PLI-273) is the same trade from the other side, and folds the
+ * same two panes. It first folded Recent as well, on the grounds that Recent is
+ * the largest of Orgs' neighbours — but Recent is a pane people read alongside
+ * the org list, not instead of it, and the first thing asked of the release was
+ * to have it back. So Recent stands at its ordinary ideal and shares the freed
+ * height round-robin with Orgs: it is served to its twelve rows, and Orgs takes
+ * every row after that. Nothing changes about Orgs' own spec — its ideal is
+ * already every org you watch, so there is no number to double, and no `first`,
+ * which would starve Recent to its floor of three on any rail short of the
+ * whole org list.
  */
 function railPanes(expanded: TicklerExpandedPane): readonly TicklerRailPaneSpec[] {
   const orgs = expanded === "orgs";
@@ -98,7 +101,6 @@ function railPanes(expanded: TicklerExpandedPane): readonly TicklerRailPaneSpec[
       idealRows: recent ? RECENT_EXPANDED_ROWS : RECENT_ROWS,
       priority: 1,
       first: recent,
-      collapsed: orgs,
     },
     { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: orgs || recent },
     { key: "routines", minRows: 2, idealRows: 4, priority: 2, collapsed: orgs || recent },
@@ -340,7 +342,7 @@ export function TicklerBoardPage({
    *
    * Zero on a rail tall enough for every org, which is the common case on a
    * desktop — and zero narrow, where the pane is unbudgeted and draws all of
-   * them anyway, so the button is disabled down there rather than folding three
+   * them anyway, so the button is disabled down there rather than folding two
    * panes for a list that is already complete.
    */
   const orgsExpandable = (orgsBudget?.hidden ?? 0) > 0;
@@ -430,12 +432,12 @@ export function TicklerBoardPage({
                 expandable={orgsExpandable}
                 title={
                   orgsExpanded
-                    ? "Collapse Orgs — Recent, Portfolio and Routines get their rows back"
+                    ? "Collapse Orgs — Portfolio and Routines get their rows back"
                     : orgsExpandable
                       ? // Not "every org": on a short rail the fold buys rows
                         // rather than the whole list, and the "+N more" beside
                         // this is what says whether any are still held back.
-                        "Expand Orgs — as many orgs as the rail can hold, with Recent, Portfolio and Routines folded to their headers to make room"
+                        "Expand Orgs — as many orgs as the rail can hold, with Portfolio and Routines folded to their headers to make room"
                       : "Nothing to expand — every org you watch is already listed"
                 }
                 onExpanded={(next) => onExpandedPane(next ? "orgs" : null)}
@@ -485,10 +487,7 @@ export function TicklerBoardPage({
           <TicklerRecentTasks
             tasks={recentExpanded ? recentDeep : recent}
             nowMs={nowMs}
-            // Folded when Orgs is expanded, for the same reason Portfolio and
-            // Routines are below: wide the spec has already said so, and narrow
-            // there is no budget to say it in.
-            budget={orgsExpanded ? collapsedPane(budget.recent) : budget.recent}
+            budget={budget.recent}
             narrow={narrow}
             expanded={recentExpanded}
             expandable={recentExpandable}

@@ -49,16 +49,16 @@ export function TicklerRailMore({ budget }: { budget?: TicklerRailPaneBudget }) 
  * The toggle that gives a pane the rail, in that pane's header.
  *
  * Shared by Recent (PLI-271) and Orgs (PLI-273) because it has to look and
- * behave like one control: the two are alternatives — expanding either folds the
- * other panes, and only one can be expanded at a time — so a reader comparing
+ * behave like one control: the two are alternatives — expanding either folds
+ * Portfolio and Routines, and only one can be expanded at a time — so a reader comparing
  * the two headers is comparing the same button, and a second hand-rolled copy is
  * how two buttons that mean the same thing end up a pixel and an aria attribute
  * apart.
  *
  * What is *not* shared is the `title`, which is the only part that carries any
- * information: what the press costs differs per pane — Recent trades two panes
- * for a week of history, Orgs trades three for the rest of the list — and that
- * is exactly the part the icon cannot say.
+ * information: what the press buys differs per pane — Recent trades two panes
+ * for a week of history, Orgs trades the same two for the rest of the list —
+ * and that is exactly the part the icon cannot say.
  *
  * Last in its header by convention, past the counts and the "+N more" those
  * counts qualify: it is the one thing in a pane header that changes the page

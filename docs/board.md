@@ -138,8 +138,8 @@ Like the pane order and the age chips, the state is saved **in that browser
 only**.
 
 **One pane at a time.** Orgs has the same toggle (below), and expanding either
-collapses the other — the height one of them is asking for is the height the
-other would have to be folded to free.
+collapses the other — both are asking for the same height, the height Portfolio
+and Routines were folded to free.
 
 ## Expanding Orgs
 
@@ -147,26 +147,29 @@ Orgs is the pane that has no cap of its own — it wants every org you watch —
 on a rail that cannot seat them all it says how many it is holding back
 (`+15 more`) and scrolls to the rest. Last in its header is the same toggle
 Recent has, and it does the same thing from the other side: pressing it folds
-**Recent**, **Portfolio** and **Routines** to a single header line each, and the
-height goes to the org list.
+**Portfolio** and **Routines** to a single header line each, digests kept, and
+the height they free goes to the org list.
 
-Three panes rather than Recent's two, because Orgs sits at the top of the rail —
-Recent is simply the largest of its neighbours, and leaving it standing leaves
-most of the height on the table. All three keep their digests, so nothing they
-were telling you goes away.
+**Recent stays standing.** It is read alongside the org list, not instead of it,
+so it keeps its ordinary size — up to twelve rows — and shares the freed height
+with Orgs: Recent is topped up to its twelve, and every row after that is Orgs'.
+(0.12.0 folded Recent as well; 0.12.1 put it back.)
 
 Measured on the demo board with 22 orgs:
 
 | | 1512×790 laptop | 2560×1400 desktop |
 | --- | --- | --- |
-| collapsed | 4 orgs, `+18 more` | 7 orgs, `+15 more` |
-| expanded | 8 orgs, `+14 more` | 21 orgs, `+1 more` |
+| collapsed | 4 orgs, 3 recent | 7 orgs, 8 recent |
+| expanded | 5 orgs, 4 recent | 13 orgs, 12 recent |
+
+The laptop gains little because Portfolio is already folded to its header there
+by the rail's own arithmetic, so only Routines has height left to give.
 
 So it is "as many as the rail can hold", not always the whole list — the
 `+N more` beside the button is what says whether any are still held back.
 
 When every org already fits, there is nothing under the fold and the toggle is
-**disabled** rather than folding three panes for a list that is already
+**disabled** rather than folding two panes for a list that is already
 complete. That is also the answer one column, where the pane draws all of them
 anyway.
 
