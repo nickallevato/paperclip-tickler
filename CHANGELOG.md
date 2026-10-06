@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.11.1
+
 - **Expanding Recent now actually lengthens Recent.** Two things were wrong with
   the toggle 0.11.0 shipped, and on a quiet board they cancelled out to "the
   expand only expands the orgs list".
