@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.12.1
+
 - **Expanding Orgs no longer folds Recent.** 0.12.0's Orgs toggle folded Recent,
   Portfolio and Routines; now it folds only Portfolio and Routines, the same two
   Recent's toggle folds. Recent keeps its ordinary size, up to twelve rows, and
