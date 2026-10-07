@@ -71,7 +71,7 @@ function TaskDetail({ company, issue, run, phase, atMs, nowMs }: TicklerRecentTa
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           {issue?.identifier && <span className={cn("mr-1.5 font-mono text-muted-foreground", MICRO)}>{issue.identifier}</span>}
-          <span className="font-medium">{issue?.title ?? run?.triggerDetail ?? run?.invocationSource}</span>
+          <span className="font-medium">{issue?.title ?? (run ? runNarration(run, undefined) : "")}</span>
         </div>
         {issue?.status && <IssueStatusBadge status={issue.status} />}
       </div>
@@ -118,8 +118,8 @@ function ageMinutes(atMs: number, nowMs: number): number {
 function TaskRow({ task, nowMs }: { task: TicklerRecentTask; nowMs: number }) {
   const { company, issue, run, phase, atMs } = task;
   // A run without a ticket has no title to show, so it borrows the narration
-  // the strip used to put on its pill.
-  const title = issue?.title ?? (run ? runNarration(run, undefined) : "");
+  // the strip used to put on its pill, under the name of the agent it is for.
+  const title = issue?.title ?? (run ? `${run.agentName} · ${runNarration(run, undefined)}` : "");
   const body = (
     <span className="flex min-w-0 items-center gap-2">
       <CompanyPatternIcon
@@ -141,7 +141,13 @@ function TaskRow({ task, nowMs }: { task: TicklerRecentTask; nowMs: number }) {
       {issue?.identifier && <span className={cn("shrink-0 font-mono font-medium text-foreground", MICRO)}>{issue.identifier}</span>}
       <span className={cn("min-w-0 flex-1 truncate", phase === null && "text-muted-foreground")}>{title}</span>
       <span className={cn("shrink-0 tabular-nums text-muted-foreground", MICRO)}>
-        {run ? elapsedLabel(run, nowMs) : formatAgeMinutes(ageMinutes(atMs, nowMs))}
+        {/* Said in words as well as by the ring: a queued row's clock is how
+            long it has waited, not how long anyone has worked on it. */}
+        {run
+          ? phase === "queued"
+            ? `queued ${elapsedLabel(run, nowMs)}`
+            : elapsedLabel(run, nowMs)
+          : formatAgeMinutes(ageMinutes(atMs, nowMs))}
       </span>
     </span>
   );
@@ -169,6 +175,39 @@ function TaskRow({ task, nowMs }: { task: TicklerRecentTask; nowMs: number }) {
         </HoverCardTrigger>
         <HoverCardContent data-recent-detail>
           <TaskDetail {...task} nowMs={nowMs} />
+        </HoverCardContent>
+      </HoverCard>
+    </li>
+  );
+}
+
+/**
+ * The queued runs past the first few, as one line: how many, and on hover
+ * which tickets they are. See `TICKLER_RECENT_QUEUED_ROWS` in lib/queue.
+ */
+function QueuedOverflowRow({ tasks, nowMs }: { tasks: TicklerRecentTask[]; nowMs: number }) {
+  return (
+    <li data-recent-task="queued-overflow" data-rail-row className={cn("flex items-center", BODY)}>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <span className="flex min-w-0 flex-1 items-center gap-2 py-1 text-muted-foreground">
+            <span className="size-4 shrink-0" aria-hidden />
+            <QueuedDot />
+            <span className="min-w-0 flex-1 truncate">{tasks.length} more queued</span>
+          </span>
+        </HoverCardTrigger>
+        <HoverCardContent data-recent-detail>
+          <ul className={cn("flex max-h-72 flex-col gap-1 overflow-y-auto", BODY)}>
+            {tasks.map(({ key, company, issue, run }) => (
+              <li key={key} className="flex min-w-0 items-baseline gap-1.5">
+                {issue?.identifier && <span className={cn("shrink-0 font-mono text-muted-foreground", MICRO)}>{issue.identifier}</span>}
+                <span className="min-w-0 flex-1 truncate">
+                  {issue?.title ?? (run ? `${run.agentName} · ${runNarration(run, undefined)}` : company.name)}
+                </span>
+                {run && <span className={cn("shrink-0 tabular-nums text-muted-foreground", MICRO)}>{elapsedLabel(run, nowMs)}</span>}
+              </li>
+            ))}
+          </ul>
         </HoverCardContent>
       </HoverCard>
     </li>
@@ -226,12 +265,19 @@ export function TicklerRecentTasks({
   onExpanded?: (expanded: boolean) => void;
   className?: string;
 }) {
-  const { items, working, queued, hidden } = tasks;
+  const { items, working, queued, hidden, queuedOverflow } = tasks;
   const box = railPaneBox(budget);
+  // The folded queue sits where it would have been: after the last live row,
+  // before the tasks merely touched.
+  const liveCount = items.filter((task) => task.phase !== null).length;
+  const entries: Array<TicklerRecentTask | "queued-overflow"> =
+    queuedOverflow.length > 0
+      ? [...items.slice(0, liveCount), "queued-overflow", ...items.slice(liveCount)]
+      : items;
   // Wide, this is every row and the model's own count — the budget scrolls the
   // pane rather than dropping rows, and that path is untouched.
-  const rows = narrow ? items.slice(0, expanded ? NARROW_ROWS_EXPANDED : NARROW_ROWS) : items;
-  const withheld = hidden + (items.length - rows.length);
+  const rows = narrow ? entries.slice(0, expanded ? NARROW_ROWS_EXPANDED : NARROW_ROWS) : entries;
+  const withheld = hidden + entries.slice(rows.length).filter((entry) => entry !== "queued-overflow").length;
   return (
     <section
       data-tickler-recent
@@ -299,9 +345,13 @@ export function TicklerRecentTasks({
           {/* Scrolled inside the height the rail budgeted, so this pane's height
               does not track the size of the fleet. */}
           <ul className="min-h-0 flex-1 overflow-y-auto px-3">
-            {rows.map((task) => (
-              <TaskRow key={task.key} task={task} nowMs={nowMs} />
-            ))}
+            {rows.map((entry) =>
+              entry === "queued-overflow" ? (
+                <QueuedOverflowRow key={entry} tasks={queuedOverflow} nowMs={nowMs} />
+              ) : (
+                <TaskRow key={entry.key} task={entry} nowMs={nowMs} />
+              ),
+            )}
           </ul>
           {withheld > 0 && (
             <p data-rail-foot className={cn("shrink-0 border-t px-3 py-1.5 text-muted-foreground", MICRO)}>

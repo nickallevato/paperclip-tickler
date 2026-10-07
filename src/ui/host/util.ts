@@ -49,6 +49,7 @@ export const queryKeys = {
     liveRuns: (companyId: string) => ["tickler", "live-runs", companyId] as const,
     projects: (companyId: string) => ["tickler", "projects", companyId] as const,
     issues: (companyId: string) => ["tickler", "issues", companyId] as const,
+    runIssue: (companyId: string, issueId: string) => ["tickler", "run-issue", companyId, issueId] as const,
     approvals: (companyId: string) => ["tickler", "approvals", companyId] as const,
     agents: (companyId: string) => ["tickler", "agents", companyId] as const,
     company: (companyId: string) => ["tickler", "company", companyId] as const,

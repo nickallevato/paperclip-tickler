@@ -54,14 +54,19 @@ export function isStartingUp(run: LiveRunForIssue): boolean {
 
 /**
  * A run's live narration, most human first: what the agent last said, then
- * a readable status line, then its planned next step, then the ticket title.
+ * a readable status line, then its planned next step, then the ticket title,
+ * and last of all what the run is doing.
+ *
+ * Never `triggerDetail` or `invocationSource`. Those are the wake's plumbing —
+ * "system", "assignment", "automation" — and nearly every run carries the same
+ * one, so a fleet of queued runs whose tickets had not loaded read as a column
+ * of "system" (PLI-274).
  */
 export function runNarration(run: LiveRunForIssue, issue: Issue | undefined): string {
   return (
     humanStatus(run) ||
     run.nextAction?.trim() ||
     issue?.title ||
-    run.triggerDetail ||
-    run.invocationSource
+    (runPhase(run) === "queued" ? "Waiting for a runner" : "Working")
   );
 }

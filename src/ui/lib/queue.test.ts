@@ -351,6 +351,39 @@ describe("recentTasks", () => {
     expect(hidden).toBe(6);
   });
 
+  // PLI-274: a routine fan-out queued seventeen runs on one board, every one a
+  // live row, and they took every row the list had.
+  it("folds queued rows past the first few and leaves the rest of the list its room", () => {
+    const queuedRuns = Array.from({ length: 6 }, (_, index) => ({
+      id: `r-q${index}`,
+      status: "queued",
+      startedAt: null,
+      createdAt: at(index + 1),
+      issueId: `i-q${index}`,
+    }));
+    const { items, working, queued, queuedOverflow } = recentTasks(
+      [
+        {
+          company: company("c1"),
+          runs: [
+            { id: "r-w", status: "running", startedAt: at(20), createdAt: at(21), issueId: "i-w" },
+            ...queuedRuns,
+          ] as never,
+          issues: [
+            { id: "i-w", title: "Being worked", updatedAt: at(20) },
+            ...queuedRuns.map((run) => ({ id: run.issueId, title: `Queued ${run.id}`, updatedAt: at(400) })),
+            { id: "i-touched", title: "Touched", updatedAt: at(4) },
+          ] as never,
+        },
+      ],
+      { nowMs: NOW, limit: 6 },
+    );
+    expect(items.map((item) => item.issue?.id)).toEqual(["i-w", "i-q0", "i-q1", "i-q2", "i-touched"]);
+    expect(queuedOverflow.map((item) => item.issue?.id)).toEqual(["i-q3", "i-q4", "i-q5"]);
+    // The counts still describe every live run, folded or not.
+    expect([working, queued]).toEqual([1, 6]);
+  });
+
   // PLI-271: what expanding Recent actually buys. The pane's height was never
   // what bounded this list on a real board — the day-long window was. A board
   // with four tasks in a day has twenty-eight in a week, so the expanded window

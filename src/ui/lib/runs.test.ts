@@ -22,7 +22,9 @@ describe("run helpers", () => {
     expect(runNarration(run({ currentStatusMessage: "Drafting section 2" }), issue)).toBe("Drafting section 2");
     expect(runNarration(run({ nextAction: "Summarise findings" }), issue)).toBe("Summarise findings");
     expect(runNarration(run({}), issue)).toBe("Write the report");
-    expect(runNarration(run({}), undefined)).toBe("trigger");
+    // The wake's plumbing ("system", "assignment") is never the narration.
+    expect(runNarration(run({}), undefined)).toBe("Working");
+    expect(runNarration(run({ status: "queued" }), undefined)).toBe("Waiting for a runner");
   });
 
   it("labels elapsed time from startedAt and knows which statuses are active", () => {

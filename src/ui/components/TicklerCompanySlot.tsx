@@ -100,7 +100,7 @@ export function TicklerCompanySlot({
     stats.running, stats.active, stats.tasksOpen, stats.tasksInProgress, stats.tasksBlocked, stats.needs,
     stats.critical, stats.failed, stats.oldestMins, stats.tokens, stats.unavailable,
     stats.routines, stats.routinesOverdue, stats.routinesFailing,
-    data.summary, data.liveRuns, data.projects, data.issues, data.agents, data.approvals,
+    data.summary, data.liveRuns, data.projects, data.issues, data.runIssues, data.agents, data.approvals,
     data.attention, data.routines, data.needsBreakdown, data.tokens,
     data.isLoading, data.unavailable, data.staleSince,
   ]);
