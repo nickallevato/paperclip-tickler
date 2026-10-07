@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.12.2
+
 - **Queued runs in Recent are named, and a long queue no longer fills the
   pane.** On a big company most queued rows read **system**: Tickler loads 200
   tickets per company, the host returns them priority first, and a ticket

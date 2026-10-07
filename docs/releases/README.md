@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.12.2](0.12.2.md)
 - [0.12.1](0.12.1.md) — expanding Orgs no longer folds Recent.
 - [0.12.0](0.12.0.md) — orgs can be expanded too, and the three panes under it fold to pay for it.
 - [0.11.1](0.11.1.md) — expanding Recent now actually lengthens Recent.
