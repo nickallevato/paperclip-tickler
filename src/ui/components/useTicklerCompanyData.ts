@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Agent,
   Approval,
@@ -34,6 +34,14 @@ export interface TicklerCompanyData {
   liveRuns: LiveRunForIssue[];
   projects: Project[];
   issues: Issue[];
+  /**
+   * Tickets a live run is on that `issues` does not hold. That list is 200
+   * tickets in the host's default order — priority first — so on a large
+   * company a run queued on a medium or low ticket had no ticket to name it by,
+   * and its row fell back to the wake's "system" (PLI-274).
+   * Kept apart from `issues` so the counts built from that list are unchanged.
+   */
+  runIssues: Issue[];
   agents: Agent[];
   approvals: Approval[];
   attention: AttentionFeed | undefined;
@@ -125,6 +133,34 @@ export function useTicklerCompanyData(companyId: string): TicklerCompanyData {
     queryFn: () => issuesApi.list(companyId, { limit: 200 }),
     ...SLOW,
   });
+  // Fetched one by one because the list endpoint has no id filter. Only the
+  // misses are fetched, so on a company under 200 tickets this is nothing, and
+  // a ticket that is already cached is not fetched again until it goes stale.
+  const missingRunIssueIds = useMemo(() => {
+    if (!issues.data || !liveRuns.data) return [];
+    const known = new Set(issues.data.map((issue) => issue.id));
+    const ids = new Set<string>();
+    for (const run of liveRuns.data) {
+      if (run.issueId && !known.has(run.issueId)) ids.add(run.issueId);
+    }
+    return [...ids].sort();
+  }, [issues.data, liveRuns.data]);
+  const runIssueQueries = useQueries({
+    queries: missingRunIssueIds.map((issueId) => ({
+      queryKey: queryKeys.tickler.runIssue(companyId, issueId),
+      queryFn: () => issuesApi.get(issueId),
+      ...SLOW,
+      retry: false,
+    })),
+  });
+  // `useQueries` hands back a fresh array every render; keyed on when each
+  // ticket last landed so the list keeps its identity between polls.
+  const runIssuesStamp = runIssueQueries.map((query) => query.dataUpdatedAt).join(",");
+  const runIssues = useMemo(
+    () => runIssueQueries.flatMap((query) => (query.data ? [query.data] : [])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [runIssuesStamp],
+  );
   const agents = useQuery({
     queryKey: queryKeys.tickler.agents(companyId),
     queryFn: () => agentsApi.list(companyId),
@@ -193,6 +229,7 @@ export function useTicklerCompanyData(companyId: string): TicklerCompanyData {
     liveRuns: liveRuns.data ?? NO_RUNS,
     projects: projects.data ?? NO_PROJECTS,
     issues: issues.data ?? NO_ISSUES,
+    runIssues: runIssues.length > 0 ? runIssues : NO_ISSUES,
     agents: agents.data ?? NO_AGENTS,
     approvals: approvals.data ?? NO_APPROVALS,
     attention: attentionData,

@@ -147,7 +147,7 @@ export function TicklerCompanyLine({
           <TicklerCapacityStrip
             agents={data.agents}
             liveRuns={data.liveRuns}
-            issues={data.issues}
+            issues={data.runIssues.length > 0 ? [...data.issues, ...data.runIssues] : data.issues}
             company={company}
             nowMs={nowMs}
             unavailable={data.unavailable}

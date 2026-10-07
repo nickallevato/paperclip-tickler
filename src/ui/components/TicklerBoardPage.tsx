@@ -264,7 +264,12 @@ export function TicklerBoardPage({
     [visibleItems, nowMs],
   );
   const recentEntries = useMemo(
-    () => loaded.map(({ company, data }) => ({ company, runs: data.liveRuns, issues: data.issues })),
+    () =>
+      loaded.map(({ company, data }) => ({
+        company,
+        runs: data.liveRuns,
+        issues: data.runIssues.length > 0 ? [...data.issues, ...data.runIssues] : data.issues,
+      })),
     [loaded],
   );
   const recent = useMemo(

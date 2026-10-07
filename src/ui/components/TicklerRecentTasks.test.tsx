@@ -43,6 +43,7 @@ const tasks = (items: TicklerRecentTask[], counts: Partial<TicklerRecentTasksMod
   working: items.filter((item) => item.phase === "working").length,
   queued: items.filter((item) => item.phase === "queued").length,
   hidden: 0,
+  queuedOverflow: [],
   ...counts,
 });
 
@@ -291,6 +292,67 @@ describe("TicklerRecentTasks", () => {
     expect(container.querySelectorAll("li")).toHaveLength(0);
     expect(container.querySelector("[data-rail-expand='recent']")).not.toBeNull();
     act(() => root.unmount());
+  });
+
+  // PLI-274: queued rows read as a column of "system" when their tickets had
+  // not loaded, and as an elapsed clock indistinguishable from work when they had.
+  it("names a queued row by its ticket and says it is queued", () => {
+    render(
+      tasks([
+        {
+          key: "c1:i-1",
+          company,
+          issue: issue({ status: "backlog" }),
+          run: run({ status: "queued", startedAt: null, createdAt: at(6), triggerDetail: "system" }),
+          phase: "queued",
+          atMs: NOW - 6 * 60_000,
+        },
+      ]),
+    );
+    const row = container.querySelector('[data-recent-task="queued"]')!;
+    expect(row.textContent).toContain("ACM-7");
+    expect(row.textContent).toContain("Write the quarterly report");
+    expect(row.textContent).toContain("queued 6m");
+    expect(row.textContent).not.toContain("system");
+  });
+
+  it("never shows the wake's plumbing when a queued run's ticket has not loaded", () => {
+    render(
+      tasks([
+        {
+          key: "r1",
+          company,
+          issue: undefined,
+          run: run({ status: "queued", startedAt: null, createdAt: at(6), triggerDetail: "system", currentStatusMessage: null }),
+          phase: "queued",
+          atMs: NOW - 6 * 60_000,
+        },
+      ]),
+    );
+    const row = container.querySelector('[data-recent-task="queued"]')!;
+    expect(row.textContent).toContain("Quill · Waiting for a runner");
+    expect(row.textContent).not.toContain("system");
+  });
+
+  it("folds the queue's overflow into one counted line after the live rows", () => {
+    const queuedTask = (index: number) => ({
+      key: `c1:i-q${index}`,
+      company,
+      issue: issue({ id: `i-q${index}`, identifier: `ACM-${100 + index}` }),
+      run: run({ id: `rq${index}`, status: "queued", startedAt: null, issueId: `i-q${index}` }),
+      phase: "queued" as const,
+      atMs: NOW - index * 60_000,
+    });
+    const idle = { key: "c1:i-idle", company, issue: issue({ id: "i-idle", identifier: "ACM-1" }), run: undefined, phase: null, atMs: NOW - 60_000 };
+    render(
+      tasks([queuedTask(0), idle], {
+        queued: 5,
+        queuedOverflow: [queuedTask(1), queuedTask(2), queuedTask(3), queuedTask(4)],
+      }),
+    );
+    const rows = [...container.querySelectorAll("[data-recent-task]")].map((row) => row.getAttribute("data-recent-task"));
+    expect(rows).toEqual(["queued", "queued-overflow", "idle"]);
+    expect(container.querySelector('[data-recent-task="queued-overflow"]')!.textContent).toContain("4 more queued");
   });
 
   it("says so when nothing is running and nothing has moved", () => {

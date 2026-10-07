@@ -708,7 +708,26 @@ export interface TicklerRecentTasks {
   queued: number;
   /** Tasks touched inside the window that the cap left out. */
   hidden: number;
+  /**
+   * Queued tasks past {@link TICKLER_RECENT_QUEUED_ROWS}, longest-waiting
+   * last. Not in `items`: the pane folds them into one line that names them on
+   * hover, so `queued` still agrees with what the pane accounts for.
+   */
+  queuedOverflow: TicklerRecentTask[];
 }
+
+/**
+ * Queued rows the list draws before it folds the rest into one line.
+ *
+ * Live rows used to be uncapped on the reasoning that a run in flight is the
+ * row most worth seeing. That holds for working runs, which are bounded by the
+ * fleet. It does not hold for queued ones: a routine fan-out queues a run on
+ * every ticket it touches, and seventeen of them took every row the list had —
+ * nothing touched today was left, and the queue the board exists for sat under
+ * a pane of identical waiting rows (PLI-274). A queued run has no agent on it,
+ * so past the first few it is a count, not a row.
+ */
+export const TICKLER_RECENT_QUEUED_ROWS = 3;
 
 /**
  * How many rows the list draws before it starts holding tasks back. Comfortably
@@ -810,9 +829,11 @@ export const TICKLER_RECENT_EXPANDED_WINDOW_MS = 7 * TICKLER_RECENT_WINDOW_MS;
  *      this list answers; the queue answers "what has waited longest".
  *
  * One row per task, not per run: a retry queued behind a run still finishing is
- * one thing happening, and the working attempt is the one worth showing. Live
- * rows are never capped away — the header counts them, and a count that
- * disagreed with the list would be worse than a longer list.
+ * one thing happening, and the working attempt is the one worth showing.
+ * Working rows are never capped away — the header counts them, and a count
+ * that disagreed with the list would be worse than a longer list. Queued rows
+ * past {@link TICKLER_RECENT_QUEUED_ROWS} go to `queuedOverflow`, which the
+ * pane draws as one counted line.
  */
 export function recentTasks(
   entries: ReadonlyArray<{ company: Company; runs: ReadonlyArray<LiveRunForIssue>; issues: ReadonlyArray<Issue> }>,
@@ -842,7 +863,7 @@ export function recentTasks(
   const live = [...byTask.values(), ...unticketed].sort(
     (a, b) => PHASE_ORDER[a.phase] - PHASE_ORDER[b.phase] || b.startedMs - a.startedMs,
   );
-  const items: TicklerRecentTask[] = live.map((entry) => ({
+  const liveTasks: TicklerRecentTask[] = live.map((entry) => ({
     key: entry.run.issueId ? `${entry.company.id}:${entry.run.issueId}` : entry.run.id,
     company: entry.company,
     issue: entry.issue,
@@ -852,7 +873,10 @@ export function recentTasks(
   }));
   const working = live.filter((entry) => entry.phase === "working").length;
   const queued = live.length - working;
-  const liveKeys = new Set(items.map((item) => item.key));
+  const liveKeys = new Set(liveTasks.map((item) => item.key));
+  // Working rows are all kept; queued ones past the first few fold away.
+  const items = liveTasks.slice(0, working + TICKLER_RECENT_QUEUED_ROWS);
+  const queuedOverflow = liveTasks.slice(working + TICKLER_RECENT_QUEUED_ROWS);
 
   // Everything else touched inside the window, newest first. A ticket with a
   // run on it is already a row above, so it is not repeated here.
@@ -874,6 +898,7 @@ export function recentTasks(
     working,
     queued,
     hidden: Math.max(0, idle.length - room),
+    queuedOverflow,
   };
 }
 
