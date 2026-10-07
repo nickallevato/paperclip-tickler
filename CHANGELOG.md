@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.13.1
+
 - **Pinned routines no longer give the left rail a scrollbar.** 0.13.0 drew
   pinned rows on top of the Routines pane without counting them against the
   rail's height, so with a few pins the rail outgrew the window and scrolled.
