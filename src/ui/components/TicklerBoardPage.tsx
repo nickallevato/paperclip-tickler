@@ -50,6 +50,16 @@ import { TicklerSegmented } from "./TicklerSegmented";
 import type { TicklerCompanyData } from "./useTicklerCompanyData";
 import { applyTriageOverrides, useQueueTriage } from "./useQueueTriage";
 import { useRailBudget } from "./useRailBudget";
+import { useTicklerUsage } from "./useTicklerUsage";
+import { TicklerUsageStrip } from "./TicklerUsageStrip";
+import {
+  formatTokensCompact,
+  normalizeUsageWindow,
+  TICKLER_USAGE_WINDOW_STORAGE_KEY,
+  TICKLER_USAGE_WINDOWS,
+  usageSeriesTitle,
+  type TicklerUsageWindow,
+} from "../lib/usage";
 
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
 
@@ -353,6 +363,23 @@ export function TicklerBoardPage({
     [pinnedRoutineIds, routineEntries, routines, nowMs],
   );
   const pinnedRoutineSet = useMemo(() => new Set(pinnedRoutineIds), [pinnedRoutineIds]);
+  // Hourly tokens per org (PLI-278). The window is per browser, like the pins.
+  const [usageWindow, setUsageWindow] = useState<TicklerUsageWindow>(() => {
+    try {
+      return normalizeUsageWindow(localStorage.getItem(TICKLER_USAGE_WINDOW_STORAGE_KEY));
+    } catch {
+      return 24;
+    }
+  });
+  const changeUsageWindow = (next: TicklerUsageWindow) => {
+    setUsageWindow(next);
+    try {
+      localStorage.setItem(TICKLER_USAGE_WINDOW_STORAGE_KEY, String(next));
+    } catch {
+      // storage unavailable (private mode) — the choice still applies for this session
+    }
+  };
+  const usage = useTicklerUsage(companies, usageWindow, nowMs);
   const projectEntries = useMemo(
     () => upcomingProjects(loaded.map(({ company, data }) => ({ company, projects: data.projects, issues: data.issues })), nowMs),
     [loaded, nowMs],
@@ -450,7 +477,7 @@ export function TicklerBoardPage({
             style={orgsBox.style}
             className={cn(
               paneOrderClass(paneOrder, "orgs"),
-              "flex min-h-0 min-w-0 shrink-0 flex-col rounded-lg border bg-card @[64rem]/board:order-none",
+              "@container/orgs flex min-h-0 min-w-0 shrink-0 flex-col rounded-lg border bg-card @[64rem]/board:order-none",
               orgsBox.className,
             )}
           >
@@ -467,6 +494,15 @@ export function TicklerBoardPage({
                 value={sortMode}
                 onChange={onSortMode}
               />
+              {usage.all && (
+                <TicklerSegmented
+                  label="Token window"
+                  options={TICKLER_USAGE_WINDOWS.map((hours) => ({ value: String(hours) as "8" | "24", label: `${hours}h` }))}
+                  value={String(usageWindow) as "8" | "24"}
+                  onChange={(value) => changeUsageWindow(normalizeUsageWindow(value))}
+                  optionProps={(value) => ({ "data-usage-window": value })}
+                />
+              )}
               {/* Demoted, the header is the whole pane, so it carries the count
                   the lines underneath would have carried. */}
               <span className={cn(MICRO, "ml-auto text-muted-foreground")}>
@@ -476,7 +512,10 @@ export function TicklerBoardPage({
                     orgs
                   </>
                 ) : (
-                  "need you"
+                  <>
+                    {usage.all && <span className="hidden @[26rem]/orgs:inline">tokens · </span>}
+                    need you
+                  </>
                 )}
               </span>
               <TicklerRailMore budget={orgsBudget} />
@@ -513,6 +552,8 @@ export function TicklerBoardPage({
                     onTogglePin={() => onTogglePin(company.id)}
                     onFocusNeeds={() => toggleFocus(company.id)}
                     needsFocused={focusCompanyId === company.id}
+                    usage={usage.byCompany[company.id]}
+                    usageScale={usage.scale}
                   />
                 ))}
               </ul>
@@ -527,8 +568,34 @@ export function TicklerBoardPage({
                 )}
               >
                 <span className="uppercase tracking-(--tracking-label)">All</span>
-                <span className="ml-auto">{formatTokensMillions(totals.tokens)}M tokens</span>
-                <span className="w-12 text-right">{Math.round((totals.runs / 7) * 10) / 10}/d</span>
+                {usage.all ? (
+                  // Same columns as the lines above, so the strip and the total
+                  // sit under theirs. The month's figure, cache reads and all,
+                  // is the total's hover.
+                  <>
+                    <span className="normal-case">· last {usageWindow}h</span>
+                    <span className="ml-auto" />
+                    <TicklerUsageStrip
+                      series={usage.all}
+                      // Its own scale: the sum of every org is taller than any
+                      // one of them, and would otherwise run off the top.
+                      scale={Math.max(...usage.all.hours.map((hour) => hour.fresh))}
+                      className="w-20 @[24rem]/orgs:w-[120px]"
+                    />
+                    <span
+                      data-usage-total
+                      className="w-10 text-right"
+                      title={`${usageSeriesTitle(usage.all, usageWindow)}\n${formatTokensMillions(totals.tokens)}M tokens this month, cache reads included`}
+                    >
+                      {formatTokensCompact(usage.all.fresh)}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="ml-auto">{formatTokensMillions(totals.tokens)}M tokens</span>
+                    <span className="w-12 text-right">{Math.round((totals.runs / 7) * 10) / 10}/d</span>
+                  </>
+                )}
                 <span className="w-8 text-right font-semibold text-foreground">{totals.needs}</span>
               </div>
             )}

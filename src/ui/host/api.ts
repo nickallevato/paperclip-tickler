@@ -258,7 +258,25 @@ export const heartbeatsApi = {
     const qs = searchParams.toString();
     return api.get<LiveRunForIssue[]>(`/companies/${companyId}/live-runs${qs ? `?${qs}` : ""}`);
   },
+  /**
+   * Recent runs, newest first, with their `usageJson` — the only per-run token
+   * source the host has. Not `summary=true`: that mode nulls `usageJson`.
+   * There is no time filter, only `limit` (server max 1000), so the caller asks
+   * for enough runs to reach back as far as it needs. Gated on run-telemetry
+   * read, like live-runs.
+   */
+  runsForCompany: (companyId: string, limit: number) =>
+    api.get<HeartbeatRunUsageRow[]>(`/companies/${companyId}/heartbeat-runs?limit=${limit}`),
 };
+
+/** The slice of a heartbeat run the usage chart reads (lib/usage). */
+export interface HeartbeatRunUsageRow {
+  id: string;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  usageJson: Record<string, unknown> | null;
+}
 
 // ---------------------------------------------------------------------------
 // Work timeline

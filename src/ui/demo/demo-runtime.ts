@@ -210,6 +210,7 @@ export function demoRespond(method: string, path: string, body?: unknown): unkno
       switch (rest.join("/")) {
         case "dashboard": return data.dashboard;
         case "live-runs": return data.liveRuns;
+        case "heartbeat-runs": return data.heartbeatRuns;
         case "projects": return data.projects;
         case "issues": return data.issues;
         case "agents": return data.agents;

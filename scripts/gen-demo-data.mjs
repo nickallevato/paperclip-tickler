@@ -658,6 +658,48 @@ function buildRoutines(key, prefix) {
 }
 
 // ---------------------------------------------------------------------------
+// Finished runs with token usage — the Orgs pane's hourly strip (PLI-278)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fresh tokens (thousands) per hour, oldest first, last 24h. Shaped so the
+ * strip has something to say: Acme is steady, Globex had one big spike
+ * overnight, Initech trickles, Umbra has used nothing at all.
+ */
+const USAGE_SHAPE = {
+  acme: [0, 0, 120, 80, 0, 0, 0, 0, 60, 140, 210, 180, 90, 0, 150, 160, 0, 0, 70, 0, 110, 95, 40, 30],
+  globex: [0, 40, 1900, 4200, 900, 0, 0, 0, 0, 0, 0, 80, 0, 0, 0, 0, 120, 0, 0, 0, 0, 0, 60, 0],
+  initech: [0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 25, 0, 0, 0, 0],
+  umbra: [],
+};
+
+function buildUsageRuns(key) {
+  const runs = [];
+  (USAGE_SHAPE[key] ?? []).forEach((thousands, index) => {
+    if (thousands === 0) return;
+    // Mid-hour, so the run lands in the same bar whatever minute the demo opens.
+    const minutesAgo = (23 - index) * 60 + 30;
+    const fresh = thousands * 1_000;
+    runs.push({
+      id: id("usage-run", `${key}-${index}`),
+      createdAt: t(`-${minutesAgo + 6}m`),
+      startedAt: t(`-${minutesAgo + 6}m`),
+      finishedAt: t(`-${minutesAgo}m`),
+      status: "succeeded",
+      usageJson: {
+        inputTokens: Math.round(fresh * 0.82),
+        outputTokens: Math.round(fresh * 0.18),
+        cachedInputTokens: fresh * 15,
+        billingType: "subscription_included",
+        costUsd: 0,
+      },
+    });
+  });
+  // Newest first, like the endpoint.
+  return runs.reverse();
+}
+
+// ---------------------------------------------------------------------------
 // Costs + dashboard + timeline
 // ---------------------------------------------------------------------------
 
@@ -805,6 +847,7 @@ for (const spec of COMPANIES) {
   fixture.byCompany[companyId(key)] = {
     dashboard: buildDashboard(key, spec, agents, issues, approvals),
     liveRuns: buildRuns(key),
+    heartbeatRuns: buildUsageRuns(key),
     projects: buildProjects(key),
     issues,
     agents,
