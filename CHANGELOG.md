@@ -5,6 +5,16 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Pinned routines no longer give the left rail a scrollbar.** 0.13.0 drew
+  pinned rows on top of the Routines pane without counting them against the
+  rail's height, so with a few pins the rail outgrew the window and scrolled.
+  Pinned rows now share the rail's height like every other row, and they come
+  first: Orgs and Recent give up their extra rows to seat them, and on a window
+  too short for both, Portfolio folds to its header before a pin does. Pins that
+  still don't fit fold behind **+N more** in the Routines header and scroll
+  inside the pane, never the rail. A pinned row is also the same height as a
+  broken routine's row now, so the pane never ends in a part row.
+
 ## 0.13.0
 
 - **Pin routines and run them from Tickler.** The **+** in the Routines pane

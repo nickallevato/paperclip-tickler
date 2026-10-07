@@ -108,8 +108,11 @@ function PinnedRow({ item, onUnpin }: { item: TicklerPinnedRoutine; onUnpin?: (r
   };
 
   return (
-    <li data-pinned-routine={run.kind} data-rail-row className="group py-1">
-      <div className={cn("flex items-center gap-2", BODY)}>
+    <li data-pinned-routine={run.kind} className="group">
+      {/* The line is the rail's row, not the `<li>`: an open variable form is
+          not a row's worth of height, and measured as one it would make every
+          row in the rail cost that much. The form scrolls inside the pane. */}
+      <div data-rail-row className={cn("flex items-center gap-2 py-1", BODY)}>
         <Pin className="h-3.5 w-3.5 shrink-0 text-tickler-wait" aria-hidden="true" />
         <CompanyPatternIcon companyName={company.name} logoUrl={company.logoUrl} className="size-4 shrink-0 rounded text-[7px]" />
         <TicklerLink
@@ -194,7 +197,10 @@ function RunButton({
   input: boolean;
   onClick: () => void;
 }) {
-  const base = cn(MICRO, "flex h-6 shrink-0 items-center gap-1 rounded-md border px-1.5 font-medium");
+  // `-my-0.5`: the button is taller than a line of text, and without it a
+  // pinned row is 4px taller than a broken routine's — the rail budgets every
+  // row in a pane at the tallest one, so the pane would end in a part row.
+  const base = cn(MICRO, "-my-0.5 flex h-6 shrink-0 items-center gap-1 rounded-md border px-1.5 font-medium");
   if (run.kind === "armed") {
     return (
       <button
@@ -291,8 +297,15 @@ function VariableForm({
 }) {
   const [draft, setDraft] = useState<RoutineVariableDraft>(() => initialVariableDraft(variables));
   const missing = missingRequiredVariables(variables, draft);
+  const formRef = useRef<HTMLFormElement>(null);
+  // The form opens inside a pane of fixed height, so it may open below the
+  // pane's fold; bring it into the pane's view rather than leave it there.
+  useEffect(() => {
+    formRef.current?.scrollIntoView?.({ block: "nearest" });
+  }, []);
   return (
     <form
+      ref={formRef}
       data-pinned-routine-form
       className="mt-1 ml-[1.375rem] flex flex-col gap-1.5 rounded-md border bg-muted/40 p-2"
       onSubmit={(e) => {

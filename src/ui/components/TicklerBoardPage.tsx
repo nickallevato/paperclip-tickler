@@ -67,7 +67,10 @@ const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
  * Routines share the second rank, equal to each other, and take what is left:
  * Portfolio capped at eleven, since comparing bars past that is not something
  * anyone does at a glance, and Routines content with four — on a good day it
- * has no exceptions at all and the header alone is the answer.
+ * has no exceptions at all and the header alone is the answer. Pinned routines
+ * (PLI-275) come on top of those four, and are reserved: served straight after
+ * Routines' own floor, so Orgs and Recent keep their three rows each, and it is
+ * their surplus that shrinks to seat the pins, and Portfolio that folds first.
  *
  * Ranks tie by the order written here, which is the only thing this order does.
  *
@@ -97,9 +100,18 @@ const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
  * which would starve Recent to its floor of three on any rail short of the
  * whole org list.
  */
-function railPanes(expanded: TicklerExpandedPane): readonly TicklerRailPaneSpec[] {
+function railPanes(expanded: TicklerExpandedPane, pinnedRoutines: number): readonly TicklerRailPaneSpec[] {
   const orgs = expanded === "orgs";
   const recent = expanded === "recent";
+  const portfolio: TicklerRailPaneSpec = { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: orgs || recent };
+  const routines: TicklerRailPaneSpec = {
+    key: "routines",
+    minRows: 2,
+    idealRows: pinnedRoutines + ROUTINE_EXCEPTION_ROWS,
+    priority: 2,
+    collapsed: orgs || recent,
+    reserveRows: pinnedRoutines,
+  };
   return [
     { key: "orgs", minRows: 3, idealRows: Infinity, priority: 1 },
     {
@@ -109,10 +121,15 @@ function railPanes(expanded: TicklerExpandedPane): readonly TicklerRailPaneSpec[
       priority: 1,
       first: recent,
     },
-    { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: orgs || recent },
-    { key: "routines", minRows: 2, idealRows: 4, priority: 2, collapsed: orgs || recent },
+    // Pinned routines are rows the reader asked for by name (PLI-275), so with
+    // any pinned Routines is served ahead of Portfolio: on a window too short
+    // for both, Portfolio is the one folded to its header.
+    ...(pinnedRoutines > 0 ? [routines, portfolio] : [portfolio, routines]),
   ];
 }
+
+/** Broken routines worth a row each; past this the header's count is the answer. */
+const ROUTINE_EXCEPTION_ROWS = 4;
 
 /** Past twelve, Recent is a log rather than a glance — unless asked for. */
 const RECENT_ROWS = 12;
@@ -360,7 +377,7 @@ export function TicklerBoardPage({
   // one thing that changes the specs: the hook keys its measurement callback on
   // their identity, so a fresh array per render would re-measure the rail every
   // render instead of every layout change.
-  const specs = useMemo(() => railPanes(expandedPane), [expandedPane]);
+  const specs = useMemo(() => railPanes(expandedPane, pinnedRoutines.length), [expandedPane, pinnedRoutines.length]);
   const { railRef, budget, narrow } = useRailBudget(specs);
   // `narrow` is measured rather than guessed, and is false for the one pre-paint
   // frame before the first measurement, so the header's Pane order button is
