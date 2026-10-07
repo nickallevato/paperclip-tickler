@@ -87,4 +87,12 @@ describe("host/api under demo mode", () => {
     await expect(companiesApi.list()).rejects.toThrow(/must not reach the network/);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it("runs a routine into a new demo issue the row can link", async () => {
+    const routine = FIXTURE.byCompany[COMPANY].routines[0];
+    const run = await routinesApi.run(routine.id);
+    expect(run).toMatchObject({ routineId: routine.id, status: "issue_created" });
+    await expect(issuesApi.get(run.linkedIssueId!)).resolves.toMatchObject({ title: routine.title });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

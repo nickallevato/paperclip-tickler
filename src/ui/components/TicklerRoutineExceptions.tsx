@@ -6,6 +6,9 @@ import { routineExceptions, type TicklerRoutineExceptionKind, type TicklerUpcomi
 import type { TicklerRailPaneBudget } from "../lib/rail-budget";
 import { TicklerLink } from "./TicklerLink";
 import { railPaneBox, TicklerRailMore } from "./TicklerRailPane";
+import type { ReactNode } from "react";
+import type { TicklerPinnedRoutineEntry } from "../lib/pinned-routines";
+import { TicklerPinnedRoutineRows, type TicklerPinnedRoutine } from "./TicklerPinnedRoutines";
 
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
 const BODY = "text-[length:var(--tickler-fs-body,14px)] leading-[1.45]";
@@ -30,19 +33,36 @@ const KIND_TONE: Record<TicklerRoutineExceptionKind, string> = {
  * the two that had actually failed the same weight as the eighteen that were
  * fine. Here a healthy routine is a number in the header and nothing else, so
  * the block is two lines tall on a good day and empty on a perfect one.
+ *
+ * The exception is the ones the user pinned: those sit on top, healthy or not,
+ * each with a Run button (see `TicklerPinnedRoutines`).
  */
 export function TicklerRoutineExceptions({
   items,
   nowMs,
   budget,
   className,
+  pinned = [],
+  onUnpin,
+  picker,
 }: {
   items: TicklerUpcomingRoutine[];
+  /** Pinned routines (PLI-275), drawn above the exceptions whatever their health. */
+  pinned?: TicklerPinnedRoutineEntry[];
+  onUnpin?: (routineId: string) => void;
+  /** The "+" that opens the pin picker. */
+  picker?: ReactNode;
   nowMs: number;
   budget?: TicklerRailPaneBudget;
   className?: string;
 }) {
-  const { items: exceptions, healthy } = routineExceptions(items, nowMs);
+  const all = routineExceptions(items, nowMs);
+  // A pinned routine that is also broken says so in its pinned row, once.
+  const pinnedIds = new Set(pinned.map((p) => p.routine.id));
+  const exceptions = all.items.filter((e) => !pinnedIds.has(e.item.routine.id));
+  const healthy = all.healthy;
+  const alerts = new Map(all.items.map((e) => [e.item.routine.id, e.kind] as const));
+  const pinnedRows: TicklerPinnedRoutine[] = pinned.map((p) => ({ ...p, alert: alerts.get(p.routine.id) }));
   const box = railPaneBox(budget);
 
   return (
@@ -61,18 +81,27 @@ export function TicklerRoutineExceptions({
       >
         <CalendarClock className="h-3 w-3" />
         Routines
-        {exceptions.length > 0 && (
+        {all.items.length > 0 && (
           <span className="ml-auto font-normal normal-case tracking-normal tabular-nums text-tickler-alarm">
-            {exceptions.length} need{exceptions.length === 1 ? "s" : ""} attention
+            {all.items.length} need{all.items.length === 1 ? "s" : ""} attention
           </span>
         )}
         <TicklerRailMore budget={budget} />
+        {picker && <span className={all.items.length > 0 ? "" : "ml-auto"}>{picker}</span>}
       </h3>
+      {pinnedRows.length > 0 && (
+        <div className={cn("shrink-0", exceptions.length > 0 && "border-b pb-1 mb-1")}>
+          <TicklerPinnedRoutineRows items={pinnedRows} onUnpin={onUnpin} />
+        </div>
+      )}
 
       {exceptions.length === 0 ? (
+        // Every broken routine is pinned, and already says so above.
+        all.items.length > 0 ? null : (
         <p data-rail-foot className={cn("px-3 pb-3 italic text-muted-foreground", MICRO)}>
           {healthy === 0 ? "nothing scheduled" : `all ${healthy} routines healthy`}
         </p>
+        )
       ) : budget?.demoted ? (
         // The header's own "3 need attention" is the digest, and it is a link
         // away from the routines themselves; two clipped rows would not be.

@@ -26,6 +26,7 @@ import type {
   IssueThreadInteraction,
   Project,
   RoutineListItem,
+  RoutineRun,
   SidebarBadges,
   SidebarOrderPreference,
   WorkTimelineResult,
@@ -145,6 +146,17 @@ export const costsApi = {
  */
 export const routinesApi = {
   list: (companyId: string) => api.get<RoutineListItem[]>(`/companies/${companyId}/routines`),
+  /**
+   * Run now — the same call the host's Routines page makes (ui/src/api/routines.ts),
+   * logged as `routine.run_triggered`. Project, assignee and workspace come
+   * from the routine's defaults. The host 403s anyone who cannot assign tasks
+   * in the routine's company.
+   */
+  run: (routineId: string, variables?: Record<string, string | number | boolean>) =>
+    api.post<RoutineRun>(`/routines/${encodeURIComponent(routineId)}/run`, {
+      source: "manual",
+      ...(variables && Object.keys(variables).length > 0 ? { variables } : {}),
+    }),
 };
 
 export const sidebarBadgesApi = {

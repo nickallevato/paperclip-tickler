@@ -74,6 +74,9 @@ and the agent's own last sentence about it.
 
 <img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/recent-hover.png" alt="A Recent row's hover card: the ticket, its status, and what the agent last said" width="408">
 
+**Routines** — only the broken ones, plus any you pin with the **+**: a pinned routine stays on
+top with a ▶ to run it now (press twice; it links the issue the run made).
+
 **In the header** — the gear names the version you are on and offers the newer one in place
 when npm has it, and holds the [token thresholds](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#token-thresholds) that colour the spend
 figures; the bell turns on browser [alerts](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#alerts) for the edges worth knowing about (an org going

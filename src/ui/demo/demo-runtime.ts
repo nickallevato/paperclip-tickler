@@ -335,5 +335,45 @@ export function demoRespond(method: string, path: string, body?: unknown): unkno
     }
   }
 
+  // Run now: the run creates an issue, as it would live, so the row can link
+  // it. The routine's own company owns both.
+  if (verb === "POST" && parts[0] === "routines" && parts[1] && parts[2] === "run") {
+    for (const [companyId, data] of Object.entries(fixture.byCompany)) {
+      const routine = data.routines.find((candidate) => candidate.id === parts[1]);
+      if (!routine) continue;
+      const prefix = fixture.companies.find((c) => c.id === companyId)?.issuePrefix ?? "DEMO";
+      const now = new Date().toISOString();
+      const issue = asWire<Issue>({
+        ...data.issues[0],
+        id: `demo-issue-${Date.now()}`,
+        identifier: `${prefix}-${data.issues.length + 1}`,
+        title: routine.title,
+        description: null,
+        status: "todo" as const,
+        createdAt: now,
+        updatedAt: now,
+      });
+      data.issues = [issue, ...data.issues];
+      return {
+        id: `demo-routine-run-${Date.now()}`,
+        companyId,
+        routineId: routine.id,
+        triggerId: null,
+        source: "manual",
+        status: "issue_created",
+        triggeredAt: now,
+        idempotencyKey: null,
+        triggerPayload: (body as { variables?: Record<string, unknown> } | undefined)?.variables ?? null,
+        dispatchFingerprint: null,
+        linkedIssueId: issue.id,
+        coalescedIntoRunId: null,
+        failureReason: null,
+        completedAt: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+    }
+  }
+
   throw new DemoRouteError(path);
 }
