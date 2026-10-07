@@ -15,6 +15,7 @@ import {
 import { TicklerCompanyLine } from "./TicklerCompanyLine";
 import { useTicklerAlerts } from "./useTicklerAlerts";
 import { useTicklerCompanyData, type TicklerCompanyData } from "./useTicklerCompanyData";
+import type { TicklerUsageSeries } from "../lib/usage";
 
 /**
  * One slot per company: owns the single useTicklerCompanyData(company.id) poll,
@@ -34,6 +35,8 @@ export function TicklerCompanySlot({
   pinned = false,
   onFocusNeeds,
   needsFocused = false,
+  usage,
+  usageScale,
 }: {
   company: Company;
   onActionable?: (companyId: string, actionable: TicklerActionable) => void;
@@ -51,6 +54,9 @@ export function TicklerCompanySlot({
   /** Filter the queue rail to this company (toggle). */
   onFocusNeeds?: () => void;
   needsFocused?: boolean;
+  /** This org's hourly tokens and the scale shared across orgs (PLI-278). */
+  usage?: TicklerUsageSeries;
+  usageScale?: number;
 }) {
   const data = useTicklerCompanyData(company.id);
   const ceoOverdue = deriveCeoHeartbeat(selectCeo(data.agents), Date.now()).state === "overdue";
@@ -118,6 +124,8 @@ export function TicklerCompanySlot({
       onFocusNeeds={onFocusNeeds}
       needsFocused={needsFocused}
       nowMs={Date.now()}
+      usage={usage}
+      usageScale={usageScale}
     />
   );
 }

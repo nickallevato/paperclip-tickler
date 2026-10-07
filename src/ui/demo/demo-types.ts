@@ -12,7 +12,7 @@ import type {
   SidebarBadges,
   WorkTimelineResult,
 } from "@paperclipai/shared";
-import type { LiveRunForIssue } from "../host/api";
+import type { HeartbeatRunUsageRow, LiveRunForIssue } from "../host/api";
 
 /**
  * Everything one company's panes need, mirroring the eight queries in
@@ -23,6 +23,8 @@ import type { LiveRunForIssue } from "../host/api";
 export interface DemoCompanyData {
   dashboard: DashboardSummary;
   liveRuns: LiveRunForIssue[];
+  /** Finished runs with token usage, for the Orgs pane's hourly strip. */
+  heartbeatRuns: HeartbeatRunUsageRow[];
   projects: Project[];
   issues: Issue[];
   agents: Agent[];

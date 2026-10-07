@@ -5,6 +5,16 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **See which org used tokens, hour by hour.** Each line in Orgs now has a
+  small bar chart of that org's tokens, one bar per hour, and its total, with an
+  **8h | 24h** switch in the header. All lines share one scale, so the org that
+  used the most stands out, and any hour with usage gets a visible bar, so a
+  quiet org is never drawn as idle. It counts fresh tokens (input and output);
+  cache reads are in each bar's tooltip. The bottom line adds every org
+  together. The chart takes the place of runs per day on the line; runs per day
+  is still in the detail card, and comes back on the line if the chart can't
+  read run telemetry.
+
 ## 0.13.1
 
 - **Pinned routines no longer give the left rail a scrollbar.** 0.13.0 drew

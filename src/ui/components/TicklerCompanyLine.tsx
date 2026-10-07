@@ -17,6 +17,8 @@ import { TicklerCapacityStrip } from "./TicklerCapacityStrip";
 import { TicklerCeoStrip } from "./TicklerCeoStrip";
 import { TicklerLink } from "./TicklerLink";
 import { TicklerSparkline } from "./TicklerSparkline";
+import { TicklerUsageStrip } from "./TicklerUsageStrip";
+import { formatTokensCompact, usageSeriesTitle, type TicklerUsageSeries } from "../lib/usage";
 import type { TicklerCompanyData } from "./useTicklerCompanyData";
 
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
@@ -49,6 +51,8 @@ export function TicklerCompanyLine({
   onFocusNeeds,
   needsFocused = false,
   nowMs,
+  usage,
+  usageScale = 0,
 }: {
   company: Company;
   data: TicklerCompanyData;
@@ -64,6 +68,13 @@ export function TicklerCompanyLine({
   onFocusNeeds?: () => void;
   needsFocused?: boolean;
   nowMs: number;
+  /**
+   * Fresh tokens by the hour (PLI-278). Undefined while loading or when run
+   * telemetry is not readable, and then the line keeps its runs-per-day column.
+   */
+  usage?: TicklerUsageSeries;
+  /** The busiest hour of any org, so every line's bars compare. */
+  usageScale?: number;
 }) {
   const loading = data.isLoading && !data.unavailable && data.summary === undefined;
   const blind = loading || data.unavailable;
@@ -155,12 +166,28 @@ export function TicklerCompanyLine({
           />
         </div>
       </div>
-      <span
-        className={cn(MICRO, "w-12 shrink-0 text-right tabular-nums text-muted-foreground", throughput.total === 0 && ZERO)}
-        title={`${throughput.total} run${throughput.total === 1 ? "" : "s"} over 7 days`}
-      >
-        {blind ? "—" : `${throughput.perDay}/d`}
-      </span>
+      {usage ? (
+        // Usage takes the runs-per-day column: which org burned tokens today
+        // is the question runs/d was standing in for, and runs/d is still in
+        // the hover card on the name.
+        <>
+          <TicklerUsageStrip series={usage} scale={usageScale} className="w-20 @[24rem]/orgs:w-[120px]" />
+          <span
+            data-usage-total
+            className={cn(MICRO, "w-10 shrink-0 text-right tabular-nums text-muted-foreground", usage.fresh === 0 && ZERO)}
+            title={usageSeriesTitle(usage, usage.hours.length)}
+          >
+            {formatTokensCompact(usage.fresh)}
+          </span>
+        </>
+      ) : (
+        <span
+          className={cn(MICRO, "w-12 shrink-0 text-right tabular-nums text-muted-foreground", throughput.total === 0 && ZERO)}
+          title={`${throughput.total} run${throughput.total === 1 ? "" : "s"} over 7 days`}
+        >
+          {blind ? "—" : `${throughput.perDay}/d`}
+        </span>
+      )}
       <span
         data-needs-count
         className={cn(

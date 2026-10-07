@@ -318,6 +318,204 @@
           "lastEventAt": null
         }
       ],
+      "heartbeatRuns": [
+        {
+          "id": "demo-usage-run-acme-23",
+          "createdAt": "@t:-36m",
+          "startedAt": "@t:-36m",
+          "finishedAt": "@t:-30m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 24600,
+            "outputTokens": 5400,
+            "cachedInputTokens": 450000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-22",
+          "createdAt": "@t:-96m",
+          "startedAt": "@t:-96m",
+          "finishedAt": "@t:-90m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 32800,
+            "outputTokens": 7200,
+            "cachedInputTokens": 600000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-21",
+          "createdAt": "@t:-156m",
+          "startedAt": "@t:-156m",
+          "finishedAt": "@t:-150m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 77900,
+            "outputTokens": 17100,
+            "cachedInputTokens": 1425000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-20",
+          "createdAt": "@t:-216m",
+          "startedAt": "@t:-216m",
+          "finishedAt": "@t:-210m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 90200,
+            "outputTokens": 19800,
+            "cachedInputTokens": 1650000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-18",
+          "createdAt": "@t:-336m",
+          "startedAt": "@t:-336m",
+          "finishedAt": "@t:-330m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 57400,
+            "outputTokens": 12600,
+            "cachedInputTokens": 1050000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-15",
+          "createdAt": "@t:-516m",
+          "startedAt": "@t:-516m",
+          "finishedAt": "@t:-510m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 131200,
+            "outputTokens": 28800,
+            "cachedInputTokens": 2400000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-14",
+          "createdAt": "@t:-576m",
+          "startedAt": "@t:-576m",
+          "finishedAt": "@t:-570m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 123000,
+            "outputTokens": 27000,
+            "cachedInputTokens": 2250000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-12",
+          "createdAt": "@t:-696m",
+          "startedAt": "@t:-696m",
+          "finishedAt": "@t:-690m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 73800,
+            "outputTokens": 16200,
+            "cachedInputTokens": 1350000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-11",
+          "createdAt": "@t:-756m",
+          "startedAt": "@t:-756m",
+          "finishedAt": "@t:-750m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 147600,
+            "outputTokens": 32400,
+            "cachedInputTokens": 2700000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-10",
+          "createdAt": "@t:-816m",
+          "startedAt": "@t:-816m",
+          "finishedAt": "@t:-810m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 172200,
+            "outputTokens": 37800,
+            "cachedInputTokens": 3150000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-9",
+          "createdAt": "@t:-876m",
+          "startedAt": "@t:-876m",
+          "finishedAt": "@t:-870m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 114800,
+            "outputTokens": 25200,
+            "cachedInputTokens": 2100000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-8",
+          "createdAt": "@t:-936m",
+          "startedAt": "@t:-936m",
+          "finishedAt": "@t:-930m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 49200,
+            "outputTokens": 10800,
+            "cachedInputTokens": 900000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-3",
+          "createdAt": "@t:-1236m",
+          "startedAt": "@t:-1236m",
+          "finishedAt": "@t:-1230m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 65600,
+            "outputTokens": 14400,
+            "cachedInputTokens": 1200000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-acme-2",
+          "createdAt": "@t:-1296m",
+          "startedAt": "@t:-1296m",
+          "finishedAt": "@t:-1290m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 98400,
+            "outputTokens": 21600,
+            "cachedInputTokens": 1800000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        }
+      ],
       "projects": [
         {
           "id": "demo-project-acme-0",
@@ -1591,6 +1789,106 @@
           "lastEventAt": "@t:-4m"
         }
       ],
+      "heartbeatRuns": [
+        {
+          "id": "demo-usage-run-globex-22",
+          "createdAt": "@t:-96m",
+          "startedAt": "@t:-96m",
+          "finishedAt": "@t:-90m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 49200,
+            "outputTokens": 10800,
+            "cachedInputTokens": 900000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-globex-16",
+          "createdAt": "@t:-456m",
+          "startedAt": "@t:-456m",
+          "finishedAt": "@t:-450m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 98400,
+            "outputTokens": 21600,
+            "cachedInputTokens": 1800000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-globex-11",
+          "createdAt": "@t:-756m",
+          "startedAt": "@t:-756m",
+          "finishedAt": "@t:-750m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 65600,
+            "outputTokens": 14400,
+            "cachedInputTokens": 1200000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-globex-4",
+          "createdAt": "@t:-1176m",
+          "startedAt": "@t:-1176m",
+          "finishedAt": "@t:-1170m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 738000,
+            "outputTokens": 162000,
+            "cachedInputTokens": 13500000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-globex-3",
+          "createdAt": "@t:-1236m",
+          "startedAt": "@t:-1236m",
+          "finishedAt": "@t:-1230m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 3444000,
+            "outputTokens": 756000,
+            "cachedInputTokens": 63000000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-globex-2",
+          "createdAt": "@t:-1296m",
+          "startedAt": "@t:-1296m",
+          "finishedAt": "@t:-1290m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 1558000,
+            "outputTokens": 342000,
+            "cachedInputTokens": 28500000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-globex-1",
+          "createdAt": "@t:-1356m",
+          "startedAt": "@t:-1356m",
+          "finishedAt": "@t:-1350m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 32800,
+            "outputTokens": 7200,
+            "cachedInputTokens": 600000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        }
+      ],
       "projects": [
         {
           "id": "demo-project-globex-0",
@@ -2743,6 +3041,50 @@
           "currentToolName": null,
           "lastAssistantSnippet": null,
           "lastEventAt": "@t:-38m"
+        }
+      ],
+      "heartbeatRuns": [
+        {
+          "id": "demo-usage-run-initech-19",
+          "createdAt": "@t:-276m",
+          "startedAt": "@t:-276m",
+          "finishedAt": "@t:-270m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 20500,
+            "outputTokens": 4500,
+            "cachedInputTokens": 375000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-initech-12",
+          "createdAt": "@t:-696m",
+          "startedAt": "@t:-696m",
+          "finishedAt": "@t:-690m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 36900,
+            "outputTokens": 8100,
+            "cachedInputTokens": 675000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
+        },
+        {
+          "id": "demo-usage-run-initech-6",
+          "createdAt": "@t:-1056m",
+          "startedAt": "@t:-1056m",
+          "finishedAt": "@t:-1050m",
+          "status": "succeeded",
+          "usageJson": {
+            "inputTokens": 24600,
+            "outputTokens": 5400,
+            "cachedInputTokens": 450000,
+            "billingType": "subscription_included",
+            "costUsd": 0
+          }
         }
       ],
       "projects": [
@@ -3975,6 +4317,7 @@
         ]
       },
       "liveRuns": [],
+      "heartbeatRuns": [],
       "projects": [
         {
           "id": "demo-project-umbra-0",

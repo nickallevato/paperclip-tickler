@@ -46,6 +46,10 @@ export const queryKeys = {
     tokens: (companyId: string, from: string, to: string) =>
       ["tickler", "tokens", companyId, from, to] as const,
     activity: (companyId: string) => ["tickler", "activity", companyId] as const,
+    // Outside the "tickler" root on purpose: a company's `invalidate()` refetches
+    // everything under it after every approve or snooze, and this is the
+    // heaviest payload on the page for a figure no click changes.
+    usage: (companyId: string) => ["tickler-usage", companyId] as const,
     liveRuns: (companyId: string) => ["tickler", "live-runs", companyId] as const,
     projects: (companyId: string) => ["tickler", "projects", companyId] as const,
     issues: (companyId: string) => ["tickler", "issues", companyId] as const,

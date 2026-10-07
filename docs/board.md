@@ -32,16 +32,36 @@ nowhere on the server to keep a preference of its own.
 
 ## Orgs
 
-Each company is one line: its name, its capacity strip (see below), runs per
-day, and **Need you** — pending approvals + undismissed attention items + an
-overdue CEO heartbeat, the same number the queue is showing for that company.
+Each company is one line: its name, its capacity strip (see below), its token
+usage by the hour, and **Need you** — pending approvals + undismissed attention
+items + an overdue CEO heartbeat, the same number the queue is showing for that
+company.
+
+### Token usage
+
+The small bar chart on each line is that org's tokens, one bar per hour, with
+the current hour on the right and the total beside it. **8h | 24h** in the
+header picks the window; the choice is kept in that browser.
+
+- It counts **fresh tokens only**: input plus output. Cache reads run about
+  fifteen times larger and would flatten every other bar, so they are left out
+  of the bars and shown in each bar's tooltip instead.
+- Every line uses **one scale**, set by the busiest hour of any org, so a tall
+  bar means a lot compared with the other orgs. Any hour that used tokens at all
+  still gets a visible bar, so a quiet org is never drawn as idle.
+- A run's tokens land in the hour it **finished**. A run still going has not
+  reported any yet.
+- It reads each org's recent runs, which needs permission to read run
+  telemetry. Without it, the line shows runs per day instead, as it did
+  before. Runs per day is also always in the detail card.
 
 Need you is the only coloured figure: **ochre** when something waits, **brick**
 when any of it is critical or high. A zero is dimmer than muted text, so a
 clear company reads as an empty field.
 
-The last line is the cross-company total: tokens this month, runs per day, and
-everything that needs you.
+The last line is the cross-company total: every org's hourly tokens added
+together, and everything that needs you. Its total's tooltip has this month's
+tokens, cache reads included.
 
 ### The detail card
 
