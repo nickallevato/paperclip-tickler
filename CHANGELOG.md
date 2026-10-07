@@ -5,6 +5,18 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Pin routines and run them from Tickler.** The **+** in the Routines pane
+  header lists every routine across your orgs; pin one and it stays at the top
+  of the pane whatever its health, with when it next runs (or last ran) and a
+  ▶ button. The first press arms it (**Run?**), a second press within three
+  seconds starts it, and the row then links the issue the run created. A
+  routine with a required variable that has no default opens a small form in
+  the row instead. Runs use the routine's default project, assignee and
+  workspace — the same call as **Run now** on Paperclip's Routines page, so
+  the host's permissions apply. A pinned routine that is also failing, blocked
+  or overdue says so in its pinned row rather than twice. Pins are per
+  browser, like watched orgs.
+
 ## 0.12.2
 
 - **Queued runs in Recent are named, and a long queue no longer fills the

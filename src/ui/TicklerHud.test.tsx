@@ -21,7 +21,7 @@ vi.mock("./host/shims", async (importOriginal) => ({
 }));
 vi.mock("./components/TicklerCompanySlot", () => ({
   TicklerCompanySlot: ({ company }: { company: { name: string } }) => (
-    <tr data-slot>
+    <tr data-company-slot>
       <td>row:{company.name}</td>
     </tr>
   ),
@@ -83,7 +83,7 @@ describe("TicklerHud", () => {
   it("renders the board: one slot row per active company and the queue rail, with no header totals", async () => {
     const root = render();
     await vi.waitFor(() => {
-      expect(container.querySelectorAll("[data-slot]").length).toBe(2);
+      expect(container.querySelectorAll("[data-company-slot]").length).toBe(2);
     });
     expect(container.textContent).toContain("row:Acme");
     expect(container.textContent).toContain("row:Globex");

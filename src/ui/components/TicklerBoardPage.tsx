@@ -31,6 +31,12 @@ import {
   type TicklerQueueGrouping,
   type TicklerQueueSort,
 } from "../lib/queue";
+import {
+  normalizePinnedRoutineIds,
+  pinnedRoutineEntries,
+  TICKLER_PINNED_ROUTINES_STORAGE_KEY,
+  togglePinnedRoutineId,
+} from "../lib/pinned-routines";
 import { paneOrderClass, type TicklerPaneKey } from "../lib/pane-order";
 import { collapsedPane, type TicklerRailPaneSpec } from "../lib/rail-budget";
 import { TicklerCompanySlot } from "./TicklerCompanySlot";
@@ -39,7 +45,7 @@ import { railPaneBox, TicklerRailExpand, TicklerRailMore } from "./TicklerRailPa
 import { TicklerQueue } from "./TicklerQueue";
 import { TicklerRecentTasks } from "./TicklerRecentTasks";
 import { TicklerRoutineExceptions } from "./TicklerRoutineExceptions";
-import { TicklerPinRoutinePicker, type TicklerPinnedRoutine } from "./TicklerPinnedRoutines";
+import { TicklerPinRoutinePicker } from "./TicklerPinnedRoutines";
 import { TicklerSegmented } from "./TicklerSegmented";
 import type { TicklerCompanyData } from "./useTicklerCompanyData";
 import { applyTriageOverrides, useQueueTriage } from "./useQueueTriage";
@@ -304,41 +310,32 @@ export function TicklerBoardPage({
     () => upcomingRoutines(loaded.map(({ company, data }) => ({ company, routines: data.routines })), nowMs),
     [loaded, nowMs],
   );
-  // PLI-275 prototype: pins live in localStorage beside the other board prefs.
+  // Pinned routines (PLI-275): per browser, like the watched orgs.
   const [pinnedRoutineIds, setPinnedRoutineIds] = useState<string[]>(() => {
     try {
-      return JSON.parse(localStorage.getItem("tickler.pinnedRoutines") ?? "[]");
+      return normalizePinnedRoutineIds(localStorage.getItem(TICKLER_PINNED_ROUTINES_STORAGE_KEY));
     } catch {
       return [];
     }
   });
-  const togglePinnedRoutine = (id: string) =>
-    setPinnedRoutineIds((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      localStorage.setItem("tickler.pinnedRoutines", JSON.stringify(next));
-      return next;
-    });
+  const togglePinnedRoutine = (id: string) => {
+    const next = togglePinnedRoutineId(pinnedRoutineIds, id);
+    setPinnedRoutineIds(next);
+    try {
+      localStorage.setItem(TICKLER_PINNED_ROUTINES_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // storage unavailable (private mode) — the pin still applies for this session
+    }
+  };
   const routineEntries = useMemo(
     () => loaded.map(({ company, data }) => ({ company, routines: data.routines })),
     [loaded],
   );
-  const pinnedRoutines = useMemo<TicklerPinnedRoutine[]>(
-    () =>
-      pinnedRoutineIds.flatMap((id) => {
-        for (const { company, routines: list } of routineEntries) {
-          const routine = list.find((r) => r.id === id);
-          if (routine) {
-            const next = routines.find((u) => u.routine.id === id);
-            const when = next
-              ? `next ${new Date(next.atMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-              : "manual";
-            return [{ company, routine, when, run: { kind: "idle" } as const }];
-          }
-        }
-        return [];
-      }),
-    [pinnedRoutineIds, routineEntries, routines],
+  const pinnedRoutines = useMemo(
+    () => pinnedRoutineEntries(pinnedRoutineIds, routineEntries, routines, nowMs),
+    [pinnedRoutineIds, routineEntries, routines, nowMs],
   );
+  const pinnedRoutineSet = useMemo(() => new Set(pinnedRoutineIds), [pinnedRoutineIds]);
   const projectEntries = useMemo(
     () => upcomingProjects(loaded.map(({ company, data }) => ({ company, projects: data.projects, issues: data.issues })), nowMs),
     [loaded, nowMs],
@@ -555,12 +552,9 @@ export function TicklerBoardPage({
           <TicklerRoutineExceptions
             items={routines}
             pinned={pinnedRoutines}
+            onUnpin={togglePinnedRoutine}
             picker={
-              <TicklerPinRoutinePicker
-                entries={routineEntries}
-                pinned={new Set(pinnedRoutineIds)}
-                onToggle={togglePinnedRoutine}
-              />
+              <TicklerPinRoutinePicker entries={routineEntries} pinned={pinnedRoutineSet} onToggle={togglePinnedRoutine} />
             }
             nowMs={nowMs}
             budget={expandedPane ? collapsedPane(budget.routines) : budget.routines}

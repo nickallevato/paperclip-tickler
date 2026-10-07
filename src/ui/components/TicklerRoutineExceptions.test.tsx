@@ -4,6 +4,8 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import { upcomingRoutines, type TicklerUpcomingRoutine } from "../lib/queue";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { TicklerPinnedRoutineEntry } from "../lib/pinned-routines";
 import { TicklerRoutineExceptions } from "./TicklerRoutineExceptions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,13 +36,15 @@ const upcoming = (id: string, title: string, nextRunAt: string, lastRun?: Record
     NOW,
   )[0];
 
-function render(items: TicklerUpcomingRoutine[]): HTMLDivElement {
+function render(items: TicklerUpcomingRoutine[], pinned: TicklerPinnedRoutineEntry[] = []): HTMLDivElement {
   const container = document.createElement("div");
   document.body.appendChild(container);
   act(() => {
     createRoot(container).render(
       <MemoryRouter>
-        <TicklerRoutineExceptions items={items} nowMs={NOW} />
+        <QueryClientProvider client={new QueryClient()}>
+          <TicklerRoutineExceptions items={items} nowMs={NOW} pinned={pinned} />
+        </QueryClientProvider>
       </MemoryRouter>,
     );
   });
@@ -92,5 +96,23 @@ describe("TicklerRoutineExceptions", () => {
 
   it("distinguishes having no routines from having no broken ones", () => {
     expect(render([]).textContent).toContain("nothing scheduled");
+  });
+
+  it("puts a pinned routine on top, and a broken pinned one there only once", () => {
+    const ok = upcoming("ok", "Nightly backup", inMins(60), { status: "completed" });
+    const bad = upcoming("bad", "Upgrade check", inMins(90), { status: "failed" });
+    const container = render([ok, bad], [
+      { company, routine: ok.routine, when: "next 13:00" },
+      { company, routine: bad.routine, when: "next 13:30" },
+    ]);
+    const pinnedRows = [...container.querySelectorAll("[data-tickler-pinned-routines] li")];
+    expect(pinnedRows.map((r) => r.textContent)).toEqual([
+      expect.stringContaining("Nightly backup"),
+      expect.stringContaining("Upgrade check"),
+    ]);
+    expect(pinnedRows[1].textContent).toContain("failed");
+    expect(container.querySelectorAll("[data-routine-exception]")).toHaveLength(0);
+    expect(container.querySelector("h3")?.textContent).toContain("1 needs attention");
+    expect(container.textContent).not.toContain("routines healthy");
   });
 });
