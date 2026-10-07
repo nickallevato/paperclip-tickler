@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.13.0
+
 - **Pin routines and run them from Tickler.** The **+** in the Routines pane
   header lists every routine across your orgs; pin one and it stays at the top
   of the pane whatever its health, with when it next runs (or last ran) and a
