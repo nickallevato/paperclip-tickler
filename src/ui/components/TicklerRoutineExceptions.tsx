@@ -6,6 +6,8 @@ import { routineExceptions, type TicklerRoutineExceptionKind, type TicklerUpcomi
 import type { TicklerRailPaneBudget } from "../lib/rail-budget";
 import { TicklerLink } from "./TicklerLink";
 import { railPaneBox, TicklerRailMore } from "./TicklerRailPane";
+import type { ReactNode } from "react";
+import { TicklerPinnedRoutineRows, type TicklerPinnedRoutine } from "./TicklerPinnedRoutines";
 
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
 const BODY = "text-[length:var(--tickler-fs-body,14px)] leading-[1.45]";
@@ -36,13 +38,25 @@ export function TicklerRoutineExceptions({
   nowMs,
   budget,
   className,
+  pinned = [],
+  picker,
 }: {
   items: TicklerUpcomingRoutine[];
+  /** PLI-275 prototype: pinned routines, drawn above the exceptions. */
+  pinned?: TicklerPinnedRoutine[];
+  /** PLI-275 prototype: the "+" that opens the pin picker. */
+  picker?: ReactNode;
   nowMs: number;
   budget?: TicklerRailPaneBudget;
   className?: string;
 }) {
-  const { items: exceptions, healthy } = routineExceptions(items, nowMs);
+  const all = routineExceptions(items, nowMs);
+  // A pinned routine that is also broken says so in its pinned row, once.
+  const pinnedIds = new Set(pinned.map((p) => p.routine.id));
+  const exceptions = all.items.filter((e) => !pinnedIds.has(e.item.routine.id));
+  const healthy = all.healthy;
+  const alerts = new Map(all.items.map((e) => [e.item.routine.id, e.kind] as const));
+  pinned = pinned.map((p) => (alerts.has(p.routine.id) ? { ...p, alert: alerts.get(p.routine.id) } : p));
   const box = railPaneBox(budget);
 
   return (
@@ -61,13 +75,19 @@ export function TicklerRoutineExceptions({
       >
         <CalendarClock className="h-3 w-3" />
         Routines
-        {exceptions.length > 0 && (
+        {all.items.length > 0 && (
           <span className="ml-auto font-normal normal-case tracking-normal tabular-nums text-tickler-alarm">
-            {exceptions.length} need{exceptions.length === 1 ? "s" : ""} attention
+            {all.items.length} need{all.items.length === 1 ? "s" : ""} attention
           </span>
         )}
         <TicklerRailMore budget={budget} />
+        {picker && <span className={all.items.length > 0 ? "" : "ml-auto"}>{picker}</span>}
       </h3>
+      {pinned.length > 0 && (
+        <div className={cn("shrink-0", exceptions.length > 0 && "border-b pb-1 mb-1")}>
+          <TicklerPinnedRoutineRows items={pinned} />
+        </div>
+      )}
 
       {exceptions.length === 0 ? (
         <p data-rail-foot className={cn("px-3 pb-3 italic text-muted-foreground", MICRO)}>
