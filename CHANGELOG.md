@@ -5,6 +5,20 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Queued runs in Recent are named, and a long queue no longer fills the
+  pane.** On a big company most queued rows read **system**: Tickler loads 200
+  tickets per company, the host returns them priority first, and a ticket
+  outside those 200 left the row with nothing but the run's trigger label. On
+  a 1,509-ticket board that was 13 of the 17 tickets with live runs. Tickler
+  now fetches those tickets by id, so every queued row shows its key and title
+  — and so does the hover on the agent capacity strip. A ticket that still
+  cannot be found reads `<agent> · Waiting for a runner`, never **system**.
+
+  Queued rows now say `queued 6m` rather than a bare `6m`. Working rows all
+  show, as before; queued rows stop at three, and the rest fold into one
+  `12 more queued` line that lists their tickets on hover, so the tasks you
+  touched today keep their rows. The header still counts every queued run.
+
 ## 0.12.1
 
 - **Expanding Orgs no longer folds Recent.** 0.12.0's Orgs toggle folded Recent,
