@@ -70,6 +70,22 @@ export interface TicklerRailPaneSpec {
    * below already prevent, but it would still take every spare row on a tall one.
    */
   first?: boolean;
+  /**
+   * Rows served straight after the pane's own floor, as far as the rail can pay
+   * for them — the rows the reader asked for by name. So they come ahead of the
+   * floor of every pane served after this one, and of everyone's surplus.
+   *
+   * Routines' pinned rows (PLI-275). They were first drawn outside the budget,
+   * so a pinned routine was height nobody had paid for and the rail scrolled.
+   * Inside it, but only as ordinary rows, they would wait their turn in the
+   * round-robin behind Orgs and Recent and fold behind "+N more" on any screen
+   * short of tall. Reserved, the panes served before this one keep their
+   * floors, and the rest shave their surplus or fold to their headers.
+   *
+   * Unlike a floor, a reserve the rail cannot pay for in full is paid in part:
+   * the pane is never demoted for asking.
+   */
+  reserveRows?: number;
 }
 
 /** One pane, as the page actually drew it. */
@@ -175,7 +191,11 @@ export function distributeRailHeight(
     // anything still at zero rows, so it stays a header for as long as it is
     // folded however much height turns up.
     if (empty(spec.key) || spec.collapsed) continue;
-    afford(spec.key, floor(spec));
+    if (!afford(spec.key, floor(spec)) || !spec.reserveRows) continue;
+    // Rows asked for by name — see `reserveRows` — straight after the pane's
+    // own floor, so ahead of the floor of every pane served after it.
+    const reserve = Math.min(spec.reserveRows, ideal(spec));
+    while (rows[spec.key] < reserve && afford(spec.key, rows[spec.key] + 1));
   }
   // The pane the height was freed for, filled first and in one go — see `first`.
   // After its minimum, so a rail too short for everyone's floor still spends

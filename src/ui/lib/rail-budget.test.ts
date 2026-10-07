@@ -265,6 +265,61 @@ describe("distributeRailHeight", () => {
     expect(tall.recent!.rows).toBe(12);
   });
 
+  // PLI-275: pinned routines were drawn outside the budget and gave the rail a
+  // scrollbar. Counted as rows and reserved, they are seated before anyone's
+  // surplus and before Portfolio's floor, Orgs and Recent keep theirs, and the
+  // rail never overflows.
+  it("seats pinned routines ahead of Portfolio and the other panes' surplus", () => {
+    const boxes: Record<string, TicklerRailPaneMetrics> = {
+      orgs: box(12, { head: 32.297, foot: 25.5, row: 47.297, frame: 2 }),
+      recent: box(32, { head: 32.297, foot: 0, row: 28.297, frame: 2 }),
+      portfolio: box(9, { head: 36.297, foot: 21.5, row: 42.297, frame: 2 }),
+      // Five pinned on top of three broken, with the rule between them.
+      routines: box(8, { head: 32.297, foot: 9, row: 28.297, frame: 2 }),
+    };
+    // Exactly what `railPanes(null, 5)` says: Routines reserved, and ahead of
+    // Portfolio for the floors.
+    const pinned: TicklerRailPaneSpec[] = [
+      { key: "orgs", minRows: 3, idealRows: Infinity, priority: 1 },
+      { key: "recent", minRows: 3, idealRows: 12, priority: 1 },
+      { key: "routines", minRows: 2, idealRows: 9, priority: 2, reserveRows: 5 },
+      { key: "portfolio", minRows: 3, idealRows: 11, priority: 2 },
+    ];
+    for (const available of [600, 790, 1000, 1308]) {
+      const budget = distributeRailHeight(pinned, boxes, { available, gap: GAP });
+      expect(budget.routines!.rows, `routines at ${available}`).toBeGreaterThanOrEqual(5);
+      expect(budget.orgs!.rows, `orgs at ${available}`).toBeGreaterThanOrEqual(3);
+      expect(budget.recent!.rows, `recent at ${available}`).toBeGreaterThanOrEqual(3);
+      expect(spent(budget, boxes), `rail at ${available}`).toBeLessThanOrEqual(available);
+    }
+    // Too short for the pins and Portfolio both: Portfolio folds, the pins stay
+    // whole. 3 orgs + 3 recent + 5 pinned + 3 bars needs ~770px.
+    const short = distributeRailHeight(pinned, boxes, { available: 700, gap: GAP });
+    expect(short.portfolio!.demoted).toBe(true);
+    expect(short.routines!.rows).toBeGreaterThanOrEqual(5);
+    expect(spent(short, boxes)).toBeLessThanOrEqual(700);
+    // Shorter still, the pins are paid in part and the pane is not demoted.
+    const shorter = distributeRailHeight(pinned, boxes, { available: 520, gap: GAP });
+    expect(shorter.routines!.demoted).toBe(false);
+    expect(shorter.routines!.rows).toBeGreaterThanOrEqual(2);
+    expect(spent(shorter, boxes)).toBeLessThanOrEqual(520);
+  });
+
+  it("pays a reserve in part rather than demoting the pane for it", () => {
+    const boxes = metrics({ orgs: 3, recent: 3, portfolio: 0, routines: 12 });
+    // Orgs and Recent whole at 146px each, empty Portfolio at 50, the gaps at 48,
+    // and Routines' 50 plus five of its rows — not the ten it asks for.
+    const available = 48 + 146 + 146 + 50 + 50 + 5 * 32 + 10;
+    const budget = distributeRailHeight(
+      PANES.map((spec) => (spec.key === "routines" ? { ...spec, idealRows: 14, reserveRows: 10 } : spec)),
+      boxes,
+      { available, gap: GAP },
+    );
+    expect(budget.routines!.demoted).toBe(false);
+    expect(budget.routines!.rows).toBe(5);
+    expect(budget.routines!.hidden).toBe(7);
+  });
+
   it("keeps a folded pane folded however tall the rail gets", () => {
     const boxes = metrics({ orgs: 12, portfolio: 11, recent: 24, routines: 3 });
     const folded = distributeRailHeight(
