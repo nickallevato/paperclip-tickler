@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.16.0
+
 - **Approval rows are safer to work on a phone.** A row's title now opens it,
   on every kind of row in **Needs you**. Approval rows get a labelled **Open**
   button, placed first (**Open · Approve · Reject**), so Open and Reject are no

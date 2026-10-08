@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.16.0](0.16.0.md) — approval rows are safer to work on a phone.
 - [0.15.1](0.15.1.md) — a crash inside Tickler now says what broke, and costs only that part.
 - [0.15.0](0.15.0.md) — runs past their agent's time limit get their own square.
 - [0.14.3](0.14.3.md) — the update chip waits until npm can serve the new version.
