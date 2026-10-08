@@ -153,7 +153,9 @@ describe("TicklerRecentTasks", () => {
     expect(list).not.toContain("max-h-");
     const pane = container.querySelector<HTMLElement>("[data-rail-pane='recent']")!;
     expect(pane.style.height).toBe("180px");
-    expect(pane.querySelector("[data-rail-more]")?.textContent).toBe("+8 more");
+    // Not laid out, so the budget's count, pointing down.
+    expect(pane.querySelector("[data-rail-more]")?.textContent).toBe("8 more");
+    expect(pane.querySelector("[data-rail-more]")?.getAttribute("data-rail-more")).toBe("below");
     expect(container.textContent).toContain("5 more touched today");
     act(() => root.unmount());
   });

@@ -91,6 +91,10 @@ export function TicklerCompanyLine({
       data-company-line={company.id}
       data-pulse={pulse}
       data-rail-row
+      // For the header's "2 more · 3 need you" when this line is scrolled out
+      // of view (PLI-278).
+      data-rail-needs={actionable.count}
+      data-rail-label={company.name}
       aria-pressed={onFocusNeeds ? needsFocused : undefined}
       onClick={
         onFocusNeeds

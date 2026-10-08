@@ -110,7 +110,7 @@ export function TicklerRoutineExceptions({
               rows fit, pinned or not, and gives the pinned ones first call on the
               height (see `reserveRows`). Anything past that scrolls here, inside
               the pane, behind the header's "+N more" — never the rail. */}
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div data-rail-scroll className="min-h-0 flex-1 overflow-y-auto">
             {pinnedRows.length > 0 && <TicklerPinnedRoutineRows items={pinnedRows} onUnpin={onUnpin} />}
             {pinnedRows.length > 0 && exceptions.length > 0 && (
               // A rule rather than a border on either list, so it can be measured.
