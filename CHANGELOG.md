@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.17.3
+
 - **Expanding Recent now makes room when the rail has none.** With Orgs
   expanded too, or on a short screen, Recent used to switch to the 7-day list
   without growing. Now Routines leaves the rail first, then Portfolio if Recent

@@ -20,7 +20,7 @@ export { PLUGIN_ID };
 const manifest: PaperclipPluginManifestV1 = {
   id: PLUGIN_ID,
   apiVersion: 1,
-  version: "0.17.2",
+  version: "0.17.3",
   displayName: "Tickler",
   description: "Cross-company HUD: company panes, triage, approvals, attention, and briefing.",
   // The manifest schema has no homepage/repository fields — `author` is a plain
