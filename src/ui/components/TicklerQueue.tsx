@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   Archive,
@@ -76,6 +76,15 @@ const QUEUE_SORTS = [
 ] as const;
 
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
+/**
+ * Row links are 24 px for a mouse and 44 px under a finger. The host already
+ * lifts every `<button>` to 44 px on a coarse pointer, but not `<a>`, so Open
+ * stayed a 20 px icon beside a full-height Reject.
+ */
+const TAP = "pointer-coarse:h-11 pointer-coarse:px-3";
+
+/** How long a first tap on Reject waits for the second before it lapses. */
+const REJECT_CONFIRM_MS = 4000;
 
 /** One line under a decide-by lane's name saying what belongs there. */
 const LANE_HINT: Partial<Record<TicklerDecideLane, string>> = {
@@ -133,6 +142,14 @@ function ApprovalActions({
   onActed: () => void;
 }) {
   const decision = useApprovalDecision(item.approval, onActed);
+  // Reject can't be taken back from here, so it takes two taps: the first
+  // arms it, the second rejects. Left alone, it disarms itself.
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const timer = setTimeout(() => setArmed(false), REJECT_CONFIRM_MS);
+    return () => clearTimeout(timer);
+  }, [armed]);
   return (
     <>
       <Button
@@ -147,13 +164,19 @@ function ApprovalActions({
       </Button>
       <Button
         size="sm"
-        variant="ghost"
-        className={cn("h-6 px-2 text-destructive", MICRO)}
+        variant={armed ? "destructive" : "ghost"}
+        className={cn("h-6 px-2", !armed && "text-destructive", MICRO)}
         disabled={decision.busy}
-        aria-label="Reject"
-        onClick={() => decision.reject()}
+        aria-label={armed ? "Confirm reject" : "Reject"}
+        data-reject-armed={armed || undefined}
+        onBlur={() => setArmed(false)}
+        onClick={() => {
+          if (!armed) return setArmed(true);
+          setArmed(false);
+          decision.reject();
+        }}
       >
-        <X className="mr-0.5 h-3 w-3" /> Reject
+        <X className="mr-0.5 h-3 w-3" /> {armed ? "Confirm reject" : "Reject"}
       </Button>
     </>
   );
@@ -174,6 +197,7 @@ function OpenLink({
       companyId={companyId}
       className={cn(
         "inline-flex h-6 items-center gap-1 rounded-md border px-2 text-muted-foreground hover:text-foreground",
+        TAP,
         MICRO,
       )}
     >
@@ -265,7 +289,7 @@ function TriageMenu({
           aria-label="Decide by, snooze or archive"
           title="Decide by, snooze or archive"
           data-triage-menu
-          className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+          className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50 pointer-coarse:p-3"
         >
           <CalendarDays className="h-3.5 w-3.5" />
         </button>
@@ -340,6 +364,8 @@ export function TicklerQueueItemRow({
 
   let identifier: string | null = null;
   let title: string;
+  /** Where the title goes: the same place as the row's Open. */
+  let href: string;
   let meta: ReactNode;
   let actions: ReactNode;
   /** The question / prompt itself, when the item carries one. */
@@ -350,6 +376,7 @@ export function TicklerQueueItemRow({
   switch (item.kind) {
     case "approval": {
       title = issueStatusLabel(item.approval.type);
+      href = `/${company.issuePrefix}/approvals/${item.approval.id}`;
       meta = (
         <>
           <Check className="h-3 w-3 shrink-0" />
@@ -360,18 +387,13 @@ export function TicklerQueueItemRow({
           )}
         </>
       );
+      // Open leads and Reject trails, with Approve between: the two used to
+      // sit side by side, and Open was a 20 px icon.
       actions = (
         <>
+          <OpenLink to={href} companyId={company.id} />
+          <span aria-hidden className="w-1 pointer-coarse:w-3" />
           <ApprovalActions item={item} onActed={onActed} />
-          <TicklerLink
-            to={`/${company.issuePrefix}/approvals/${item.approval.id}`}
-            companyId={company.id}
-            title="Open approval"
-            aria-label="Open approval"
-            className="rounded p-1 text-muted-foreground hover:text-foreground"
-          >
-            <ExternalLink className="h-3 w-3" />
-          </TicklerLink>
         </>
       );
       break;
@@ -392,7 +414,7 @@ export function TicklerQueueItemRow({
           </span>
         </>
       );
-      const href = subject.href
+      href = subject.href
         ? `/${company.issuePrefix}${toCompanyRelativePath(subject.href)}`
         : `/${company.issuePrefix}/decisions`;
       if (hasInlineInteraction(item.item))
@@ -409,7 +431,7 @@ export function TicklerQueueItemRow({
           companyId={company.id}
           title="Open thread"
           aria-label="Open thread"
-          className="rounded p-1 text-muted-foreground hover:text-foreground"
+          className="rounded p-1 text-muted-foreground hover:text-foreground pointer-coarse:p-3"
         >
           <ExternalLink className="h-3 w-3" />
         </TicklerLink>
@@ -424,6 +446,7 @@ export function TicklerQueueItemRow({
     }
     case "heartbeat": {
       title = `${item.ceo.name} heartbeat overdue`;
+      href = `/${company.issuePrefix}/agents/${item.ceo.urlKey ?? item.ceo.id}`;
       const interval = intervalLabel(item.beat.intervalSec);
       meta = (
         <>
@@ -437,7 +460,7 @@ export function TicklerQueueItemRow({
       );
       actions = (
         <OpenLink
-          to={`/${company.issuePrefix}/agents/${item.ceo.urlKey ?? item.ceo.id}`}
+          to={href}
           companyId={company.id}
           label="Open CEO"
         />
@@ -447,6 +470,7 @@ export function TicklerQueueItemRow({
     case "routine":
     default: {
       title = item.routine.title;
+      href = `/${company.issuePrefix}/routines/${item.routine.id}`;
       meta = (
         <>
           <CalendarClock className="h-3 w-3 shrink-0" />
@@ -458,7 +482,7 @@ export function TicklerQueueItemRow({
       );
       actions = (
         <OpenLink
-          to={`/${company.issuePrefix}/routines/${item.routine.id}`}
+          to={href}
           companyId={company.id}
         />
       );
@@ -496,9 +520,16 @@ export function TicklerQueueItemRow({
             {identifier}
           </span>
         )}
-        <span className="min-w-0 truncate" title={title}>
+        {/* The title is the biggest target on the row and the one people try
+            first, so it opens the same thing Open does. */}
+        <TicklerLink
+          to={href}
+          companyId={company.id}
+          title={title}
+          className="min-w-0 truncate decoration-muted-foreground/60 underline-offset-2 hover:underline"
+        >
           {title}
-        </span>
+        </TicklerLink>
       </div>
       {ask &&
         (item.kind === "attention" ? (
@@ -574,7 +605,7 @@ export function TicklerQueueItemRow({
     >
       <Avatar company={company} />
       {body}
-      <span className="ml-[30px] flex flex-wrap items-center gap-1 @[36rem]:ml-0 @[36rem]:shrink-0 @[36rem]:flex-nowrap @[36rem]:self-center">
+      <span className="ml-[30px] flex flex-wrap items-center gap-1 pointer-coarse:gap-2 @[36rem]:ml-0 @[36rem]:shrink-0 @[36rem]:flex-nowrap @[36rem]:self-center">
         {canTriage && lane === "unsorted" && (
           <DecideQuickPicks disabled={triageBusy} onPick={(decideBy) => onTriage?.({ decideBy })} />
         )}
