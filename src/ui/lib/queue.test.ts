@@ -9,7 +9,8 @@ import {
   ageTone,
   countQueueByAge,
   derivePortfolio,
-  normalizeExpandedPane,
+  normalizeExpandedPanes,
+  serializeExpandedPanes,
   normalizePortfolioSort,
   routineExceptions,
   filterQueueByAge,
@@ -1056,29 +1057,38 @@ describe("derivePortfolio company order", () => {
   });
 });
 
-describe("normalizeExpandedPane", () => {
-  it("answers with the pane that was stored, and nothing for anything else", () => {
-    expect(normalizeExpandedPane("orgs")).toBe("orgs");
-    expect(normalizeExpandedPane("recent")).toBe("recent");
-    expect(normalizeExpandedPane("none")).toBe(null);
+describe("normalizeExpandedPanes", () => {
+  const none = { orgs: false, recent: false };
+  it("answers with the panes that were stored, and nothing for anything else", () => {
+    expect(normalizeExpandedPanes("orgs")).toEqual({ orgs: true, recent: false });
+    expect(normalizeExpandedPanes("recent")).toEqual({ orgs: false, recent: true });
+    expect(normalizeExpandedPanes("orgs,recent")).toEqual({ orgs: true, recent: true });
+    expect(normalizeExpandedPanes("none")).toEqual(none);
     // In the rail but not expandable, and a pane name no version ever had.
-    expect(normalizeExpandedPane("portfolio")).toBe(null);
-    expect(normalizeExpandedPane("nonsense")).toBe(null);
-    expect(normalizeExpandedPane("")).toBe(null);
+    expect(normalizeExpandedPanes("portfolio")).toEqual(none);
+    expect(normalizeExpandedPanes("nonsense")).toEqual(none);
+    expect(normalizeExpandedPanes("")).toEqual(none);
   });
 
   it("carries 0.11's Recent-only preference over rather than dropping it", () => {
-    expect(normalizeExpandedPane(null, "on")).toBe("recent");
-    expect(normalizeExpandedPane(undefined, "on")).toBe("recent");
-    expect(normalizeExpandedPane(null, "off")).toBe(null);
-    expect(normalizeExpandedPane(null, null)).toBe(null);
+    expect(normalizeExpandedPanes(null, "on")).toEqual({ orgs: false, recent: true });
+    expect(normalizeExpandedPanes(undefined, "on")).toEqual({ orgs: false, recent: true });
+    expect(normalizeExpandedPanes(null, "off")).toEqual(none);
+    expect(normalizeExpandedPanes(null, null)).toEqual(none);
   });
 
   it("lets the new key overrule the old one once it has been written", () => {
     // The press that collapsed Recent wrote "none" here and left "on" behind
     // under the old key, so a fallback that still read it would re-expand the
     // pane on the next visit — and expanding Orgs would be undone the same way.
-    expect(normalizeExpandedPane("none", "on")).toBe(null);
-    expect(normalizeExpandedPane("orgs", "on")).toBe("orgs");
+    expect(normalizeExpandedPanes("none", "on")).toEqual(none);
+    expect(normalizeExpandedPanes("orgs", "on")).toEqual({ orgs: true, recent: false });
+  });
+
+  it("writes back what it reads", () => {
+    for (const panes of [none, { orgs: true, recent: false }, { orgs: false, recent: true }, { orgs: true, recent: true }]) {
+      expect(normalizeExpandedPanes(serializeExpandedPanes(panes))).toEqual(panes);
+    }
+    expect(serializeExpandedPanes(none)).toBe("none");
   });
 });

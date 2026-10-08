@@ -28,12 +28,13 @@ import {
   TICKLER_QUEUE_GROUPING_STORAGE_KEY,
   TICKLER_QUEUE_SORT_STORAGE_KEY,
   TICKLER_RECENT_EXPANDED_STORAGE_KEY,
-  normalizeExpandedPane,
+  normalizeExpandedPanes,
   normalizePortfolioSort,
   normalizeQueueAgeFilter,
   normalizeQueueGrouping,
   normalizeQueueSort,
-  type TicklerExpandedPane,
+  serializeExpandedPanes,
+  type TicklerExpandedPanes,
   type TicklerPortfolioSort,
   type TicklerQueueAgeFilter,
   type TicklerQueueGrouping,
@@ -185,21 +186,21 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
     writeStored(TICKLER_PORTFOLIO_SORT_STORAGE_KEY, sort);
   };
 
-  // Which rail pane has been given the rail, the others folded to their headers
-  // to pay for it. Persisted for the same reason the age chips are: which pane of
+  // Which rail panes have been expanded, Portfolio and Routines folded to their
+  // headers to pay for it. Persisted for the same reason the age chips are: which pane of
   // the rail you actually read is a habit, and re-expanding it on every visit is
   // the friction the button exists to remove.
-  const [expandedPane, setExpandedPane] = useState<TicklerExpandedPane>(() =>
-    normalizeExpandedPane(
+  const [expandedPanes, setExpandedPanes] = useState<TicklerExpandedPanes>(() =>
+    normalizeExpandedPanes(
       readStored(TICKLER_EXPANDED_PANE_STORAGE_KEY),
       readStored(TICKLER_RECENT_EXPANDED_STORAGE_KEY),
     ),
   );
-  const selectExpandedPane = (pane: TicklerExpandedPane) => {
-    setExpandedPane(pane);
+  const selectExpandedPanes = (panes: TicklerExpandedPanes) => {
+    setExpandedPanes(panes);
     // "none" written out rather than the key removed, so that a collapse is a
     // value this key holds and not an absence the old key gets to answer for.
-    writeStored(TICKLER_EXPANDED_PANE_STORAGE_KEY, pane ?? "none");
+    writeStored(TICKLER_EXPANDED_PANE_STORAGE_KEY, serializeExpandedPanes(panes));
   };
 
   // The narrow board's stack order. Per-browser and only that: a plugin has no
@@ -483,8 +484,8 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
           onAgeFilter={selectAgeFilter}
           portfolioSort={portfolioSort}
           onPortfolioSort={selectPortfolioSort}
-          expandedPane={expandedPane}
-          onExpandedPane={selectExpandedPane}
+          expandedPanes={expandedPanes}
+          onExpandedPanes={selectExpandedPanes}
           paneOrder={paneOrder}
           onNarrow={reportBoardNarrow}
           footer={

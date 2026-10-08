@@ -5,6 +5,15 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Expanding Recent no longer collapses Orgs.** The two rail panes used to
+  share one expand setting, so pressing **Expand** on Recent un-expanded Orgs,
+  and the Recent header slid up under the cursor as org rows vanished. Each
+  pane now has its own toggle. With both expanded, Orgs keeps its height and
+  Recent keeps its own, switching to the 7-day list and scrolling in place —
+  the only room left for it to grow would come out of Orgs, above the cursor.
+  Expanding either pane alone works as before. Saved rail settings load
+  unchanged. (PLI-287)
+
 ## 0.17.0
 
 - **A version that crashes can be rolled back from the crash itself.** Tickler

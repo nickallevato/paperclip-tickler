@@ -246,6 +246,7 @@ export function TicklerRecentTasks({
   expanded = false,
   expandable = true,
   onExpanded,
+  orgsExpanded = false,
   className,
 }: {
   tasks: TicklerRecentTasksModel;
@@ -263,6 +264,12 @@ export function TicklerRecentTasks({
   expandable?: boolean;
   /** Absent hides the toggle — the pane is then exactly what it was. */
   onExpanded?: (expanded: boolean) => void;
+  /**
+   * Orgs is expanded too, so this pane keeps its height either way and the
+   * press only changes how far back the list reaches (PLI-287). Said in the
+   * button's title, which is otherwise a promise of a taller pane.
+   */
+  orgsExpanded?: boolean;
   className?: string;
 }) {
   const { items, working, queued, hidden, queuedOverflow } = tasks;
@@ -321,10 +328,14 @@ export function TicklerRecentTasks({
             expandable={expandable}
             title={
               expanded
-                ? "Collapse Recent — back to the last day, and Portfolio and Routines get their rows back"
-                : expandable
-                  ? "Expand Recent — the last 7 days instead of the last day, with Portfolio and Routines folded to their headers to make room"
-                  : "Nothing to expand — the last 7 days hold no more than what is already listed"
+                ? orgsExpanded
+                  ? "Collapse Recent — back to the last day"
+                  : "Collapse Recent — back to the last day, and Portfolio and Routines get their rows back"
+                : !expandable
+                  ? "Nothing to expand — the last 7 days hold no more than what is already listed"
+                  : orgsExpanded
+                    ? "Expand Recent — the last 7 days instead of the last day, scrolled in the same height so Orgs stays where it is"
+                    : "Expand Recent — the last 7 days instead of the last day, with Portfolio and Routines folded to their headers to make room"
             }
             onExpanded={onExpanded}
           />

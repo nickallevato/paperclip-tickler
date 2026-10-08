@@ -25,7 +25,7 @@ import {
   TICKLER_RECENT_EXPANDED_WINDOW_MS,
   upcomingProjects,
   upcomingRoutines,
-  type TicklerExpandedPane,
+  type TicklerExpandedPanes,
   type TicklerPortfolioSort,
   type TicklerQueueAgeFilter,
   type TicklerQueueGrouping,
@@ -85,11 +85,9 @@ const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
  *
  * Ranks tie by the order written here, which is the only thing this order does.
  *
- * `expanded` is the reader's own override of that settlement: one pane is given
- * the rail and the others fold to their headers, which is where the height for
- * its extra rows comes from. Only one at a time — see `TicklerExpandedPane` —
- * because the height each would be asking for is the height the other was just
- * folded to free.
+ * `expanded` is the reader's own override of that settlement: Orgs, Recent or
+ * both are expanded and Portfolio and Routines fold to their headers, which is
+ * where the height for the extra rows comes from.
  *
  * Recent expanded (PLI-271) doubles its ideal and folds the two panes under it.
  * It is also served `first`, which is the half of this the first cut got wrong:
@@ -110,25 +108,43 @@ const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
  * already every org you watch, so there is no number to double, and no `first`,
  * which would starve Recent to its floor of three on any rail short of the
  * whole org list.
+ *
+ * Both expanded (PLI-287) is Orgs expanded, to the row: Recent is budgeted the
+ * rows its one-day list would draw — `recentDayRows` — and shows the week
+ * scrolled inside them. They used to be one slot, so expanding Recent collapsed
+ * Orgs, and the Recent header the reader had just pressed jumped up the rail by
+ * every org row that went. Doubling Recent here would do the same thing more
+ * slowly: Portfolio and Routines are already folded, so every row it gained
+ * would come out of Orgs, above the pointer. A press grows the page below where
+ * it was made, or not at all.
  */
-function railPanes(expanded: TicklerExpandedPane, pinnedRoutines: number): readonly TicklerRailPaneSpec[] {
-  const orgs = expanded === "orgs";
-  const recent = expanded === "recent";
-  const portfolio: TicklerRailPaneSpec = { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: orgs || recent };
+export function railPanes(
+  expanded: TicklerExpandedPanes,
+  pinnedRoutines: number,
+  recentDayRows: number,
+): readonly TicklerRailPaneSpec[] {
+  const orgs = expanded.orgs;
+  // Recent given more of the rail — only when Orgs is not already holding it.
+  const recent = expanded.recent && !orgs;
+  const folded = expanded.orgs || expanded.recent;
+  // The day list's rows, at least one: an empty day is a pane with no rows and
+  // a one-line note, and a week fed into it needs a row to scroll in.
+  const dayRows = Math.max(1, recentDayRows);
+  const portfolio: TicklerRailPaneSpec = { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: folded };
   const routines: TicklerRailPaneSpec = {
     key: "routines",
     minRows: 2,
     idealRows: pinnedRoutines + ROUTINE_EXCEPTION_ROWS,
     priority: 2,
-    collapsed: orgs || recent,
+    collapsed: folded,
     reserveRows: pinnedRoutines,
   };
   return [
     { key: "orgs", minRows: 3, idealRows: Infinity, priority: 1 },
     {
       key: "recent",
-      minRows: 3,
-      idealRows: recent ? RECENT_EXPANDED_ROWS : RECENT_ROWS,
+      minRows: orgs && expanded.recent ? Math.min(3, dayRows) : 3,
+      idealRows: recent ? RECENT_EXPANDED_ROWS : orgs && expanded.recent ? Math.min(RECENT_ROWS, dayRows) : RECENT_ROWS,
       priority: 1,
       first: recent,
     },
@@ -188,8 +204,8 @@ export function TicklerBoardPage({
   onAgeFilter,
   portfolioSort,
   onPortfolioSort,
-  expandedPane,
-  onExpandedPane,
+  expandedPanes,
+  onExpandedPanes,
   paneOrder,
   onNarrow,
   footer,
@@ -216,9 +232,9 @@ export function TicklerBoardPage({
   onAgeFilter: (filter: TicklerQueueAgeFilter) => void;
   portfolioSort: TicklerPortfolioSort;
   onPortfolioSort: (sort: TicklerPortfolioSort) => void;
-  /** The one rail pane given the rail, with the others folded to pay for it. */
-  expandedPane: TicklerExpandedPane;
-  onExpandedPane: (pane: TicklerExpandedPane) => void;
+  /** The rail panes expanded, with Portfolio and Routines folded to pay for it. */
+  expandedPanes: TicklerExpandedPanes;
+  onExpandedPanes: (panes: TicklerExpandedPanes) => void;
   /** The narrow stack's order. Ignored wide, where `order` is overridden away. */
   paneOrder: readonly TicklerPaneKey[];
   /**
@@ -230,8 +246,9 @@ export function TicklerBoardPage({
   footer?: ReactNode;
 }) {
   const nowMs = useNowMs();
-  const orgsExpanded = expandedPane === "orgs";
-  const recentExpanded = expandedPane === "recent";
+  const orgsExpanded = expandedPanes.orgs;
+  const recentExpanded = expandedPanes.recent;
+  const anyExpanded = orgsExpanded || recentExpanded;
   // Clicking a row's Need-you count narrows the rail to that company; clicking
   // it again (or the rail's chip) widens it back. Not persisted — it is a
   // glance, not a setting.
@@ -405,7 +422,13 @@ export function TicklerBoardPage({
   // one thing that changes the specs: the hook keys its measurement callback on
   // their identity, so a fresh array per render would re-measure the rail every
   // render instead of every layout change.
-  const specs = useMemo(() => railPanes(expandedPane, pinnedRoutines.length), [expandedPane, pinnedRoutines.length]);
+  // The rows the one-day list draws, the folded queue line included — what
+  // Recent is held to when Orgs is expanded too.
+  const recentDayRows = recent.items.length + (recent.queuedOverflow.length > 0 ? 1 : 0);
+  const specs = useMemo(
+    () => railPanes(expandedPanes, pinnedRoutines.length, recentDayRows),
+    [expandedPanes, pinnedRoutines.length, recentDayRows],
+  );
   const { railRef, budget, narrow } = useRailBudget(specs);
   // `narrow` is measured rather than guessed, and is false for the one pre-paint
   // frame before the first measurement, so the header's Pane order button is
@@ -558,7 +581,9 @@ export function TicklerBoardPage({
                 expandable={orgsExpandable}
                 title={
                   orgsExpanded
-                    ? "Collapse Orgs — Portfolio and Routines get their rows back"
+                    ? recentExpanded
+                      ? "Collapse Orgs — Recent takes the height it frees"
+                      : "Collapse Orgs — Portfolio and Routines get their rows back"
                     : orgsExpandable
                       ? // Not "every org": on a short rail the fold buys rows
                         // rather than the whole list, and the "+N more" beside
@@ -566,7 +591,7 @@ export function TicklerBoardPage({
                         "Expand Orgs — as many orgs as the rail can hold, with Portfolio and Routines folded to their headers to make room"
                       : "Nothing to expand — every org you watch is already listed"
                 }
-                onExpanded={(next) => onExpandedPane(next ? "orgs" : null)}
+                onExpanded={(next) => onExpandedPanes({ ...expandedPanes, orgs: next })}
               />
             </div>
             {!orgsBudget?.demoted && (
@@ -650,7 +675,8 @@ export function TicklerBoardPage({
               narrow={narrow}
               expanded={recentExpanded}
               expandable={recentExpandable}
-              onExpanded={(next) => onExpandedPane(next ? "recent" : null)}
+              onExpanded={(next) => onExpandedPanes({ ...expandedPanes, recent: next })}
+              orgsExpanded={orgsExpanded}
               className={recentClass}
             />
           </TicklerErrorBoundary>
@@ -669,7 +695,7 @@ export function TicklerBoardPage({
               // spec has already said so and this changes nothing; narrow there is
               // no budget to say it in, and the fold is the reader's choice at
               // either width.
-              budget={expandedPane ? collapsedPane(budget.portfolio) : budget.portfolio}
+              budget={anyExpanded ? collapsedPane(budget.portfolio) : budget.portfolio}
               className={portfolioClass}
             />
           </TicklerErrorBoundary>
@@ -682,7 +708,7 @@ export function TicklerBoardPage({
                 <TicklerPinRoutinePicker entries={routineEntries} pinned={pinnedRoutineSet} onToggle={togglePinnedRoutine} />
               }
               nowMs={nowMs}
-              budget={expandedPane ? collapsedPane(budget.routines) : budget.routines}
+              budget={anyExpanded ? collapsedPane(budget.routines) : budget.routines}
               className={routinesClass}
             />
           </TicklerErrorBoundary>
