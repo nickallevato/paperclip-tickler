@@ -428,6 +428,17 @@ export function TicklerBoardPage({
    * panes for a list that is already complete.
    */
   const orgsExpandable = (orgsBudget?.hidden ?? 0) > 0;
+  /** The All line, under the org lines — only when there is more than one to add up. */
+  const showTotals = companies.length > 1 && !orgsBudget?.demoted;
+  const usageWindowToggle = (
+    <TicklerSegmented
+      label="Token window"
+      options={TICKLER_USAGE_WINDOWS.map((hours) => ({ value: String(hours) as "8" | "24", label: `${hours}h` }))}
+      value={String(usageWindow) as "8" | "24"}
+      onChange={(value) => changeUsageWindow(normalizeUsageWindow(value))}
+      optionProps={(value) => ({ "data-usage-window": value })}
+    />
+  );
 
   // Wide: one sticky column of context (Companies, Recent, Portfolio, Routines)
   // beside the queue, which owns the main column because it is where the work
@@ -485,36 +496,35 @@ export function TicklerBoardPage({
               <h2 className={cn(MICRO, "font-semibold uppercase tracking-(--tracking-label) text-muted-foreground")}>
                 Orgs
               </h2>
-              <TicklerSegmented
-                label="Org order"
-                options={[
-                  { value: "hot", label: "Hot first" },
-                  { value: "manual", label: "My order" },
-                ]}
-                value={sortMode}
-                onChange={onSortMode}
-              />
-              {usage.all && (
+              {/* One org has no order to choose. */}
+              {companies.length > 1 && (
                 <TicklerSegmented
-                  label="Token window"
-                  options={TICKLER_USAGE_WINDOWS.map((hours) => ({ value: String(hours) as "8" | "24", label: `${hours}h` }))}
-                  value={String(usageWindow) as "8" | "24"}
-                  onChange={(value) => changeUsageWindow(normalizeUsageWindow(value))}
-                  optionProps={(value) => ({ "data-usage-window": value })}
+                  label="Org order"
+                  options={[
+                    { value: "hot", label: "Hot first" },
+                    { value: "manual", label: "My order" },
+                  ]}
+                  value={sortMode}
+                  onChange={onSortMode}
                 />
               )}
+              {/* The window toggle lives on the All line, under the strips it
+                  sets; only a lone org, which has no All line, keeps it here.
+                  Demoted there are no strips to set. */}
+              {usage.all && companies.length === 1 && !orgsBudget?.demoted && usageWindowToggle}
               {/* Demoted, the header is the whole pane, so it carries the count
-                  the lines underneath would have carried. */}
-              <span className={cn(MICRO, "ml-auto text-muted-foreground")}>
+                  the lines underneath would have carried. One line always: the
+                  caption gives up its words before it wraps (PLI-278). */}
+              <span className={cn(MICRO, "ml-auto truncate whitespace-nowrap text-muted-foreground")}>
                 {orgsBudget?.demoted ? (
                   <>
-                    <span className="font-semibold text-foreground">{totals.needs}</span> need you · {companies.length}{" "}
-                    orgs
+                    <span className="font-semibold text-foreground">{totals.needs}</span> need you
+                    <span className="hidden @[22rem]/orgs:inline"> · {companies.length} orgs</span>
                   </>
                 ) : (
                   <>
-                    {usage.all && <span className="hidden @[26rem]/orgs:inline">tokens · </span>}
-                    need you
+                    {usage.all && <span className="hidden @[24rem]/orgs:inline">tokens · </span>}
+                    <span className="hidden @[21rem]/orgs:inline">need you</span>
                   </>
                 )}
               </span>
@@ -558,13 +568,15 @@ export function TicklerBoardPage({
                 ))}
               </ul>
             )}
-            {companies.length > 1 && !orgsBudget?.demoted && (
+            {showTotals && (
               <div
                 data-board-totals
                 data-rail-foot
                 className={cn(
                   MICRO,
-                  "flex shrink-0 items-center gap-2.5 border-t px-3 py-1.5 tabular-nums text-muted-foreground",
+                  "flex shrink-0 items-center gap-2.5 border-t px-3 tabular-nums text-muted-foreground",
+                  // The window toggle is taller than the text it replaced.
+                  usage.all ? "py-1" : "py-1.5",
                 )}
               >
                 <span className="uppercase tracking-(--tracking-label)">All</span>
@@ -573,7 +585,7 @@ export function TicklerBoardPage({
                   // sit under theirs. The month's figure, cache reads and all,
                   // is the total's hover.
                   <>
-                    <span className="normal-case">· last {usageWindow}h</span>
+                    {usageWindowToggle}
                     <span className="ml-auto" />
                     <TicklerUsageStrip
                       series={usage.all}
