@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { TicklerHud } from "./TicklerHud";
 import { TicklerErrorBoundary } from "./components/TicklerErrorBoundary";
 import { LastGoodVersionRecorder } from "./components/TicklerRollback";
+import { useRepairRememberedTicklerPaths } from "./host/company-path-memory";
 import { activateDemoMode, deactivateDemoMode } from "./demo/demo-runtime";
 import { resolveDemoMode } from "./demo/demo-mode";
 
@@ -33,6 +34,7 @@ export function TicklerPage() {
     },
   }));
   const [gate, setGate] = useState<GateState>({ phase: "resolving" });
+  useRepairRememberedTicklerPaths();
 
   useEffect(() => {
     let cancelled = false;
