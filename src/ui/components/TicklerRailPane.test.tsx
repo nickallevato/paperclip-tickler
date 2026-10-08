@@ -151,4 +151,21 @@ describe("TicklerRailMore", () => {
     render([{ name: "A", needs: 1 }], budget(0));
     expect(chip()).toBeNull();
   });
+
+  // The budget guessed rows were hidden, but the pane laid out with room for
+  // all of them. Drawing nothing used to drop the chip's ref, so the next read
+  // found no pane, fell back on the budget, drew the chip, read 0 again — and
+  // React gave up with error #185 (PLI-286).
+  it("draws nothing, and settles, when the budget hides rows the pane has room for", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      [
+        { name: "A", needs: 0 },
+        { name: "B", needs: 0 },
+      ],
+      budget(1),
+    );
+    expect(chip()).toBeNull();
+    expect(error).not.toHaveBeenCalled();
+  });
 });

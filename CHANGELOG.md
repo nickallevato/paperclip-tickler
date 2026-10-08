@@ -5,6 +5,13 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The Tickler page no longer crashes at some window heights.** Since
+  0.14.2, the rail's **N more** chip could get stuck redrawing itself when a
+  pane had room for every row after all, until React gave up and the page
+  stopped drawing (React error #185). Whether it happened depended on how
+  tall the window was. The chip now stays put, hidden, when nothing is cut
+  off. (PLI-286)
+
 ## 0.16.0
 
 - **Approval rows are safer to work on a phone.** A row's title now opens it,
