@@ -5,6 +5,14 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The Orgs header stays on one line.** 0.14.0 put the **8h | 24h** switch in
+  the Orgs header, which squeezed the "tokens · need you" caption onto a second
+  line at most rail widths. The switch now sits on the All line at the bottom of
+  the pane, under the charts it controls, in place of the "· last 24h" text.
+  The caption drops words instead of wrapping on a narrow rail. With only one
+  org there is no All line, so the switch takes the place of **Hot first | My
+  order** in the header.
+
 ## 0.14.0
 
 - **See which org used tokens, hour by hour.** Each line in Orgs now has a
