@@ -1,6 +1,6 @@
 {
   "name": "paperclip-plugin-tickler",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "packageManager": "pnpm@10.33.0",
   "type": "module",
   "description": "Every org, one page: a cross-org HUD for Paperclip that shows what needs you and lets you answer approvals and agent questions inline.",

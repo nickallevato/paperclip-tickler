@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.15.1
+
 - **A crash inside Tickler now says what broke, and costs only that part.**
   Any error while drawing used to reach Paperclip's own catch-all, which
   replaces the whole page with **Tickler: failed to render** and keeps the
