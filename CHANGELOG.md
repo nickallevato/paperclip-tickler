@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.17.0
+
 - **A version that crashes can be rolled back from the crash itself.** Tickler
   now remembers, per browser, the versions that drew the page without an
   error. When a newer one crashes, the page and pane notices offer **Roll back
