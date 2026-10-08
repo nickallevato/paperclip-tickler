@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.14.2](0.14.2.md) — "+2 more" now tells you something.
 - [0.14.1](0.14.1.md) — the Orgs header stays on one line.
 - [0.14.0](0.14.0.md) — see which org used tokens, hour by hour.
 - [0.13.1](0.13.1.md) — pinned routines no longer give the left rail a scrollbar.

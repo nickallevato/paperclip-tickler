@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.14.2
+
 - **"+2 more" now tells you something.** The count in a rail pane's header
   used to say only that rows were out of view. It now follows the scroll: "2
   more ↓" while rows are below, "2 more ↑" once you have scrolled past them. It
