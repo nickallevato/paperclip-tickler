@@ -212,6 +212,75 @@ async function region(page, selectors, pad = PAD) {
 const HUD_SELECTORS = ["[data-tickler-companies]", "[data-tickler-portfolio]", "[data-tickler-queue]"];
 
 /**
+ * The README's lead shots are taken at a real screen rather than the tall
+ * documentation viewport, because they show what a reader will see on opening
+ * the page: the rail budgets its panes to the fold, so at 1600 × 1800 Recent
+ * and Portfolio run to their natural height and the picture is of no screen
+ * anyone owns. 1150 tall is a desktop monitor's browser window — tall enough
+ * that every pane in the rail shows rows; at a 900-tall laptop Routines folds
+ * to its header and the lead image loses a pane.
+ */
+const SCREEN = { viewport: { width: 1600, height: 1150 }, deviceScaleFactor: SCALE };
+
+/** `clip`, cut off at the bottom of the viewport — what is actually on screen. */
+function onScreen(page, clip) {
+  const { height } = page.viewportSize();
+  return { ...clip, height: Math.min(clip.height, height - clip.y) };
+}
+
+/**
+ * The README's lead image, its queue and its left column, and the two hover
+ * cards. Once hand-captured at 1×; scripted since PLI-288 so a UI change
+ * cannot leave the first thing a visitor sees out of date.
+ */
+const README_SHOTS = [
+  {
+    name: "hero",
+    doc: "README lead: the whole page as it opens on a desktop monitor — rail at left, queue in the main column.",
+    context: SCREEN,
+    take: async (page) => ({ clip: onScreen(page, await region(page, [...HUD_SELECTORS, "h1"])) }),
+  },
+  {
+    name: "needs-you",
+    doc: "README queue section: the queue in its default grouping, down to the end of Unsorted.",
+    context: { viewport: { width: 1280, height: 1800 }, deviceScaleFactor: SCALE },
+    take: async (page) => {
+      const queue = await region(page, ["[data-tickler-queue]"]);
+      const unsorted = await region(page, ["[data-queue-group='decide:unsorted']"], 0);
+      return { clip: { ...queue, height: unsorted.y + unsorted.height - queue.y + PAD } };
+    },
+  },
+  {
+    name: "left-rail",
+    doc: "README left-column section: Orgs, Recent, Portfolio and Routines as the rail budgets them on that screen.",
+    context: SCREEN,
+    take: async (page) => ({
+      clip: onScreen(page, await region(page, ["[data-tickler-companies]", "[data-tickler-routines]"])),
+    }),
+  },
+  {
+    name: "recent-hover",
+    doc: "A Recent row's hover card: the ticket, its status, and the agent's last sentence.",
+    context: SCREEN,
+    before: async (page) => {
+      await page.locator("[data-tickler-recent] [data-recent-task] > span").nth(2).hover();
+      await page.waitForSelector("[data-recent-detail]", { timeout: 10_000 });
+      await page.waitForTimeout(400);
+    },
+    take: async (page) => ({ clip: await region(page, ["[data-tickler-recent]", "[data-recent-detail]"]) }),
+  },
+  {
+    name: "portfolio-by-org",
+    doc: "The portfolio ordered by org instead of by trouble.",
+    before: async (page) => {
+      await page.locator("[data-portfolio-sort='company']").first().click();
+      await page.waitForTimeout(600);
+    },
+    take: async (page) => ({ clip: await region(page, ["[data-tickler-portfolio]"]) }),
+  },
+];
+
+/**
  * The shots, in the order the docs introduce them.
  *
  * Each `take` runs against a page already loaded on the Tickler route in demo
@@ -219,6 +288,7 @@ const HUD_SELECTORS = ["[data-tickler-companies]", "[data-tickler-portfolio]", "
  * clicks a grouping cannot change what the next shot sees.
  */
 const SHOTS = [
+  ...README_SHOTS,
   {
     name: "tickler-page",
     doc: "The whole page: Orgs, portfolio and routines at left, the queue owning the main column.",
@@ -389,8 +459,11 @@ const SHOTS = [
 ];
 
 async function groupQueueBy(page, label) {
-  await page.locator("[data-tickler-queue]").first().scrollIntoViewIfNeeded();
-  await page.getByRole("button", { name: label, exact: true }).first().click();
+  const queue = page.locator("[data-tickler-queue]").first();
+  await queue.scrollIntoViewIfNeeded();
+  // Inside the queue: the Portfolio pane has an "Org" toggle of its own, earlier
+  // in the document, and an unscoped lookup clicked that one instead.
+  await queue.getByRole("button", { name: label, exact: true }).first().click();
   await page.waitForTimeout(600);
 }
 

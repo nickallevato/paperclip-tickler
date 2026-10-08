@@ -155,10 +155,10 @@ them by hand when the UI they show changes.
 
 | File | Source |
 | --- | --- |
-| `hero.png` | Demo mode — the README's lead image |
-| `needs-you.png` | Demo mode — the README's queue section |
-| `left-rail.png` | Demo mode — the README's left-column section |
 | `queue-confirmation.png` | Tickler's own development org (live) |
 | `queue-question.png` | Tickler's own development org (live) |
-| `recent-hover.png` | Demo mode |
-| `portfolio-by-org.png` | Demo mode |
+
+The README's own images — `hero`, `needs-you`, `left-rail`, `recent-hover` —
+and `portfolio-by-org` were on this list until PLI-288 and are scripted now.
+`hero` and `left-rail` are shot at a 1600 × 1150 window rather than the tall
+documentation viewport, so the rail shows what it budgets to a real screen.
