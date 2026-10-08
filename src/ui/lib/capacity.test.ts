@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { Agent } from "@paperclipai/shared";
 import type { LiveRunForIssue } from "../host/api";
-import { agentProfile, countCapacity, deriveCapacity, TICKLER_STALL_MS } from "./capacity";
+import {
+  agentProfile,
+  countCapacity,
+  countOverLimitRuns,
+  deriveCapacity,
+  durationLabel,
+  limitLabel,
+  TICKLER_OVER_LIMIT_SLACK_MS,
+  TICKLER_STALL_MS,
+} from "./capacity";
 
 const NOW = Date.UTC(2026, 7, 25, 12);
 const agoIso = (ms: number) => new Date(NOW - ms).toISOString();
@@ -10,8 +19,14 @@ const agent = (
   id: string,
   name: string,
   status = "idle",
-  extra: { role?: string; reportsTo?: string | null } = {},
-): Agent => ({ id, name, status, role: extra.role ?? "worker", reportsTo: extra.reportsTo ?? null }) as never;
+  extra: { role?: string; reportsTo?: string | null; adapterConfig?: Record<string, unknown> } = {},
+): Agent =>
+  ({ id, name, status, role: extra.role ?? "worker", reportsTo: extra.reportsTo ?? null, adapterConfig: extra.adapterConfig ?? {} }) as never;
+
+const HOUR = 60 * 60_000;
+/** An opencode-style agent with the two-hour limit from GH#72. */
+const limited = (id: string, adapterConfig: Record<string, unknown> = { timeoutSec: 7200 }) =>
+  agent(id, id.toUpperCase(), "running", { adapterConfig });
 
 const run = (over: Partial<LiveRunForIssue> & { agentId: string }): LiveRunForIssue =>
   ({
@@ -151,9 +166,70 @@ describe("deriveCapacity", () => {
     expect(squares[0].state).toBe("stalled");
   });
 
+  describe("over limit", () => {
+    // GH#72: output stopped at the 2h mark and the run was never closed.
+    const hung = (startedMsAgo: number, id = "r1") =>
+      run({ agentId: "a", id, startedAt: agoIso(startedMsAgo), lastUsefulActionAt: agoIso(startedMsAgo - 2 * HOUR) });
+
+    it("flags a run still running past its agent's timeoutSec, with how long it has run", () => {
+      const [square] = deriveCapacity([limited("a")], [hung(3 * HOUR + 47 * 60_000)], NOW);
+      expect(square).toMatchObject({ state: "over_limit", runningMins: 227, limitSec: 7200, silentMins: null });
+    });
+
+    it("outranks stalled, since a run past its limit is silent too", () => {
+      const [square] = deriveCapacity([limited("a")], [hung(3 * HOUR)], NOW);
+      expect(square.state).toBe("over_limit");
+    });
+
+    it("picks the over-limit run when the agent holds a stalled one as well", () => {
+      const quiet = run({ agentId: "a", id: "r2", lastUsefulActionAt: agoIso(2 * TICKLER_STALL_MS) });
+      const [square] = deriveCapacity([limited("a")], [quiet, hung(3 * HOUR)], NOW);
+      expect(square.state).toBe("over_limit");
+      expect(square.run?.id).toBe("r1");
+    });
+
+    it("waits out the host's grace period and one poll before calling it", () => {
+      const config = { timeoutSec: 7200, graceSec: 30 };
+      const atEdge = 2 * HOUR + 30_000 + TICKLER_OVER_LIMIT_SLACK_MS;
+      expect(deriveCapacity([limited("a", config)], [hung(atEdge - 1_000)], NOW)[0].state).not.toBe("over_limit");
+      expect(deriveCapacity([limited("a", config)], [hung(atEdge)], NOW)[0].state).toBe("over_limit");
+    });
+
+    it.each([
+      ["0 (no limit)", { timeoutSec: 0 }],
+      ["missing", {}],
+      ["not a number", { timeoutSec: "7200" }],
+    ])("never applies when timeoutSec is %s — the square behaves as before", (_label, config) => {
+      const [square] = deriveCapacity([limited("a", config)], [hung(10 * HOUR)], NOW);
+      expect(square.state).toBe("stalled");
+      expect(square).toMatchObject({ runningMins: null, limitSec: null });
+    });
+
+    it("never applies to a queued run, which has not started its clock", () => {
+      const waiting = run({ agentId: "a", status: "queued", startedAt: null, createdAt: agoIso(5 * HOUR) });
+      expect(deriveCapacity([limited("a")], [waiting], NOW)[0].state).toBe("queued");
+    });
+
+    it("counts runs, not agents, so a multi-slot agent's hung runs each count", () => {
+      const runs = [hung(3 * HOUR, "r1"), hung(4 * HOUR, "r2"), run({ agentId: "b" })];
+      expect(countOverLimitRuns([limited("a"), limited("b")], runs, NOW)).toBe(2);
+      expect(countOverLimitRuns([limited("a", {})], runs, NOW)).toBe(0);
+    });
+  });
+
   it("ignores runs belonging to agents it was not given", () => {
     const squares = deriveCapacity([agent("a", "Al")], [run({ agentId: "ghost" })], NOW);
     expect(squares[0].state).toBe("idle");
+  });
+});
+
+describe("durationLabel / limitLabel", () => {
+  it("reads like the issue asked: 3h 47m · limit 2h", () => {
+    expect(durationLabel(227)).toBe("3h 47m");
+    expect(durationLabel(47)).toBe("47m");
+    expect(limitLabel(7200)).toBe("2h");
+    expect(limitLabel(5400)).toBe("1h 30m");
+    expect(limitLabel(45)).toBe("45s");
   });
 });
 
@@ -164,7 +240,7 @@ describe("countCapacity", () => {
       [run({ agentId: "a" }), run({ agentId: "b", status: "queued", startedAt: null })],
       NOW,
     );
-    expect(countCapacity(squares)).toEqual({ working: 1, stalled: 0, queued: 1, error: 1, idle: 1, total: 4 });
+    expect(countCapacity(squares)).toEqual({ working: 1, over_limit: 0, stalled: 0, queued: 1, error: 1, idle: 1, total: 4 });
   });
 });
 

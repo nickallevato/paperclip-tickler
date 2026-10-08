@@ -5,6 +5,16 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Runs past their agent's time limit get their own square.** A run still
+  marked `running` after its agent's `timeoutSec` has been given up on by
+  Paperclip, and nothing will close it — it holds the agent's run slot until
+  someone cancels it. Tickler used to call it **stalled**, the same as a slow
+  model step that may still answer. Its capacity square is now brick-edged,
+  ranks above stalled, and its hover says how long it has run against the
+  limit ("3h 47m · limit 2h"). The org's hover counts such runs, and they push
+  the org further up the **Hot** sort than a stalled run does. Agents with no
+  `timeoutSec`, or `0`, are never over the limit. (GH#72)
+
 ## 0.14.3
 
 - **The update chip waits until npm can serve the new version.** For about

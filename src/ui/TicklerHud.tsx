@@ -5,7 +5,7 @@ import { authApi } from "./host/api";
 import { companiesListQueryOptions } from "./host/companies-query";
 import { useBreadcrumbs } from "./host/shims";
 import { useCompanyOrder } from "./host/useCompanyOrder";
-import { countCapacity, deriveCapacity } from "./lib/capacity";
+import { countCapacity, countOverLimitRuns, deriveCapacity } from "./lib/capacity";
 import { releaseStrandedPointerEvents } from "./lib/drafts";
 import {
   normalizePaneOrder,
@@ -319,7 +319,7 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
   // Heat is computed and never drawn: Need-you and Decisions already say
   // whether a company wants you, so a heat mark beside them would restate it.
   // Its job is the row order — the one thing those columns cannot do, because
-  // it folds in what none of them show (a silent run, an errored agent, an
+  // it folds in what none of them show (a silent or over-limit run, an errored agent, an
   // unreachable company).
   const heatByCompany = useMemo(() => {
     const now = Date.now();
@@ -336,6 +336,7 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
         oldestMins: stats?.oldestMins ?? null,
         tasksBlocked: stats?.tasksBlocked ?? 0,
         stalled: countCapacity(deriveCapacity(data?.agents ?? [], data?.liveRuns ?? [], now)).stalled,
+        overLimit: countOverLimitRuns(data?.agents ?? [], data?.liveRuns ?? [], now),
         agentErrors: data?.summary?.agents.error ?? 0,
         decisionsOpen: data?.needsBreakdown?.decisions ?? 0,
         tokenState: tokens === undefined ? "ok" : tokenState(tokens, thresholdsFor(tokenSettings, company.id)),

@@ -8,6 +8,8 @@ import {
   agentProfile,
   countCapacity,
   deriveCapacity,
+  durationLabel,
+  limitLabel,
   type TicklerSquare,
   type TicklerSquareState,
 } from "../lib/capacity";
@@ -28,6 +30,8 @@ const SQUARE_CLASS: Record<TicklerSquareState, string> = {
   working: "bg-tickler-live animate-[pulse_3s_ease-in-out_infinite] motion-reduce:animate-none",
   queued: "border border-tickler-live bg-transparent",
   stalled: "border border-tickler-wait bg-tickler-wait/20",
+  // Brick like an error, but half-filled: the agent is fine, one of its runs is not.
+  over_limit: "border border-tickler-alarm bg-tickler-alarm/50",
   error: "bg-tickler-alarm",
   idle: "bg-muted-foreground/25",
 };
@@ -36,6 +40,7 @@ const STATE_LABEL: Record<TicklerSquareState, string> = {
   working: "working",
   queued: "queued — no runner yet",
   stalled: "live but silent",
+  over_limit: "over its time limit",
   error: "agent error",
   idle: "idle",
 };
@@ -101,14 +106,21 @@ function SquareDetail({
             {issue?.title ?? runNarration(run, issue)}
           </p>
           <p className="whitespace-pre-line text-muted-foreground">
-            {square.state === "stalled"
+            {square.state === "over_limit"
+              ? `Past its own time limit — Paperclip has stopped waiting on it, but the run was never closed. It still holds a runner; cancel it to free the slot.`
+              : square.state === "stalled"
               ? `Nothing reported for ${square.silentMins}m — still holding a runner.`
               : square.state === "queued"
                 ? "Waiting for a runner; no agent is on it yet."
                 : (humanStatus(run) ?? (isStartingUp(run) ? "Starting up — nothing to report yet." : "Working — nothing reported yet."))}
           </p>
           <p className={cn("text-muted-foreground", MICRO)}>
-            {company.name} · {square.state === "queued" ? `queued ${elapsedLabel(run)}` : elapsedLabel(run)}
+            {company.name} ·{" "}
+            {square.state === "over_limit" && square.runningMins !== null && square.limitSec !== null
+              ? `${durationLabel(square.runningMins)} · limit ${limitLabel(square.limitSec)}`
+              : square.state === "queued"
+                ? `queued ${elapsedLabel(run)}`
+                : elapsedLabel(run)}
           </p>
         </>
       ) : (
@@ -124,8 +136,9 @@ function SquareDetail({
 
 /**
  * A company's agents as a row of small squares: dim when idle, live when
- * working, hollow when queued, ochre when a run has gone quiet, brick when an
- * agent has failed.
+ * working, hollow when queued, ochre when a run has gone quiet, brick-edged
+ * when a run has outlived its agent's time limit, brick when an agent has
+ * failed.
  *
  * This replaces the old "0 / 4" count, which could not tell idle-and-staffed
  * apart from having no agents at all, and had no way at all to show a run that
@@ -193,6 +206,7 @@ export function TicklerCapacityStrip({
 
   const summary =
     `${counts.working} working, ${counts.queued} queued, ${counts.idle} idle of ${counts.total} agents` +
+    (counts.over_limit > 0 ? ` · ${counts.over_limit} over time limit` : "") +
     (counts.stalled > 0 ? ` · ${counts.stalled} silent` : "") +
     (counts.error > 0 ? ` · ${counts.error} in error` : "");
 

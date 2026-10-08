@@ -896,7 +896,7 @@ export function formatTokensMillions(tokens: number): string {
  * this company want me", so a heat mark beside them would be a second opinion
  * on the same question. Heat exists to *order* the board, which is the one
  * job those columns cannot do — it folds in the things no single column shows
- * (a stalled run, an errored agent, an unreachable company), so a company with
+ * (a stalled or over-limit run, an errored agent, an unreachable company), so a company with
  * nothing in its Need-you count can still sort to the top when it is broken.
  */
 export interface TicklerHeatInput {
@@ -908,6 +908,11 @@ export interface TicklerHeatInput {
   tasksBlocked: number;
   /** Live runs that have gone quiet — see deriveCapacity. */
   stalled: number;
+  /**
+   * Live runs past their agent's own time limit — see countOverLimitRuns.
+   * Outweighs `stalled`: a quiet run may still answer, this one never will.
+   */
+  overLimit: number;
   agentErrors: number;
   /** Open decisions — a slice of `needs`, counted here so heat can weight them. */
   decisionsOpen: number;
@@ -922,6 +927,7 @@ export function deriveHeat(input: TicklerHeatInput): number {
   if (input.unavailable) return TICKLER_HEAT_MAX;
   let score = 0;
   if (input.agentErrors > 0) score += 2;
+  if (input.overLimit > 0) score += 3;
   if (input.stalled > 0) score += 2;
   if (input.decisionsOpen > 0) score += 1;
   if (input.criticalOrHigh) score += 2;
