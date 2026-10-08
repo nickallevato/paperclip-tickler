@@ -5,6 +5,17 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **A crash inside Tickler now says what broke, and costs only that part.**
+  Any error while drawing used to reach Paperclip's own catch-all, which
+  replaces the whole page with **Tickler: failed to render** and keeps the
+  cause in the browser console. Tickler now catches it first: one org whose
+  data trips it loses only its own line in **Orgs**, a failing pane (Recent,
+  Portfolio, Routines, Needs you) only that pane, and anything else gets a
+  page-sized notice. Each one shows the error message and offers **Try again**
+  and **Copy details**, which copies the version, the error and where it
+  happened, for a bug report. The toolbar button falls back to a warning
+  glyph instead of the host's error text. (PLI-285)
+
 ## 0.15.0
 
 - **Runs past their agent's time limit get their own square.** A run still

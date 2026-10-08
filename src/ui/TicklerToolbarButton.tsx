@@ -1,3 +1,4 @@
+import { TicklerErrorBoundary } from "./components/TicklerErrorBoundary";
 import { TicklerMark } from "./components/TicklerMark";
 import { buildCompanyPath, useHostNavigate, useOptionalCompany } from "./host/shims";
 
@@ -13,11 +14,19 @@ import { buildCompanyPath, useHostNavigate, useOptionalCompany } from "./host/sh
  * wrapper, so this renders its own compact button rather than bare content
  * (unlike the sidebarPanel zone, which supplies a bordered card frame).
  */
-export function TicklerToolbarButton({
-  context,
-}: {
-  context?: { companyPrefix?: string | null };
-}) {
+export function TicklerToolbarButton(props: TicklerToolbarButtonProps) {
+  // The host draws this on every page, so a throw here would put "Tickler:
+  // failed to render" in everyone's toolbar; a warning glyph is enough.
+  return (
+    <TicklerErrorBoundary area="Toolbar button" variant="chip">
+      <TicklerToolbarLink {...props} />
+    </TicklerErrorBoundary>
+  );
+}
+
+type TicklerToolbarButtonProps = { context?: { companyPrefix?: string | null } };
+
+function TicklerToolbarLink({ context }: TicklerToolbarButtonProps) {
   const nav = useHostNavigate();
   const company = useOptionalCompany();
   const prefix = context?.companyPrefix ?? company?.companyPrefix ?? null;
