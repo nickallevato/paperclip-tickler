@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.17.1
+
 - **Expanding Recent no longer collapses Orgs.** The two rail panes used to
   share one expand setting, so pressing **Expand** on Recent un-expanded Orgs,
   and the Recent header slid up under the cursor as org rows vanished. Each
