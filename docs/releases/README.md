@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.17.2](0.17.2.md) — switching org from the Tickler page no longer lands on "Page not found".
 - [0.17.1](0.17.1.md) — expanding Recent no longer collapses Orgs.
 - [0.17.0](0.17.0.md) — a version that crashes can be rolled back from the crash itself; crash notices can be reported on GitHub.
 - [0.16.1](0.16.1.md) — the Tickler page no longer crashes at some window heights.

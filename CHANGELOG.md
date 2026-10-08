@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.17.2
+
 - **Switching org from the Tickler page no longer lands on "Page not found".**
   Paperclip remembers the last page you had open in each org and goes back
   to it when you switch, but it saved Tickler's address with the org prefix
