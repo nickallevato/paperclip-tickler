@@ -40,6 +40,39 @@ export function crashReport(caught: TicklerCaughtError): string {
   return lines.join("\n");
 }
 
+export const TICKLER_NEW_ISSUE_URL = "https://github.com/nickallevato/paperclip-tickler/issues/new";
+
+/** GitHub serves a 414 well before browsers give up on a URL; stay clear of it. */
+const MAX_ISSUE_URL = 7000;
+
+/**
+ * A prefilled "new issue" form on Tickler's GitHub repo. It only opens the form:
+ * the reporter reads it, signs in and submits, so nothing leaves the browser
+ * unseen. A long stack is cut from the end rather than losing the message.
+ */
+export function crashIssueUrl(caught: TicklerCaughtError): string {
+  const title = `Crash: Tickler ${caught.version} — ${caught.area}: ${caught.message}`.slice(0, 200);
+  const build = (report: string) => {
+    const body = [
+      "<!-- Filled in from Tickler's crash notice. Check it holds nothing private before submitting. -->",
+      "",
+      "**What I was doing:** ",
+      "",
+      "```",
+      report,
+      "```",
+    ].join("\n");
+    return `${TICKLER_NEW_ISSUE_URL}?${new URLSearchParams({ title, body })}`;
+  };
+  let report = crashReport(caught);
+  let url = build(report);
+  while (url.length > MAX_ISSUE_URL && report.length > 0) {
+    report = report.slice(0, Math.floor(report.length * 0.8));
+    url = build(`${report}\n… (cut; Copy details has the rest)`);
+  }
+  return url;
+}
+
 type Variant = "page" | "pane" | "row" | "chip";
 
 type Props = {
@@ -120,6 +153,21 @@ function CopyDetails({ caught }: { caught: TicklerCaughtError }) {
     >
       {copied === "done" ? "Copied" : copied === "failed" ? "Copy failed" : "Copy details"}
     </button>
+  );
+}
+
+function ReportOnGitHub({ caught }: { caught: TicklerCaughtError }) {
+  return (
+    <a
+      data-error-report
+      href={crashIssueUrl(caught)}
+      target="_blank"
+      rel="noreferrer"
+      title="Opens a prefilled issue on Tickler's GitHub repo. You review it before submitting."
+      className="rounded border border-border px-1.5 py-0.5 font-medium text-foreground no-underline hover:bg-accent"
+    >
+      Report on GitHub
+    </a>
   );
 }
 
@@ -215,13 +263,14 @@ export function TicklerErrorFallback({
       {variant === "page" && (
         <p>
           Nothing on the server changed — this is Tickler's page in this browser. If it happens again
-          after trying, copy the details into a bug report; they name the version that failed. If
-          an earlier version worked here, you can roll back to it.
+          after trying, report it on GitHub — the report names the version that failed. If an
+          earlier version worked here, you can roll back to it.
         </p>
       )}
       <div className="flex flex-wrap items-center gap-1.5">
         {retry}
         <CopyDetails caught={caught} />
+        <ReportOnGitHub caught={caught} />
         <RollbackButton running={caught.version} />
       </div>
       {(caught.stack || caught.componentStack) && (

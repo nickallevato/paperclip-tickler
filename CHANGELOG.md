@@ -45,6 +45,9 @@ Short-form. The reader-facing write-up for each version is in
   instance-admin only, like updating. A bundle that fails before Tickler's code
   runs at all still shows only Paperclip's placeholder; that needs a fix in
   Paperclip. (PLI-286)
+- **Crash notices can be reported on GitHub.** The page and pane notices gain
+  **Report on GitHub**, which opens a new issue on Tickler's repo prefilled with
+  the copied details. Nothing is sent until you submit it there. (PLI-286)
 
 ## 0.15.0
 

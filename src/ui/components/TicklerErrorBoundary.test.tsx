@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import manifest from "../../manifest";
-import { TicklerErrorBoundary, crashReport, describeCaughtError } from "./TicklerErrorBoundary";
+import {
+  TICKLER_NEW_ISSUE_URL,
+  TicklerErrorBoundary,
+  crashIssueUrl,
+  crashReport,
+  describeCaughtError,
+} from "./TicklerErrorBoundary";
 
 let shouldThrow = true;
 
@@ -138,5 +144,33 @@ describe("crashReport", () => {
     expect(crashReport(caught)).toBe(
       `Tickler ${manifest.version} — Routines failed to render\nat 2026-10-08T17:00:00.000Z\n\nboom`,
     );
+  });
+});
+
+describe("crashIssueUrl", () => {
+  it("opens a prefilled issue on Tickler's repo carrying the report", () => {
+    render(
+      <TicklerErrorBoundary area="Recent">
+        <Bomb />
+      </TicklerErrorBoundary>,
+    );
+    const link = screen.getByRole("link", { name: "Report on GitHub" });
+    expect(link).toHaveAttribute("target", "_blank");
+    const url = new URL(link.getAttribute("href")!);
+    expect(`${url.origin}${url.pathname}`).toBe(TICKLER_NEW_ISSUE_URL);
+    expect(url.searchParams.get("title")).toBe(
+      `Crash: Tickler ${manifest.version} — Recent: TypeError: Cannot read properties of undefined (reading 'map')`,
+    );
+    expect(url.searchParams.get("body")).toContain(`Tickler ${manifest.version} — Recent failed to render`);
+  });
+
+  it("cuts a long stack so GitHub still accepts the URL, keeping the message", () => {
+    const error = new Error("boom");
+    error.stack = `Error: boom\n${"    at someFrame (http://host/_plugins/tickler/ui/index.js:1:1)\n".repeat(400)}`;
+    const url = crashIssueUrl(describeCaughtError("Tickler page", error));
+    expect(url.length).toBeLessThanOrEqual(7000);
+    const body = new URL(url).searchParams.get("body")!;
+    expect(body).toContain("Error: boom");
+    expect(body).toContain("(cut; Copy details has the rest)");
   });
 });
