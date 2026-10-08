@@ -6,9 +6,9 @@ changed, what it means for them, and anything they have to do by hand.
 - [0.17.1](0.17.1.md) — expanding Recent no longer collapses Orgs.
 - [0.17.0](0.17.0.md) — a version that crashes can be rolled back from the crash itself; crash notices can be reported on GitHub.
 - [0.16.1](0.16.1.md) — the Tickler page no longer crashes at some window heights.
-- [0.16.0](0.16.0.md) — approval rows are safer to work on a phone.
+- [0.16.0](0.16.0.md) — approval rows are safer to work on a phone, suggested by [@naeemakhtar110](https://github.com/naeemakhtar110).
 - [0.15.1](0.15.1.md) — a crash inside Tickler now says what broke, and costs only that part.
-- [0.15.0](0.15.0.md) — runs past their agent's time limit get their own square.
+- [0.15.0](0.15.0.md) — runs past their agent's time limit get their own square, suggested by [@naeemakhtar110](https://github.com/naeemakhtar110).
 - [0.14.3](0.14.3.md) — the update chip waits until npm can serve the new version.
 - [0.14.2](0.14.2.md) — "+2 more" now tells you something.
 - [0.14.1](0.14.1.md) — the Orgs header stays on one line.

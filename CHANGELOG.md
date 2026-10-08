@@ -49,7 +49,7 @@ Short-form. The reader-facing write-up for each version is in
   longer neighbours. Links are 44 px tall under a finger, as buttons already
   were. **Reject takes two taps:** the first turns it into a red **Confirm
   reject**, which goes back after 4 s or when it loses focus, because a
-  rejected approval cannot be undone. (GH#73)
+  rejected approval cannot be undone. ([GH#73](https://github.com/nickallevato/paperclip-tickler/issues/73) — suggested by [@naeemakhtar110](https://github.com/naeemakhtar110))
 
 ## 0.15.1
 
@@ -74,7 +74,7 @@ Short-form. The reader-facing write-up for each version is in
   ranks above stalled, and its hover says how long it has run against the
   limit ("3h 47m · limit 2h"). The org's hover counts such runs, and they push
   the org further up the **Hot** sort than a stalled run does. Agents with no
-  `timeoutSec`, or `0`, are never over the limit. (GH#72)
+  `timeoutSec`, or `0`, are never over the limit. ([GH#72](https://github.com/nickallevato/paperclip-tickler/issues/72) — suggested by [@naeemakhtar110](https://github.com/naeemakhtar110))
 
 ## 0.14.3
 
