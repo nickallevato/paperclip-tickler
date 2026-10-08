@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.15.0
+
 - **Runs past their agent's time limit get their own square.** A run still
   marked `running` after its agent's `timeoutSec` has been given up on by
   Paperclip, and nothing will close it — it holds the agent's run slot until

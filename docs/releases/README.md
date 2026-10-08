@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.15.0](0.15.0.md) — runs past their agent's time limit get their own square.
 - [0.14.3](0.14.3.md) — the update chip waits until npm can serve the new version.
 - [0.14.2](0.14.2.md) — "+2 more" now tells you something.
 - [0.14.1](0.14.1.md) — the Orgs header stays on one line.
