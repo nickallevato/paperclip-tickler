@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.14.1
+
 - **The Orgs header stays on one line.** 0.14.0 put the **8h | 24h** switch in
   the Orgs header, which squeezed the "tokens · need you" caption onto a second
   line at most rail widths. The switch now sits on the All line at the bottom of
