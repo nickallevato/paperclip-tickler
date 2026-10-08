@@ -5,6 +5,16 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The update chip waits until npm can serve the new version.** For about
+  five minutes after a release, npm already lists the new version as latest
+  but still returns 404 for its package file, so clicking **Update** in that
+  window ran an `npm install` that failed. The chip now also checks that the
+  file is there. Until it is, the chip shows a spinning **Publishing x.y.z…**
+  that can't be clicked, checks again every 30 seconds, and turns into
+  **Update to x.y.z** on its own. The settings panel says the same in words.
+  If the check fails for any other reason, the chip shows nothing, as it does
+  when npm can't be reached.
+
 ## 0.14.2
 
 - **"+2 more" now tells you something.** The count in a rail pane's header

@@ -25,6 +25,14 @@
  * answer slowly or not at all. Anything this cannot answer is `"unknown"`, and
  * an unknown never renders an update affordance: a button that 400s because the
  * version behind it was a guess is worse than no button.
+ *
+ * ## `latest` moves before the tarball does
+ *
+ * Right after a release, npm's `/<pkg>/latest` already names the new version
+ * while its tarball still 404s, for about five minutes. The host's upgrade runs
+ * `npm install`, which needs the tarball, so a button offered in that window
+ * fails (PLI-279). The check therefore also asks whether the tarball is there,
+ * and until it is the version is `"publishing"`: shown, but not offered.
  */
 import { compareVersions, type InstalledPluginRecord } from "./plugin-reload";
 
@@ -41,24 +49,55 @@ export const NPM_PACKAGE = "paperclip-plugin-tickler";
  */
 export const NPM_LATEST_URL = `https://registry.npmjs.org/${NPM_PACKAGE}/latest`;
 
+/**
+ * Where npm serves a version's tarball — the file `npm install` actually needs.
+ * Its 404 answers with `access-control-allow-origin: *` too, so a `HEAD` from
+ * the page can tell "not there yet" from "unreachable".
+ */
+export function npmTarballUrl(version: string): string {
+  return `https://registry.npmjs.org/${NPM_PACKAGE}/-/${NPM_PACKAGE}-${version}.tgz`;
+}
+
+/** How often to look again while a version is publishing. */
+export const PUBLISHING_POLL_MS = 30_000;
+
 export type SelfUpdateCheck =
   /** No registration, no answer from npm, or an unreadable one. Renders nothing. */
   | { status: "unknown" }
   /** Installed from a local path; `lib/plugin-reload` owns this install's updates. */
   | { status: "local"; installed: string }
   | { status: "current"; installed: string }
+  /** npm names a newer version but cannot serve its tarball yet. Not installable. */
+  | { status: "publishing"; installed: string; latest: string }
   /** A newer version is published and the host can take it in place. */
   | { status: "available"; installed: string; latest: string };
 
+/**
+ * `tarballReady` is whether npm serves `latest`'s tarball: `false` while it is
+ * publishing, and `undefined` when that is not known — not asked yet, or the
+ * registry did not answer. Only a definite `true` offers the update.
+ */
 export function checkSelfUpdate(
   installed: InstalledPluginRecord | null | undefined,
   latest: string | null | undefined,
+  tarballReady?: boolean | null,
 ): SelfUpdateCheck {
   const installedVersion = installed?.version;
   if (!installedVersion) return { status: "unknown" };
   if (installed?.packagePath) return { status: "local", installed: installedVersion };
   if (!latest) return { status: "unknown" };
-  return compareVersions(latest, installedVersion) > 0
-    ? { status: "available", installed: installedVersion, latest }
-    : { status: "current", installed: installedVersion };
+  if (compareVersions(latest, installedVersion) <= 0) {
+    return { status: "current", installed: installedVersion };
+  }
+  if (tarballReady === true) return { status: "available", installed: installedVersion, latest };
+  if (tarballReady === false) return { status: "publishing", installed: installedVersion, latest };
+  return { status: "unknown" };
+}
+
+/** Whether the check needs the tarball answer: npm names a newer version. */
+export function needsTarballCheck(
+  installed: InstalledPluginRecord | null | undefined,
+  latest: string | null | undefined,
+): latest is string {
+  return checkSelfUpdate(installed, latest, true).status === "available";
 }

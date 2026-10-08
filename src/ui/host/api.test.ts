@@ -14,7 +14,7 @@ import {
   sidebarBadgesApi,
   workTimelineApi,
 } from "./api";
-import { NPM_LATEST_URL } from "../lib/self-update";
+import { NPM_LATEST_URL, npmTarballUrl } from "../lib/self-update";
 
 function mockJson(body: unknown, status = 200) {
   return vi.fn(async () => new Response(JSON.stringify(body), {
@@ -214,6 +214,28 @@ describe("host/api", () => {
     it("returns null for a body without a version rather than inventing one", async () => {
       vi.stubGlobal("fetch", mockJson({}));
       await expect(npmRegistryApi.latestVersion()).resolves.toBeNull();
+    });
+  });
+
+  describe("npmRegistryApi.tarballReady", () => {
+    const head = (status: number) => vi.fn(async () => new Response(null, { status }));
+
+    it("is true once npm serves the tarball, asked uncached and without cookies", async () => {
+      vi.stubGlobal("fetch", head(200));
+      await expect(npmRegistryApi.tarballReady("0.7.1")).resolves.toBe(true);
+      const [url, init] = lastCall();
+      expect(url).toBe(npmTarballUrl("0.7.1"));
+      expect(init).toMatchObject({ method: "HEAD", credentials: "omit", cache: "no-store" });
+    });
+
+    it("is false on a 404 — the window right after a release", async () => {
+      vi.stubGlobal("fetch", head(404));
+      await expect(npmRegistryApi.tarballReady("0.7.1")).resolves.toBe(false);
+    });
+
+    it("raises on anything else, so the caller says 'don't know'", async () => {
+      vi.stubGlobal("fetch", head(503));
+      await expect(npmRegistryApi.tarballReady("0.7.1")).rejects.toBeInstanceOf(ApiError);
     });
   });
 });

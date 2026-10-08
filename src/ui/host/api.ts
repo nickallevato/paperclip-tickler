@@ -34,7 +34,7 @@ import type {
 import { demoRespond, isDemoActive } from "../demo/demo-runtime";
 import { PLUGIN_ID } from "../../plugin-id";
 import type { InstalledPluginRecord } from "../lib/plugin-reload";
-import { NPM_LATEST_URL } from "../lib/self-update";
+import { NPM_LATEST_URL, npmTarballUrl } from "../lib/self-update";
 
 const BASE = "/api";
 
@@ -441,6 +441,22 @@ export const npmRegistryApi = {
     if (!res.ok) throw new ApiError(`npm registry: ${res.status}`, res.status, null);
     const body = (await res.json()) as { version?: unknown };
     return typeof body.version === "string" ? body.version : null;
+  },
+  /**
+   * Whether npm will hand over this version's tarball yet. `false` on a 404 —
+   * the window after a release where `latest` is ahead of the file — and a
+   * raise for anything else, which the caller treats as "don't know".
+   */
+  tarballReady: async (version: string): Promise<boolean> => {
+    const res = await fetch(npmTarballUrl(version), {
+      method: "HEAD",
+      credentials: "omit",
+      // A cached 404 from the first look would keep it "publishing" forever.
+      cache: "no-store",
+    });
+    if (res.ok) return true;
+    if (res.status === 404) return false;
+    throw new ApiError(`npm registry: ${res.status}`, res.status, null);
   },
 };
 
