@@ -872,6 +872,7 @@ describe("deriveHeat", () => {
     oldestMins: null,
     tasksBlocked: 0,
     stalled: 0,
+    overLimit: 0,
     agentErrors: 0,
     decisionsOpen: 0,
     tokenState: "ok",
@@ -901,6 +902,10 @@ describe("deriveHeat", () => {
     expect(deriveHeat({ ...calm, stalled: 2 })).toBeGreaterThan(0);
   });
 
+  it("ranks a run past its time limit above a silent one", () => {
+    expect(deriveHeat({ ...calm, overLimit: 1 })).toBeGreaterThan(deriveHeat({ ...calm, stalled: 1 }));
+  });
+
   it("counts open decisions", () => {
     expect(deriveHeat({ ...calm, decisionsOpen: 1 })).toBeGreaterThan(0);
   });
@@ -914,6 +919,7 @@ describe("deriveHeat", () => {
         oldestMins: 10 * 1440,
         tasksBlocked: 9,
         stalled: 4,
+        overLimit: 2,
         agentErrors: 3,
         decisionsOpen: 2,
         tokenState: "crit",

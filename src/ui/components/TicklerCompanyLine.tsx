@@ -13,6 +13,7 @@ import {
   type TicklerCompanyStats,
   type TicklerTokenThresholds,
 } from "../lib/tickler";
+import { countOverLimitRuns } from "../lib/capacity";
 import { TicklerCapacityStrip } from "./TicklerCapacityStrip";
 import { TicklerCeoStrip } from "./TicklerCeoStrip";
 import { TicklerLink } from "./TicklerLink";
@@ -141,6 +142,7 @@ export function TicklerCompanyLine({
                 actionable={actionable}
                 thresholds={thresholds}
                 blind={blind}
+                nowMs={nowMs}
                 pinned={pinned}
                 onTogglePin={onTogglePin}
               />
@@ -218,6 +220,7 @@ function CompanyDetail({
   actionable,
   thresholds,
   blind,
+  nowMs,
   pinned,
   onTogglePin,
 }: {
@@ -227,11 +230,13 @@ function CompanyDetail({
   actionable: TicklerActionable;
   thresholds: TicklerTokenThresholds;
   blind: boolean;
+  nowMs: number;
   pinned: boolean;
   onTogglePin?: () => void;
 }) {
   const needs = deriveNeedsBreakdown(data.attention);
   const throughput = deriveThroughput(data.summary?.runActivity ?? []);
+  const overLimit = countOverLimitRuns(data.agents, data.liveRuns, nowMs);
   const tokenTone = stats.tokens === undefined ? "ok" : tokenState(stats.tokens, thresholds);
   const figures: Array<{ label: string; value: string | number; tone?: string; title?: string }> = [
     { label: "Need you", value: actionable.count, tone: actionable.count === 0 ? ZERO : undefined },
@@ -320,6 +325,15 @@ function CompanyDetail({
             </span>
             <TicklerSparkline runActivity={data.summary?.runActivity ?? []} />
           </div>
+          {overLimit > 0 && (
+            <p
+              data-over-limit-count={overLimit}
+              className={cn(MICRO, "text-tickler-alarm")}
+              title="Still marked running after the agent's own time limit. Nothing will close these runs; each holds a runner until someone cancels it."
+            >
+              {overLimit} run{overLimit === 1 ? "" : "s"} over their time limit
+            </p>
+          )}
           <div className="flex items-center gap-1.5">
             <span className={cn(MICRO, "text-muted-foreground")}>Lead</span>
             <TicklerCeoStrip agents={data.agents} company={company} />

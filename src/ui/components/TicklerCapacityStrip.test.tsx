@@ -76,6 +76,25 @@ describe("TicklerCapacityStrip", () => {
     expect(states()).toEqual(["stalled"]);
   });
 
+  it("shows a run past its agent's time limit as over limit, and says so to screen readers", () => {
+    const limited = { ...agent("a", "Al"), adapterConfig: { timeoutSec: 7200 } } as Agent;
+    render(
+      <TicklerCapacityStrip
+        agents={[limited, agent("b", "Bo")]}
+        liveRuns={[
+          run({ agentId: "a", startedAt: agoIso(227 * 60_000), lastUsefulActionAt: agoIso(107 * 60_000) }),
+          run({ agentId: "b", startedAt: agoIso(227 * 60_000), lastUsefulActionAt: agoIso(107 * 60_000) }),
+        ]}
+        issues={[] as Issue[]}
+        company={company}
+        nowMs={NOW}
+      />,
+    );
+    // Bo has no limit configured, so the same silence is only "stalled".
+    expect(states()).toEqual(["over_limit", "stalled"]);
+    expect(container.querySelector(".sr-only")?.textContent).toContain("1 over time limit · 1 silent");
+  });
+
   it("says so plainly when a company has no agents, rather than drawing nothing", () => {
     render(<TicklerCapacityStrip agents={[]} liveRuns={[]} issues={[] as Issue[]} company={company} nowMs={NOW} />);
     expect(states()).toEqual([]);

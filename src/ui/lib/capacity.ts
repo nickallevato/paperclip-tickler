@@ -11,15 +11,26 @@ import { runPhase } from "./runs";
 export const TICKLER_STALL_MS = 20 * 60_000;
 
 /**
+ * Slack past an agent's `timeoutSec` + `graceSec` before a run is called over
+ * its limit. The host closes a timed-out run itself once the grace period is
+ * up, and the board only sees that on its next poll — without this margin a
+ * run that ended on time would flash "over limit" for one refresh.
+ */
+export const TICKLER_OVER_LIMIT_SLACK_MS = 60_000;
+
+/**
  * One square in a company's capacity strip.
  *
  * `working` and `queued` mirror {@link runPhase}; `stalled` is a working run
- * that has gone quiet; `error` is an agent the host has marked failed; `idle`
+ * that has gone quiet; `over_limit` is a run still marked running after its
+ * agent's own `timeoutSec` — the host has already given up on it and nothing
+ * will close it, so unlike `stalled` it cannot recover by itself and someone
+ * has to cancel it; `error` is an agent the host has marked failed; `idle`
  * is an agent that is staffed with nothing on it. The distinction between
  * `idle` and *no agent at all* is the whole point — "0 / 4" renders those two
  * states identically today.
  */
-export type TicklerSquareState = "working" | "stalled" | "queued" | "error" | "idle";
+export type TicklerSquareState = "working" | "over_limit" | "stalled" | "queued" | "error" | "idle";
 
 export interface TicklerSquare {
   agentId: string;
@@ -29,6 +40,10 @@ export interface TicklerSquare {
   run: LiveRunForIssue | null;
   /** Minutes since the run last did anything useful — only set when stalled. */
   silentMins: number | null;
+  /** Minutes since the run started — only set when over its limit. */
+  runningMins: number | null;
+  /** The agent's `timeoutSec` — only set when over its limit. */
+  limitSec: number | null;
 }
 
 /**
@@ -41,7 +56,7 @@ export interface TicklerSquare {
 const NOT_CAPACITY = new Set(["paused", "terminated", "pending_approval"]);
 
 /** The most alarming state wins when one agent somehow has several runs. */
-const RANK: Record<TicklerSquareState, number> = { error: 0, stalled: 1, working: 2, queued: 3, idle: 4 };
+const RANK: Record<TicklerSquareState, number> = { error: 0, over_limit: 1, stalled: 2, working: 3, queued: 4, idle: 5 };
 
 /**
  * The last moment a run demonstrably did something.
@@ -64,13 +79,50 @@ function lastSignAtMs(run: LiveRunForIssue): number | null {
   return Number.isFinite(started) ? started : null;
 }
 
-function stateForRun(run: LiveRunForIssue, nowMs: number): { state: TicklerSquareState; silentMins: number | null } {
-  if (runPhase(run) === "queued") return { state: "queued", silentMins: null };
+/**
+ * The agent's own run time limit, from the adapter config the board already
+ * reads. `timeoutSec` of 0 or absent means no limit, and such an agent is
+ * never over it. `graceSec` is the host's wait between the stop signal and the
+ * kill, so a run inside it is still being shut down on schedule.
+ */
+export function agentRunLimit(agent: Agent | undefined): { timeoutSec: number; graceSec: number } | null {
+  const adapter = record(agent?.adapterConfig) ?? {};
+  const timeoutSec = positive(adapter.timeoutSec);
+  if (timeoutSec === null) return null;
+  return { timeoutSec, graceSec: positive(adapter.graceSec) ?? 0 };
+}
+
+type RunVerdict = Pick<TicklerSquare, "state" | "silentMins" | "runningMins" | "limitSec">;
+
+function stateForRun(run: LiveRunForIssue, nowMs: number, agent?: Agent): RunVerdict {
+  const plain = { silentMins: null, runningMins: null, limitSec: null };
+  if (runPhase(run) === "queued") return { state: "queued", ...plain };
+  const limit = agentRunLimit(agent);
+  const started = run.startedAt ? new Date(run.startedAt).getTime() : Number.NaN;
+  if (limit && Number.isFinite(started)) {
+    const runningMs = nowMs - started;
+    if (runningMs >= (limit.timeoutSec + limit.graceSec) * 1000 + TICKLER_OVER_LIMIT_SLACK_MS) {
+      return { state: "over_limit", silentMins: null, runningMins: Math.floor(runningMs / 60_000), limitSec: limit.timeoutSec };
+    }
+  }
   const lastSign = lastSignAtMs(run);
-  if (lastSign === null) return { state: "working", silentMins: null };
+  if (lastSign === null) return { state: "working", ...plain };
   const silentMs = nowMs - lastSign;
-  if (silentMs >= TICKLER_STALL_MS) return { state: "stalled", silentMins: Math.round(silentMs / 60_000) };
-  return { state: "working", silentMins: null };
+  if (silentMs >= TICKLER_STALL_MS) return { state: "stalled", ...plain, silentMins: Math.round(silentMs / 60_000) };
+  return { state: "working", ...plain };
+}
+
+/** `47m`, `2h`, `3h 47m` — a run's age or an agent's limit at a glance. */
+export function durationLabel(mins: number): string {
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  return rest === 0 ? `${hours}h` : `${hours}h ${rest}m`;
+}
+
+/** An agent's `timeoutSec` in the same form, keeping seconds when it is under a minute. */
+export function limitLabel(limitSec: number): string {
+  return limitSec < 60 ? `${limitSec}s` : durationLabel(Math.round(limitSec / 60));
 }
 
 
@@ -142,23 +194,43 @@ export function deriveCapacity(
 
   return orgOrder(agents.filter((agent) => !NOT_CAPACITY.has(agent.status)))
     .map((agent) => {
+      const plain = { run: null, silentMins: null, runningMins: null, limitSec: null };
       if (agent.status === "error") {
-        return { agentId: agent.id, agentName: agent.name, state: "error" as const, run: null, silentMins: null };
+        return { agentId: agent.id, agentName: agent.name, state: "error" as const, ...plain };
       }
       const runs = runsByAgent.get(agent.id) ?? [];
       if (runs.length === 0) {
-        return { agentId: agent.id, agentName: agent.name, state: "idle" as const, run: null, silentMins: null };
+        return { agentId: agent.id, agentName: agent.name, state: "idle" as const, ...plain };
       }
       const scored = runs
-        .map((run) => ({ run, ...stateForRun(run, nowMs) }))
+        .map((run) => ({ run, ...stateForRun(run, nowMs, agent) }))
         .sort((a, b) => RANK[a.state] - RANK[b.state]);
-      const best = scored[0];
-      return { agentId: agent.id, agentName: agent.name, state: best.state, run: best.run, silentMins: best.silentMins };
+      return { agentId: agent.id, agentName: agent.name, ...scored[0] };
     });
+}
+
+/**
+ * Live runs past their agent's own time limit, counted per run rather than per
+ * square: an agent allowed several runs at once can hold more than one, and
+ * each is a slot nobody will free.
+ */
+export function countOverLimitRuns(
+  agents: ReadonlyArray<Agent>,
+  liveRuns: ReadonlyArray<LiveRunForIssue>,
+  nowMs: number,
+): number {
+  const agentsById = new Map(agents.map((agent) => [agent.id, agent]));
+  let count = 0;
+  for (const run of liveRuns) {
+    const agent = agentsById.get(run.agentId);
+    if (agent && stateForRun(run, nowMs, agent).state === "over_limit") count += 1;
+  }
+  return count;
 }
 
 export interface TicklerCapacityCounts {
   working: number;
+  over_limit: number;
   stalled: number;
   queued: number;
   error: number;
@@ -167,7 +239,7 @@ export interface TicklerCapacityCounts {
 }
 
 export function countCapacity(squares: ReadonlyArray<TicklerSquare>): TicklerCapacityCounts {
-  const counts: TicklerCapacityCounts = { working: 0, stalled: 0, queued: 0, error: 0, idle: 0, total: squares.length };
+  const counts: TicklerCapacityCounts = { working: 0, over_limit: 0, stalled: 0, queued: 0, error: 0, idle: 0, total: squares.length };
   for (const square of squares) counts[square.state] += 1;
   return counts;
 }
