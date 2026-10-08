@@ -86,6 +86,23 @@ export interface TicklerRailPaneSpec {
    * the pane is never demoted for asking.
    */
   reserveRows?: number;
+  /**
+   * Rows to keep growing towards once everyone else has been served, paying for
+   * them by taking `droppable` panes off the rail if what is left is not enough
+   * (PLI-287).
+   *
+   * For a pane the reader expanded on a rail that had nothing left to give it:
+   * Portfolio and Routines already folded to their headers, and Orgs — above
+   * it — not to be touched, because every row taken from Orgs moves the header
+   * that was just pressed. So it is served last, and from below.
+   */
+  tailRows?: number;
+  /**
+   * Folded, and may leave the rail altogether — header and gap — when the
+   * `tailRows` pane still wants rows. Last declared goes first, so the rail
+   * gives up its bottom pane before the one above it. Only with `collapsed`.
+   */
+  droppable?: boolean;
 }
 
 /** One pane, as the page actually drew it. */
@@ -112,6 +129,8 @@ export interface TicklerRailPaneBudget {
   hidden: number;
   /** Header only: the pane could not afford even its minimum. */
   demoted: boolean;
+  /** Off the rail entirely, header included — see `droppable`. */
+  dropped?: boolean;
 }
 
 export type TicklerRailBudget = Record<string, TicklerRailPaneBudget | undefined>;
@@ -159,6 +178,8 @@ export function distributeRailHeight(
   const floor = (spec: TicklerRailPaneSpec) => Math.min(spec.minRows, boxes[spec.key].total);
 
   const rows: Record<string, number> = Object.fromEntries(specs.map((spec) => [spec.key, 0]));
+  /** Panes taken off the rail for a `tailRows` pane: no header, and no gap. */
+  const dropped = new Set<string>();
   /**
    * What the pane costs, rounded up to the whole pixel it will be pinned to.
    *
@@ -170,12 +191,14 @@ export function distributeRailHeight(
    * is the flexible child.
    */
   const paneHeight = (key: string) => {
+    if (dropped.has(key)) return 0;
     const box = boxes[key];
     const drawn = rows[key] > 0 || empty(key);
     return Math.ceil(box.frame + box.head + (drawn ? box.foot : 0) + rows[key] * box.row);
   };
   const spent = () =>
-    specs.reduce((total, spec) => total + paneHeight(spec.key), 0) + gap * Math.max(0, specs.length - 1);
+    specs.reduce((total, spec) => total + paneHeight(spec.key), 0) +
+    gap * Math.max(0, specs.length - dropped.size - 1);
   /** Take `n` rows if the rail can still pay for every pane; otherwise change nothing. */
   const afford = (key: string, n: number) => {
     const held = rows[key];
@@ -215,6 +238,27 @@ export function distributeRailHeight(
       if (afford(spec.key, rows[spec.key] + 1)) moving = true;
     }
   }
+  // Last, the pane still growing towards `tailRows`: from whatever is left, then
+  // from the panes below it, one at a time from the bottom of the rail. Every row
+  // above it is already settled, so this only ever moves things under it.
+  const droppable = specs.filter((spec) => spec.collapsed && spec.droppable).reverse();
+  for (const spec of order) {
+    if (!spec.tailRows || rows[spec.key] === 0) continue;
+    const want = Math.min(spec.tailRows, boxes[spec.key].total);
+    for (const next of droppable) {
+      while (rows[spec.key] < want && afford(spec.key, rows[spec.key] + 1));
+      if (rows[spec.key] >= want) break;
+      dropped.add(next.key);
+    }
+    while (rows[spec.key] < want && afford(spec.key, rows[spec.key] + 1));
+  }
+  // A pane dropped for less than a row's worth is put back: gone for nothing is
+  // still gone.
+  for (const spec of [...droppable].reverse()) {
+    if (!dropped.has(spec.key)) continue;
+    dropped.delete(spec.key);
+    if (spent() > available) dropped.add(spec.key);
+  }
 
   return Object.fromEntries(
     specs.map((spec) => {
@@ -223,6 +267,7 @@ export function distributeRailHeight(
       // Folded reads as demoted to the pane itself — header only — because that
       // is the state it already knows how to draw. It is told how many rows it
       // is holding so the header can say so.
+      if (dropped.has(spec.key)) return [spec.key, { rows: 0, height: null, hidden: box.total, demoted: true, dropped: true }];
       if (spec.collapsed) return [spec.key, { rows: 0, height: null, hidden: box.total, demoted: true }];
       if (empty(spec.key)) return [spec.key, UNBUDGETED];
       if (drawn === 0) return [spec.key, { rows: 0, height: null, hidden: box.total, demoted: true }];
@@ -265,7 +310,8 @@ export function sameRailBudget(a: TicklerRailBudget, b: TicklerRailBudget): bool
       left.rows !== right.rows ||
       left.height !== right.height ||
       left.hidden !== right.hidden ||
-      left.demoted !== right.demoted
+      left.demoted !== right.demoted ||
+      Boolean(left.dropped) !== Boolean(right.dropped)
     )
       return false;
   }
