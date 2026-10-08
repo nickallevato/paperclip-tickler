@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.14.3
+
 - **The update chip waits until npm can serve the new version.** For about
   five minutes after a release, npm already lists the new version as latest
   but still returns 404 for its package file, so clicking **Update** in that
