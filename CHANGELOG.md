@@ -5,6 +5,14 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Approval rows are safer to work on a phone.** A row's title now opens it,
+  on every kind of row in **Needs you**. Approval rows get a labelled **Open**
+  button, placed first (**Open · Approve · Reject**), so Open and Reject are no
+  longer neighbours. Links are 44 px tall under a finger, as buttons already
+  were. **Reject takes two taps:** the first turns it into a red **Confirm
+  reject**, which goes back after 4 s or when it loses focus, because a
+  rejected approval cannot be undone. (GH#73)
+
 ## 0.15.1
 
 - **A crash inside Tickler now says what broke, and costs only that part.**

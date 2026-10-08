@@ -235,7 +235,7 @@ describe("TicklerQueue", () => {
     expect(row.textContent).not.toContain("Questions need answers");
     expect(row.querySelector("[data-queue-ask]")?.textContent).toContain("3 questions · Which class do you select for the fall term?");
     expect(row.textContent).toContain("questions");
-    expect(row.querySelector('[aria-label="Answer"], a')?.textContent).toContain("Answer");
+    expect(row.querySelector('[aria-label="Answer"], a:not([title])')?.textContent).toContain("Answer");
     act(() => root.unmount());
   });
 
@@ -346,6 +346,39 @@ describe("TicklerQueue", () => {
     });
     expect(mockApprovalsApi.approve).toHaveBeenCalledWith("ap-1", undefined);
     expect(onActed).toHaveBeenCalledWith("c1");
+    act(() => root.unmount());
+  });
+
+  it("opens an approval from its title or a labelled Open that sits away from Reject", () => {
+    const root = render();
+    const row = container.querySelector('[data-queue-item="approval:ap-1"]') as HTMLElement;
+    const title = row.querySelector("a[title]") as HTMLAnchorElement;
+    expect(title.getAttribute("href")).toBe("/ACM/approvals/ap-1");
+    const controls = [...row.querySelectorAll("a:not([title]), button[aria-label]")].map(
+      (el) => el.getAttribute("aria-label") ?? el.textContent?.trim(),
+    );
+    expect(controls.slice(0, 3)).toEqual(["Open", "Approve", "Reject"]);
+    act(() => root.unmount());
+  });
+
+  it("rejects only on a second tap, and a lapsed first tap disarms", async () => {
+    vi.useFakeTimers();
+    mockApprovalsApi.reject.mockResolvedValue({ id: "ap-1", status: "rejected" });
+    const root = render();
+    const reject = () =>
+      container.querySelector('[data-queue-item="approval:ap-1"] [aria-label$="eject"]') as HTMLButtonElement;
+    act(() => reject().click());
+    expect(mockApprovalsApi.reject).not.toHaveBeenCalled();
+    expect(reject().textContent).toContain("Confirm reject");
+    act(() => vi.advanceTimersByTime(4000));
+    expect(reject().textContent).not.toContain("Confirm");
+    act(() => reject().click());
+    await act(async () => {
+      reject().click();
+      await vi.runAllTimersAsync();
+    });
+    expect(mockApprovalsApi.reject).toHaveBeenCalledWith("ap-1", undefined);
+    vi.useRealTimers();
     act(() => root.unmount());
   });
 
