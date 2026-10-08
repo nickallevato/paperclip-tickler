@@ -5,6 +5,17 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Switching org from the Tickler page no longer lands on "Page not found".**
+  Paperclip remembers the last page you had open in each org and goes back
+  to it when you switch, but it saved Tickler's address with the org prefix
+  still on, so switching took you to `/PLA/PLA/tickler`. Each later switch
+  added another prefix. Tickler now corrects those saved addresses, including
+  ones already broken, so a switch opens the new org's Tickler page. The
+  underlying bug is in Paperclip and affects every plugin page; this works
+  around it for Tickler.
+  ([GH#79](https://github.com/nickallevato/paperclip-tickler/issues/79) —
+  reported by [@naeemakhtar110](https://github.com/naeemakhtar110)) (PLI-289)
+
 ## 0.17.1
 
 - **Expanding Recent no longer collapses Orgs.** The two rail panes used to
