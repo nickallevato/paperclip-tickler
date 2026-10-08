@@ -34,7 +34,8 @@ import type {
 import { demoRespond, isDemoActive } from "../demo/demo-runtime";
 import { PLUGIN_ID } from "../../plugin-id";
 import type { InstalledPluginRecord } from "../lib/plugin-reload";
-import { NPM_LATEST_URL, npmTarballUrl } from "../lib/self-update";
+import type { NpmPackument } from "../lib/rollback";
+import { NPM_LATEST_URL, NPM_PACKUMENT_URL, npmTarballUrl } from "../lib/self-update";
 
 const BASE = "/api";
 
@@ -457,6 +458,17 @@ export const npmRegistryApi = {
     if (res.ok) return true;
     if (res.status === 404) return false;
     throw new ApiError(`npm registry: ${res.status}`, res.status, null);
+  },
+  /** Every published version, for the earlier-version picker — see `lib/rollback`. */
+  packument: async (): Promise<NpmPackument> => {
+    const res = await fetch(NPM_PACKUMENT_URL, {
+      credentials: "omit",
+      // The abbreviated form npm itself installs from: versions and their
+      // deprecation, without every release's readme.
+      headers: { Accept: "application/vnd.npm.install-v1+json" },
+    });
+    if (!res.ok) throw new ApiError(`npm registry: ${res.status}`, res.status, null);
+    return (await res.json()) as NpmPackument;
   },
 };
 

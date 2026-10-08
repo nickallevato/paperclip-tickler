@@ -1,6 +1,7 @@
 import { ArrowUpCircle, RefreshCw } from "lucide-react";
 import manifest from "../../manifest";
 import type { SelfUpdateCheck } from "../lib/self-update";
+import { TicklerEarlierVersionPicker } from "./TicklerRollback";
 import { useTicklerSelfUpdate } from "./useTicklerSelfUpdate";
 
 const CHIP =
@@ -145,6 +146,8 @@ export function TicklerSelfUpdatePanel({ check: injected, onUpdated }: {
           {error}
         </p>
       )}
+      {/* A local checkout is rolled back with git, not npm. */}
+      {check.status !== "local" && <TicklerEarlierVersionPicker onDone={onUpdated} />}
     </div>
   );
 }

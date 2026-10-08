@@ -50,6 +50,12 @@ export const NPM_PACKAGE = "paperclip-plugin-tickler";
 export const NPM_LATEST_URL = `https://registry.npmjs.org/${NPM_PACKAGE}/latest`;
 
 /**
+ * Every published version, for "Install an earlier version" (PLI-286). The
+ * full document answers with `access-control-allow-origin: *` like `/latest`.
+ */
+export const NPM_PACKUMENT_URL = `https://registry.npmjs.org/${NPM_PACKAGE}`;
+
+/**
  * Where npm serves a version's tarball — the file `npm install` actually needs.
  * Its 404 answers with `access-control-allow-origin: *` too, so a `HEAD` from
  * the page can tell "not there yet" from "unreachable".

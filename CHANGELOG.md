@@ -5,6 +5,20 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **A version that crashes can be rolled back from the crash itself.** Tickler
+  now remembers, per browser, the versions that drew the page without an
+  error. When a newer one crashes, the page and pane notices offer **Roll back
+  to x.y.z** — the newest version that worked here — which reinstalls it from
+  npm in place, keeps settings, and reloads. Settings gains **Install an
+  earlier version** for when no version has been remembered yet, and a crash
+  notice with nothing to roll back to says so and points there. Both are
+  instance-admin only, like updating. A bundle that fails before Tickler's code
+  runs at all still shows only Paperclip's placeholder; that needs a fix in
+  Paperclip. (PLI-286)
+- **Crash notices can be reported on GitHub.** The page and pane notices gain
+  **Report on GitHub**, which opens a new issue on Tickler's repo prefilled with
+  the copied details. Nothing is sent until you submit it there. (PLI-286)
+
 ## 0.16.1
 
 - **The Tickler page no longer crashes at some window heights.** Since
