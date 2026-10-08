@@ -332,6 +332,44 @@ describe("distributeRailHeight", () => {
     expect(folded.portfolio!.demoted).toBe(false);
   });
 
+  // PLI-287: Recent expanded on a rail with nothing left to give it.
+  const TAIL: TicklerRailPaneSpec[] = [
+    { key: "orgs", minRows: 3, idealRows: Infinity, priority: 1 },
+    { key: "recent", minRows: 3, idealRows: 4, priority: 1, tailRows: 24 },
+    { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: true, droppable: true },
+    { key: "routines", minRows: 2, idealRows: 4, priority: 2, collapsed: true, droppable: true },
+  ];
+
+  it("takes folded panes off the rail from the bottom up, and never a row from above", () => {
+    const boxes = metrics({ orgs: 40, recent: 20, portfolio: 11, routines: 3 });
+    const before = distributeRailHeight(
+      TAIL.map(({ tailRows: _, ...spec }) => spec),
+      boxes,
+      { available: 900, gap: GAP },
+    );
+    const after = distributeRailHeight(TAIL, boxes, { available: 900, gap: GAP });
+    expect(after.orgs).toEqual(before.orgs);
+    expect(after.recent!.rows).toBeGreaterThan(before.recent!.rows + 1);
+    expect(after.routines).toMatchObject({ dropped: true, rows: 0 });
+    expect(after.portfolio).toMatchObject({ dropped: true, rows: 0 });
+  });
+
+  it("puts a pane back when taking it off bought no row", () => {
+    const boxes = { ...metrics({ orgs: 40, portfolio: 11, routines: 3 }), recent: box(20, { row: 100 }) };
+    const budget = distributeRailHeight(TAIL, boxes, { available: 900, gap: GAP });
+    expect(budget.routines!.dropped).toBeUndefined();
+    expect(budget.portfolio!.dropped).toBeUndefined();
+    expect(budget.routines!.demoted).toBe(true);
+  });
+
+  it("drops nothing when the leftovers already pay for the rows", () => {
+    const boxes = metrics({ orgs: 3, recent: 20, portfolio: 11, routines: 3 });
+    const budget = distributeRailHeight(TAIL, boxes, { available: 2000, gap: GAP });
+    expect(budget.recent!.rows).toBe(20);
+    expect(budget.routines!.dropped).toBeUndefined();
+    expect(budget.portfolio!.dropped).toBeUndefined();
+  });
+
   it("charges the gap between panes", () => {
     const boxes = metrics({ orgs: 12, portfolio: 11, recent: 20, routines: 3 });
     const tight = distributeRailHeight(PANES, boxes, { available: 790, gap: 0 });

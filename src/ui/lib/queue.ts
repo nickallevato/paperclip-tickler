@@ -757,10 +757,10 @@ export const TICKLER_RECENT_EXPANDED_LIMIT = TICKLER_RECENT_LIMIT * 2;
  * pointer is, and never move the thing under it.
  *
  * So each press does only its own job. Either one folds Portfolio and Routines.
- * With both, Orgs keeps exactly the height it had and Recent keeps its height
- * too — it switches to the week and scrolls it in place, because the only
- * height left to give it would come out of Orgs, from above the pointer. See
- * `railPanes` for how that is spelled.
+ * With both, Orgs keeps exactly the height it had, and Recent switches to the
+ * week and grows only into what is below it — Routines, then Portfolio, leave
+ * the rail to pay for it — never into Orgs, above the pointer. See `railPanes`
+ * for how that is spelled.
  *
  * Only these two are expandable. Queue is not in the rail; Portfolio and
  * Routines are the panes that get folded, and both already stop at an ideal they

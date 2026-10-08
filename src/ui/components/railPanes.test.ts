@@ -26,11 +26,38 @@ describe("railPanes", () => {
     const orgsOnly = budgetFor(true, false);
     const both = budgetFor(true, true);
     expect(both.orgs).toEqual(orgsOnly.orgs);
-    // Recent keeps its height too, and scrolls the week inside it.
-    expect(both.recent!.height).toBe(orgsOnly.recent!.height);
+    expect(both.recent!.rows).toBeGreaterThanOrEqual(orgsOnly.recent!.rows);
+  });
+
+  // PLI-287 follow-up: on a rail with nothing to spare, Recent's press did
+  // nothing visible. The panes below it leave the rail to make the room.
+  it("takes Routines, then Portfolio, off the rail to grow Recent beside an expanded Orgs", () => {
+    const orgsOnly = budgetFor(true, false);
+    const both = budgetFor(true, true);
+    // 46px each — a 30px header and a 16px gap — is at least a 32px row apiece.
+    expect(both.recent!.rows).toBeGreaterThan(orgsOnly.recent!.rows + 1);
     expect(both.recent!.hidden).toBeGreaterThan(0);
-    expect(both.portfolio!.demoted).toBe(true);
-    expect(both.routines!.demoted).toBe(true);
+    expect(both.routines!.dropped).toBe(true);
+    expect(both.portfolio!.dropped).toBe(true);
+  });
+
+  it("drops only as many panes as Recent needs", () => {
+    const specs = railPanes({ orgs: true, recent: true }, 0, 4);
+    const budget = distributeRailHeight(
+      specs,
+      { orgs: box(30), recent: box(5), portfolio: box(8), routines: box(3) },
+      RAIL,
+    );
+    expect(budget.recent!.rows).toBe(5);
+    expect(budget.routines!.dropped).toBe(true);
+    expect(budget.portfolio!.dropped).toBeUndefined();
+    expect(budget.portfolio!.demoted).toBe(true);
+  });
+
+  it("drops nothing while Recent is not expanded", () => {
+    const budget = budgetFor(true, false);
+    expect(budget.routines!.dropped).toBeUndefined();
+    expect(budget.portfolio!.dropped).toBeUndefined();
   });
 
   it("still gives Recent the freed height when Orgs is not expanded", () => {

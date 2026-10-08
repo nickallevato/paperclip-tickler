@@ -211,7 +211,9 @@ export function useRailBudget(specs: readonly TicklerRailPaneSpec[]): {
       for (const part of pane.querySelectorAll<HTMLElement>("[data-rail-foot]")) foot += heightOf(part);
       const held = remembered.current[spec.key];
       remembered.current[spec.key] = {
-        head: heightOf(pane.querySelector<HTMLElement>("[data-rail-head]")),
+        // A dropped pane (`droppable`) is `display: none` and measures nothing,
+        // header included; without the height it had, it could never come back.
+        head: heightOf(pane.querySelector<HTMLElement>("[data-rail-head]")) || (held?.head ?? 0),
         // A demoted pane draws neither rows nor footer. Measuring its footer as
         // nothing would cost it that much less to promote than it really costs,
         // and it would come back a footer too tall for the rail. An empty pane

@@ -329,13 +329,13 @@ export function TicklerRecentTasks({
             title={
               expanded
                 ? orgsExpanded
-                  ? "Collapse Recent — back to the last day"
+                  ? "Collapse Recent — back to the last day, and Portfolio and Routines come back as headers"
                   : "Collapse Recent — back to the last day, and Portfolio and Routines get their rows back"
                 : !expandable
                   ? "Nothing to expand — the last 7 days hold no more than what is already listed"
                   : orgsExpanded
-                    ? "Expand Recent — the last 7 days instead of the last day, scrolled in the same height so Orgs stays where it is"
-                    : "Expand Recent — the last 7 days instead of the last day, with Portfolio and Routines folded to their headers to make room"
+                    ? "Expand Recent — the last 7 days instead of the last day, growing downward so Orgs stays where it is; Routines, then Portfolio, leave the rail if that is the only room"
+                    : "Expand Recent — the last 7 days instead of the last day, with Portfolio and Routines folded to their headers to make room, or off the rail if that is not enough"
             }
             onExpanded={onExpanded}
           />

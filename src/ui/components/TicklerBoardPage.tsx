@@ -117,6 +117,13 @@ const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
  * slowly: Portfolio and Routines are already folded, so every row it gained
  * would come out of Orgs, above the pointer. A press grows the page below where
  * it was made, or not at all.
+ *
+ * Except that "not at all" read as the button doing nothing on a rail with no
+ * height to spare, so Recent expanded — beside Orgs or not — keeps growing
+ * towards its doubled ideal after everyone else is served, and pays for it by
+ * taking Routines, then Portfolio, off the rail: `tailRows` and `droppable`.
+ * Both sit under Recent, so what goes is below the pointer, and Orgs is settled
+ * before any of it happens.
  */
 export function railPanes(
   expanded: TicklerExpandedPanes,
@@ -130,13 +137,22 @@ export function railPanes(
   // The day list's rows, at least one: an empty day is a pane with no rows and
   // a one-line note, and a week fed into it needs a row to scroll in.
   const dayRows = Math.max(1, recentDayRows);
-  const portfolio: TicklerRailPaneSpec = { key: "portfolio", minRows: 3, idealRows: 11, priority: 2, collapsed: folded };
+  const droppable = expanded.recent;
+  const portfolio: TicklerRailPaneSpec = {
+    key: "portfolio",
+    minRows: 3,
+    idealRows: 11,
+    priority: 2,
+    collapsed: folded,
+    droppable,
+  };
   const routines: TicklerRailPaneSpec = {
     key: "routines",
     minRows: 2,
     idealRows: pinnedRoutines + ROUTINE_EXCEPTION_ROWS,
     priority: 2,
     collapsed: folded,
+    droppable,
     reserveRows: pinnedRoutines,
   };
   return [
@@ -147,6 +163,7 @@ export function railPanes(
       idealRows: recent ? RECENT_EXPANDED_ROWS : orgs && expanded.recent ? Math.min(RECENT_ROWS, dayRows) : RECENT_ROWS,
       priority: 1,
       first: recent,
+      tailRows: expanded.recent ? RECENT_EXPANDED_ROWS : undefined,
     },
     // Pinned routines are rows the reader asked for by name (PLI-275), so with
     // any pinned Routines is served ahead of Portfolio: on a window too short
@@ -489,8 +506,18 @@ export function TicklerBoardPage({
   // Each pane's error boundary hands its fallback the same class, so a pane
   // that fails to draw keeps its place in the order.
   const recentClass = cn(paneOrderClass(paneOrder, "recent"), "min-w-0 @[64rem]/board:order-none");
-  const portfolioClass = cn(paneOrderClass(paneOrder, "portfolio"), "min-h-0 min-w-0 flex-1 @[64rem]/board:order-none");
-  const routinesClass = cn(paneOrderClass(paneOrder, "routines"), "min-w-0 @[64rem]/board:order-none");
+  // Taken off the rail to make room for Recent — see `railPanes`. Only ever set
+  // wide, where there is a budget to have done it.
+  const portfolioClass = cn(
+    paneOrderClass(paneOrder, "portfolio"),
+    "min-h-0 min-w-0 flex-1 @[64rem]/board:order-none",
+    budget.portfolio?.dropped && "hidden",
+  );
+  const routinesClass = cn(
+    paneOrderClass(paneOrder, "routines"),
+    "min-w-0 @[64rem]/board:order-none",
+    budget.routines?.dropped && "hidden",
+  );
   return (
     <div data-view="board" className="@container/board flex flex-col gap-4">
       <div className="grid gap-4 @[64rem]/board:grid-cols-[minmax(320px,400px)_minmax(0,1fr)] @[96rem]/board:grid-cols-[440px_minmax(0,1fr)] [.tickler-kiosk_&]:gap-6 [.tickler-kiosk_&]:@[110rem]/board:grid-cols-[540px_minmax(0,1fr)]">
