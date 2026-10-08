@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.16.1
+
 - **The Tickler page no longer crashes at some window heights.** Since
   0.14.2, the rail's **N more** chip could get stuck redrawing itself when a
   pane had room for every row after all, until React gave up and the page
