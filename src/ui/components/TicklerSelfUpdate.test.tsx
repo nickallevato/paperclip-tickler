@@ -12,8 +12,17 @@ function wrap(ui: ReactNode) {
 }
 
 /** One handler for both reads: the host's plugin record and npm's `latest`. */
-function mockFetch(routes: { upgrade?: { status: number; body: unknown }; npm?: string; self?: unknown }) {
+function mockFetch(routes: {
+  upgrade?: { status: number; body: unknown };
+  npm?: string;
+  self?: unknown;
+  /** Status npm gives the tarball `HEAD`; 404 is the window right after a release. */
+  tarball?: number;
+}) {
   const fn = vi.fn(async (url: string) => {
+    if (typeof url === "string" && url.endsWith(".tgz")) {
+      return new Response(null, { status: routes.tarball ?? 200 });
+    }
     if (typeof url === "string" && url.startsWith("https://registry.npmjs.org")) {
       return json(200, { version: routes.npm ?? "0.0.0" });
     }
@@ -34,6 +43,7 @@ function json(status: number, body: unknown) {
 }
 
 const AVAILABLE = { status: "available", installed: "0.6.0", latest: "0.7.1" } as const;
+const PUBLISHING = { status: "publishing", installed: "0.6.0", latest: "0.7.1" } as const;
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -102,6 +112,30 @@ describe("TicklerUpdateChip", () => {
     wrap(<TicklerUpdateChip />);
     expect(await screen.findByRole("button", { name: /Update to 0\.7\.1/ })).toBeInTheDocument();
   });
+
+  it("shows a publishing chip with nothing to click while npm cannot serve the tarball", () => {
+    wrap(<TicklerUpdateChip check={PUBLISHING} />);
+    expect(screen.getByText("Publishing 0.7.1…")).toBeInTheDocument();
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+
+  it("holds back the button while the new version's tarball still 404s (PLI-279)", async () => {
+    const fetchMock = mockFetch({ self: { version: "0.6.0", packagePath: null }, npm: "0.7.1", tarball: 404 });
+    wrap(<TicklerUpdateChip />);
+    expect(await screen.findByText("Publishing 0.7.1…")).toBeInTheDocument();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://registry.npmjs.org/paperclip-plugin-tickler/-/paperclip-plugin-tickler-0.7.1.tgz",
+      expect.objectContaining({ method: "HEAD", credentials: "omit", cache: "no-store" }),
+    );
+  });
+
+  it("offers nothing when the tarball check itself fails", async () => {
+    mockFetch({ self: { version: "0.6.0", packagePath: null }, npm: "0.7.1", tarball: 503 });
+    const { container } = wrap(<TicklerUpdateChip />);
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    expect(screen.queryByText(/Publishing/)).toBeNull();
+  });
 });
 
 describe("TicklerSelfUpdatePanel", () => {
@@ -116,6 +150,13 @@ describe("TicklerSelfUpdatePanel", () => {
     wrap(<TicklerSelfUpdatePanel check={AVAILABLE} />);
     expect(screen.getByRole("button", { name: /Update to 0\.7\.1/ })).toBeInTheDocument();
     expect(screen.getByText(/settings and token thresholds are kept/)).toBeInTheDocument();
+  });
+
+  it("says the version is publishing, with no update button, until npm can serve it", () => {
+    wrap(<TicklerSelfUpdatePanel check={PUBLISHING} />);
+    expect(screen.getByText("0.7.1 is publishing on npm")).toBeInTheDocument();
+    expect(screen.getByText(/updating now would fail/)).toBeInTheDocument();
+    expect(screen.queryByRole("button")).toBeNull();
   });
 
   it("still names a version when the registration could not be read", () => {

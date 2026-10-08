@@ -9,7 +9,8 @@ const CHIP =
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
 
 /**
- * The header chip: "Update to 0.7.2", and nothing at all otherwise.
+ * The header chip: "Update to 0.7.2", "Publishing 0.7.2…" while npm cannot
+ * serve that version's tarball yet, and nothing at all otherwise.
  *
  * Silent unless a newer version is definitely published — a chip that appears
  * whenever npm is slow or unreachable teaches people to ignore it. The settings
@@ -21,6 +22,19 @@ export function TicklerUpdateChip({ check: injected, onUpdated }: {
   onUpdated?: () => void;
 } = {}) {
   const { check, isUpdating, error, start } = useTicklerSelfUpdate({ check: injected, onUpdated });
+
+  if (check.status === "publishing") {
+    const waiting =
+      `Tickler ${check.latest} is being published to npm, and npm cannot serve it yet. ` +
+      `This usually takes a few minutes; the update button appears here when it can.`;
+    return (
+      <span data-self-update-publishing title={waiting} className={`${CHIP} opacity-80`}>
+        <RefreshCw className="h-3 w-3 shrink-0 animate-spin" aria-hidden="true" />
+        {`Publishing ${check.latest}…`}
+        <span className="sr-only">{waiting}</span>
+      </span>
+    );
+  }
 
   if (check.status !== "available") return null;
 
@@ -95,7 +109,15 @@ export function TicklerSelfUpdatePanel({ check: injected, onUpdated }: {
             {isUpdating ? "Updating…" : `Update to ${check.latest}`}
           </button>
         )}
-        {check.status !== "available" && check.status !== "local" && (
+        {check.status === "publishing" && (
+          <span
+            className={`ml-auto inline-flex items-center gap-1 ${MICRO} font-medium text-tickler-wait`}
+          >
+            <RefreshCw className="h-3 w-3 shrink-0 animate-spin" aria-hidden="true" />
+            Publishing…
+          </span>
+        )}
+        {check.status !== "available" && check.status !== "publishing" && check.status !== "local" && (
           <button
             type="button"
             disabled={isChecking}
@@ -112,6 +134,12 @@ export function TicklerSelfUpdatePanel({ check: injected, onUpdated }: {
           reloads when the host has taken the new version. Instance admins only.
         </p>
       )}
+      {check.status === "publishing" && (
+        <p className={`${MICRO} text-muted-foreground`}>
+          npm has the new version listed but cannot serve it yet, so updating now would fail. This
+          usually takes a few minutes, and the update button appears on its own.
+        </p>
+      )}
       {error && (
         <p role="alert" className={`${MICRO} text-tickler-wait`}>
           {error}
@@ -125,6 +153,8 @@ function summary(check: SelfUpdateCheck, isChecking: boolean): string {
   switch (check.status) {
     case "available":
       return `${check.latest} is available`;
+    case "publishing":
+      return `${check.latest} is publishing on npm`;
     case "current":
       return "Up to date";
     case "local":

@@ -1,17 +1,51 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { NPM_LATEST_URL, NPM_PACKAGE, checkSelfUpdate } from "./self-update";
+import {
+  NPM_LATEST_URL,
+  NPM_PACKAGE,
+  checkSelfUpdate,
+  needsTarballCheck,
+  npmTarballUrl,
+} from "./self-update";
 
 const npm = (version: string) => ({ version, packagePath: null });
 
 describe("checkSelfUpdate", () => {
   it("offers the published version when it is newer than the registration", () => {
-    expect(checkSelfUpdate(npm("0.6.0"), "0.7.1")).toEqual({
+    expect(checkSelfUpdate(npm("0.6.0"), "0.7.1", true)).toEqual({
       status: "available",
       installed: "0.6.0",
       latest: "0.7.1",
     });
+  });
+
+  it("is publishing, not available, while npm cannot serve the tarball (PLI-279)", () => {
+    // `latest` moves minutes before the tarball does; an upgrade in that window
+    // runs `npm install` against a 404.
+    expect(checkSelfUpdate(npm("0.6.0"), "0.7.1", false)).toEqual({
+      status: "publishing",
+      installed: "0.6.0",
+      latest: "0.7.1",
+    });
+  });
+
+  it("offers nothing until the tarball has been asked about", () => {
+    expect(checkSelfUpdate(npm("0.6.0"), "0.7.1")).toEqual({ status: "unknown" });
+    expect(checkSelfUpdate(npm("0.6.0"), "0.7.1", null)).toEqual({ status: "unknown" });
+  });
+
+  it("asks about the tarball only when npm names a newer npm-installed version", () => {
+    expect(needsTarballCheck(npm("0.6.0"), "0.7.1")).toBe(true);
+    expect(needsTarballCheck(npm("0.7.1"), "0.7.1")).toBe(false);
+    expect(needsTarballCheck({ version: "0.6.0", packagePath: "/srv/tickler" }, "0.7.1")).toBe(false);
+    expect(needsTarballCheck(npm("0.6.0"), null)).toBe(false);
+  });
+
+  it("points at npm's tarball path for an unscoped package", () => {
+    expect(npmTarballUrl("0.7.1")).toBe(
+      `https://registry.npmjs.org/${NPM_PACKAGE}/-/${NPM_PACKAGE}-0.7.1.tgz`,
+    );
   });
 
   it("says nothing to do when the registration is the published version", () => {

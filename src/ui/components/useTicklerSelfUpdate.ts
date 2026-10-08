@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, npmRegistryApi, pluginSelfApi } from "../host/api";
 import { isDemoActive } from "../demo/demo-runtime";
-import { checkSelfUpdate, type SelfUpdateCheck } from "../lib/self-update";
+import {
+  PUBLISHING_POLL_MS,
+  checkSelfUpdate,
+  needsTarballCheck,
+  type SelfUpdateCheck,
+} from "../lib/self-update";
 
 /**
  * The state behind Tickler's update-to-latest button, shared by the header chip
@@ -41,7 +46,22 @@ export function useTicklerSelfUpdate({ onUpdated, check: injected }: {
     retry: false,
   });
 
-  const check = injected ?? checkSelfUpdate(installed.data, latest.data);
+  // npm's `latest` can name a version whose tarball is still 404ing, and the
+  // upgrade would fail on it — see `lib/self-update`. Ask about the file itself,
+  // and keep asking while it is not there, so the chip turns into a button on
+  // its own once the release lands.
+  const latestVersion = latest.data;
+  const tarballWanted = needsTarballCheck(installed.data, latestVersion);
+  const tarball = useQuery({
+    queryKey: ["tickler", "npm-tarball", latestVersion],
+    queryFn: () => npmRegistryApi.tarballReady(latestVersion as string),
+    enabled: live && tarballWanted,
+    staleTime: (query) => (query.state.data === true ? Infinity : 0),
+    refetchInterval: (query) => (query.state.data === false ? PUBLISHING_POLL_MS : false),
+    retry: false,
+  });
+
+  const check = injected ?? checkSelfUpdate(installed.data, latestVersion, tarball.data);
 
   const update = useMutation({
     mutationFn: () =>
@@ -61,12 +81,14 @@ export function useTicklerSelfUpdate({ onUpdated, check: injected }: {
   return {
     check,
     /** Never both checking and a definite answer: checking means unknown so far. */
-    isChecking: live && (installed.isPending || latest.isPending),
+    isChecking:
+      live && (installed.isPending || latest.isPending || (tarballWanted && tarball.isPending)),
     isUpdating: update.isPending,
     error: describeError(update.error),
     /** Ask npm again now, for the "Check again" affordance in the panel. */
     recheck: () => {
       void queryClient.invalidateQueries({ queryKey: ["tickler", "npm-latest"] });
+      void queryClient.invalidateQueries({ queryKey: ["tickler", "npm-tarball"] });
       void queryClient.invalidateQueries({ queryKey: ["tickler", "plugin-self"] });
     },
     start: () => update.mutate(),
