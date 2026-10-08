@@ -84,7 +84,7 @@ export function useTicklerSelfUpdate({ onUpdated, check: injected }: {
     isChecking:
       live && (installed.isPending || latest.isPending || (tarballWanted && tarball.isPending)),
     isUpdating: update.isPending,
-    error: describeError(update.error),
+    error: describeUpgradeError(update.error),
     /** Ask npm again now, for the "Check again" affordance in the panel. */
     recheck: () => {
       void queryClient.invalidateQueries({ queryKey: ["tickler", "npm-latest"] });
@@ -106,10 +106,14 @@ export function useTicklerSelfUpdate({ onUpdated, check: injected }: {
  * (plugin-loader, `upgradePlugin`), and there the only way forward really is a
  * reinstall.
  */
-function describeError(error: unknown): string | null {
+export function describeUpgradeError(
+  error: unknown,
+  /** The rollback (PLI-286) runs through the same route and reads the same refusals. */
+  verb: "update" | "roll back" | "install" = "update",
+): string | null {
   if (!error) return null;
   if (error instanceof ApiError && error.status === 403) {
-    return "Only an instance admin can update Tickler.";
+    return `Only an instance admin can ${verb} Tickler.`;
   }
   const message = error instanceof Error ? error.message : String(error);
   if (/capabilit/i.test(message)) {
@@ -118,5 +122,6 @@ function describeError(error: unknown): string | null {
       "Uninstall and reinstall Tickler from the Plugin Manager to take it."
     );
   }
-  return `Update failed: ${message}`;
+  const label = verb === "update" ? "Update" : verb === "roll back" ? "Rollback" : "Install";
+  return `${label} failed: ${message}`;
 }

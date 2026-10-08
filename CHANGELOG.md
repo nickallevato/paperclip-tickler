@@ -36,6 +36,15 @@ Short-form. The reader-facing write-up for each version is in
   and **Copy details**, which copies the version, the error and where it
   happened, for a bug report. The toolbar button falls back to a warning
   glyph instead of the host's error text. (PLI-285)
+- **A version that crashes can be rolled back from the crash itself.** Tickler
+  now remembers, per browser, the versions that drew the page without an
+  error. When a newer one crashes, the page and pane notices offer **Roll back
+  to x.y.z** — the newest version that worked here — which reinstalls it from
+  npm in place, keeps settings, and reloads. Settings gains **Install an
+  earlier version** for when no version has been remembered yet. Both are
+  instance-admin only, like updating. A bundle that fails before Tickler's code
+  runs at all still shows only Paperclip's placeholder; that needs a fix in
+  Paperclip. (PLI-286)
 
 ## 0.15.0
 

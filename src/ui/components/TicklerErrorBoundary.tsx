@@ -2,6 +2,8 @@ import { Component, useState, type ErrorInfo, type ReactNode } from "react";
 import { TriangleAlert } from "lucide-react";
 import manifest from "../../manifest";
 import { cn } from "../host/util";
+import { noteCrash } from "../lib/rollback";
+import { RollbackButton } from "./TicklerRollback";
 
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
 
@@ -72,6 +74,8 @@ export class TicklerErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo): void {
+    // This load no longer vouches for its version as one to roll back to.
+    noteCrash();
     // The component stack only arrives here, after the fallback has rendered once.
     this.setState({ caught: describeCaughtError(this.props.area, error, info.componentStack) });
     // Keep the console trail: the fallback is for people, this is for devtools.
@@ -211,12 +215,14 @@ export function TicklerErrorFallback({
       {variant === "page" && (
         <p>
           Nothing on the server changed — this is Tickler's page in this browser. If it happens again
-          after trying, copy the details into a bug report; they name the version that failed.
+          after trying, copy the details into a bug report; they name the version that failed. If
+          an earlier version worked here, you can roll back to it.
         </p>
       )}
       <div className="flex flex-wrap items-center gap-1.5">
         {retry}
         <CopyDetails caught={caught} />
+        <RollbackButton running={caught.version} />
       </div>
       {(caught.stack || caught.componentStack) && (
         <details>
