@@ -747,24 +747,40 @@ export const TICKLER_RECENT_LIMIT = 16;
 export const TICKLER_RECENT_EXPANDED_LIMIT = TICKLER_RECENT_LIMIT * 2;
 
 /**
- * Which rail pane the reader has given the rail to, if any.
+ * Which rail panes the reader has expanded.
  *
- * One value and not a flag per pane, because the rail's height is one thing and
- * expanding a pane is spending it: either one folds Portfolio and Routines, and
- * two panes expanded at once would both be asking for the same freed height —
- * Recent served first to its doubled ideal, Orgs left with whatever that did not
- * take, which is neither press doing what it says. The state the panes
- * can actually be in is "this one, or none", so that is the state that is
- * stored, and `railPanes` cannot be handed a contradiction.
+ * A flag per pane, not one slot. It was one slot until PLI-287, on the grounds
+ * that both panes would be asking for the same freed height — and the price of
+ * that was that pressing Recent's toggle with Orgs expanded collapsed Orgs, so
+ * the Recent header the reader was pointing at jumped up the rail by however
+ * many org rows had just gone. A press should change the page from where the
+ * pointer is, and never move the thing under it.
+ *
+ * So each press does only its own job. Either one folds Portfolio and Routines.
+ * With both, Orgs keeps exactly the height it had and Recent keeps its height
+ * too — it switches to the week and scrolls it in place, because the only
+ * height left to give it would come out of Orgs, from above the pointer. See
+ * `railPanes` for how that is spelled.
  *
  * Only these two are expandable. Queue is not in the rail; Portfolio and
  * Routines are the panes that get folded, and both already stop at an ideal they
  * reach on any ordinary screen — there is nothing under their fold to expand
  * into.
  */
-export type TicklerExpandedPane = "orgs" | "recent" | null;
+export interface TicklerExpandedPanes {
+  orgs: boolean;
+  recent: boolean;
+}
 
-/** Which pane is expanded. Per browser, like every other board preference. */
+export const TICKLER_NO_EXPANDED_PANES: TicklerExpandedPanes = { orgs: false, recent: false };
+
+/**
+ * Which panes are expanded. Per browser, like every other board preference.
+ *
+ * Holds "orgs", "recent", "orgs,recent" or "none". The first two are what 0.12
+ * through 0.17 wrote, so they read back unchanged; a version from before
+ * PLI-287 reading "orgs,recent" sees nothing it knows and expands nothing.
+ */
 export const TICKLER_EXPANDED_PANE_STORAGE_KEY = "tickler.expandedPane";
 
 /**
@@ -782,16 +798,22 @@ export const TICKLER_RECENT_EXPANDED_STORAGE_KEY = "tickler.recentExpanded";
  * Anything unrecognised is nothing — including the name of a pane that is in the
  * rail but not expandable, and the name of one a later version dropped.
  */
-export function normalizeExpandedPane(
+export function normalizeExpandedPanes(
   value: string | null | undefined,
   legacyRecent?: string | null | undefined,
-): TicklerExpandedPane {
-  if (value === "orgs" || value === "recent") return value;
+): TicklerExpandedPanes {
   // Only when the new key has never been written: an explicit "none" there is
   // the reader collapsing the pane, and must not be undone by the stale "on"
   // that the press left behind under the old key.
-  if (value === null || value === undefined) return legacyRecent === "on" ? "recent" : null;
-  return null;
+  if (value === null || value === undefined) return { orgs: false, recent: legacyRecent === "on" };
+  const panes = new Set(value.split(","));
+  return { orgs: panes.has("orgs"), recent: panes.has("recent") };
+}
+
+/** The stored form of {@link normalizeExpandedPanes}'s answer. */
+export function serializeExpandedPanes(panes: TicklerExpandedPanes): string {
+  const names = [panes.orgs && "orgs", panes.recent && "recent"].filter(Boolean);
+  return names.length > 0 ? names.join(",") : "none";
 }
 
 /** How far back "recent" reaches for a task with no run on it. */

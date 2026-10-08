@@ -241,8 +241,8 @@ export function TicklerRailMore({
  * The toggle that gives a pane the rail, in that pane's header.
  *
  * Shared by Recent (PLI-271) and Orgs (PLI-273) because it has to look and
- * behave like one control: the two are alternatives — expanding either folds
- * Portfolio and Routines, and only one can be expanded at a time — so a reader comparing
+ * behave like one control: expanding either folds Portfolio and Routines, and
+ * each press changes only its own pane (PLI-287) — so a reader comparing
  * the two headers is comparing the same button, and a second hand-rolled copy is
  * how two buttons that mean the same thing end up a pixel and an aria attribute
  * apart.
