@@ -10,7 +10,8 @@ Short-form. The reader-facing write-up for each version is in
   error. When a newer one crashes, the page and pane notices offer **Roll back
   to x.y.z** — the newest version that worked here — which reinstalls it from
   npm in place, keeps settings, and reloads. Settings gains **Install an
-  earlier version** for when no version has been remembered yet. Both are
+  earlier version** for when no version has been remembered yet, and a crash
+  notice with nothing to roll back to says so and points there. Both are
   instance-admin only, like updating. A bundle that fails before Tickler's code
   runs at all still shows only Paperclip's placeholder; that needs a fix in
   Paperclip. (PLI-286)

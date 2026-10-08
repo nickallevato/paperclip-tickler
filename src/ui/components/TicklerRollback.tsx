@@ -50,7 +50,8 @@ function useInstallVersion(verb: "roll back" | "install", onDone?: () => void) {
  * more machinery than one fetch. It shows only when there is somewhere to go —
  * a version that worked in this browser and is older than the one that threw —
  * and only for an npm install, since the upgrade route re-reads a local
- * checkout from disk whatever version is asked for.
+ * checkout from disk whatever version is asked for. With nothing recorded, an
+ * npm install gets a pointer to the settings picker instead.
  */
 export function RollbackButton({ running = manifest.version, onDone }: {
   running?: string;
@@ -62,7 +63,7 @@ export function RollbackButton({ running = manifest.version, onDone }: {
   const install = useInstallVersion("roll back", onDone);
 
   useEffect(() => {
-    if (!target || isDemoActive()) return;
+    if (isDemoActive()) return;
     let cancelled = false;
     pluginSelfApi.get().then(
       (record) => {
@@ -76,7 +77,15 @@ export function RollbackButton({ running = manifest.version, onDone }: {
     };
   }, [target]);
 
-  if (!target || !fromNpm) return null;
+  if (!fromNpm) return null;
+  if (!target) {
+    return (
+      <span data-error-rollback-hint className="basis-full text-muted-foreground">
+        No earlier version has worked in this browser yet, so there is nothing to roll back to
+        here. To pick one, open Tickler's settings → Install an earlier version.
+      </span>
+    );
+  }
 
   const detail =
     `Tickler ${target} worked in this browser. Rolling back reinstalls it from npm in place — ` +

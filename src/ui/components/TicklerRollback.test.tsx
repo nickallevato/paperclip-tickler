@@ -93,13 +93,13 @@ describe("RollbackButton", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Only an instance admin can roll back Tickler.");
   });
 
-  it("offers nothing without an older version that worked here", async () => {
+  it("points to the settings picker without an older version that worked here", async () => {
     recordGoodVersion("0.16.0");
-    const fetchFn = mockFetch({ self: { version: "0.16.0" } });
+    const fetchFn = mockFetch({ self: { version: "0.16.0", packagePath: null } });
     render(<RollbackButton running="0.16.0" />);
-    await Promise.resolve();
+    expect(await screen.findByText(/Install an earlier version/)).toBeInTheDocument();
     expect(screen.queryByRole("button")).toBeNull();
-    expect(fetchFn).not.toHaveBeenCalled();
+    expect(upgradeBodies(fetchFn)).toEqual([]);
   });
 
   it("offers nothing for a local-path install, which the route re-reads from disk", async () => {
@@ -108,6 +108,7 @@ describe("RollbackButton", () => {
     render(<RollbackButton running="0.16.0" />);
     await waitFor(() => expect(fetchFn).toHaveBeenCalled());
     expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByText(/Install an earlier version/)).toBeNull();
   });
 
   it("appears in the page fallback when the page crashes", async () => {
