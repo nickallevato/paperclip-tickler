@@ -189,7 +189,7 @@ export function TicklerPortfolio({
         null
       ) : (
         <>
-          <ul className="min-h-0 flex-1 overflow-y-auto px-3">
+          <ul data-rail-scroll className="min-h-0 flex-1 overflow-y-auto px-3">
             {entries.map((entry, index) => {
               const due = dueLabel(entry, nowMs);
               // Grouped order only: in trouble order consecutive bars belong to

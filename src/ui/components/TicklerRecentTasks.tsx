@@ -344,7 +344,7 @@ export function TicklerRecentTasks({
         <>
           {/* Scrolled inside the height the rail budgeted, so this pane's height
               does not track the size of the fleet. */}
-          <ul className="min-h-0 flex-1 overflow-y-auto px-3">
+          <ul data-rail-scroll className="min-h-0 flex-1 overflow-y-auto px-3">
             {rows.map((entry) =>
               entry === "queued-overflow" ? (
                 <QueuedOverflowRow key={entry} tasks={queuedOverflow} nowMs={nowMs} />

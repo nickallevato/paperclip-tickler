@@ -5,6 +5,14 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **"+2 more" now tells you something.** The count in a rail pane's header
+  used to say only that rows were out of view. It now follows the scroll: "2
+  more ↓" while rows are below, "2 more ↑" once you have scrolled past them. It
+  is a button that scrolls a page that way. In Orgs it also says when an org
+  out of view needs you, as "1 more · 5 need you", in the same colour as the
+  need-you column, and its tooltip names the orgs. On the narrowest rail it
+  shortens to "5 need you".
+
 ## 0.14.1
 
 - **The Orgs header stays on one line.** 0.14.0 put the **8h | 24h** switch in

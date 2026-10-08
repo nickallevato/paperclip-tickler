@@ -492,7 +492,7 @@ export function TicklerBoardPage({
               orgsBox.className,
             )}
           >
-            <div data-rail-head className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
+            <div data-rail-head className="group/orgs-head flex shrink-0 items-center gap-2 border-b px-3 py-2">
               <h2 className={cn(MICRO, "font-semibold uppercase tracking-(--tracking-label) text-muted-foreground")}>
                 Orgs
               </h2>
@@ -514,8 +514,16 @@ export function TicklerBoardPage({
               {usage.all && companies.length === 1 && !orgsBudget?.demoted && usageWindowToggle}
               {/* Demoted, the header is the whole pane, so it carries the count
                   the lines underneath would have carried. One line always: the
-                  caption gives up its words before it wraps (PLI-278). */}
-              <span className={cn(MICRO, "ml-auto truncate whitespace-nowrap text-muted-foreground")}>
+                  caption gives up its words before it wraps (PLI-278). And
+                  when an org scrolled out of view needs you, it gives way to the
+                  "1 more · 5 need you" that says so: a column label is worth
+                  less than that, and both will not fit without an ellipsis. */}
+              <span
+                className={cn(
+                  MICRO,
+                  "ml-auto truncate whitespace-nowrap text-muted-foreground group-has-[[data-rail-more-needs]]/orgs-head:hidden",
+                )}
+              >
                 {orgsBudget?.demoted ? (
                   <>
                     <span className="font-semibold text-foreground">{totals.needs}</span> need you
@@ -528,7 +536,14 @@ export function TicklerBoardPage({
                   </>
                 )}
               </span>
-              <TicklerRailMore budget={orgsBudget} />
+              <TicklerRailMore
+                budget={orgsBudget}
+                // Takes the caption's place at the right when it stands aside.
+                className="group-has-[[data-rail-more-needs]]/orgs-head:ml-auto"
+                // Under 22rem the header holds "5 need you" or "1 more · 5 need
+                // you" and the expand button, not both.
+                countClassName="hidden @[22rem]/orgs:inline"
+              />
               <TicklerRailExpand
                 pane="orgs"
                 label="Orgs"
@@ -548,7 +563,7 @@ export function TicklerBoardPage({
               />
             </div>
             {!orgsBudget?.demoted && (
-              <ul className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              <ul data-rail-scroll className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                 {companies.map((company) => (
                   <TicklerCompanySlot
                     key={company.id}
