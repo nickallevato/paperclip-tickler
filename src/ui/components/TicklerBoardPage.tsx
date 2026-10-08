@@ -39,6 +39,7 @@ import {
 } from "../lib/pinned-routines";
 import { paneOrderClass, type TicklerPaneKey } from "../lib/pane-order";
 import { collapsedPane, type TicklerRailPaneSpec } from "../lib/rail-budget";
+import { TicklerErrorBoundary } from "./TicklerErrorBoundary";
 import { TicklerCompanySlot } from "./TicklerCompanySlot";
 import { TicklerPortfolio } from "./TicklerPortfolio";
 import { railPaneBox, TicklerRailExpand, TicklerRailMore } from "./TicklerRailPane";
@@ -461,6 +462,12 @@ export function TicklerBoardPage({
   // only once they are given a width to truncate to — widens the single column
   // past the viewport and clips every pane in it on the right. `min-w-0` drops
   // that floor, the column is the viewport again, and the rows truncate.
+  //
+  // Each pane's error boundary hands its fallback the same class, so a pane
+  // that fails to draw keeps its place in the order.
+  const recentClass = cn(paneOrderClass(paneOrder, "recent"), "min-w-0 @[64rem]/board:order-none");
+  const portfolioClass = cn(paneOrderClass(paneOrder, "portfolio"), "min-h-0 min-w-0 flex-1 @[64rem]/board:order-none");
+  const routinesClass = cn(paneOrderClass(paneOrder, "routines"), "min-w-0 @[64rem]/board:order-none");
   return (
     <div data-view="board" className="@container/board flex flex-col gap-4">
       <div className="grid gap-4 @[64rem]/board:grid-cols-[minmax(320px,400px)_minmax(0,1fr)] @[96rem]/board:grid-cols-[440px_minmax(0,1fr)] [.tickler-kiosk_&]:gap-6 [.tickler-kiosk_&]:@[110rem]/board:grid-cols-[540px_minmax(0,1fr)]">
@@ -565,21 +572,23 @@ export function TicklerBoardPage({
             {!orgsBudget?.demoted && (
               <ul data-rail-scroll className="flex min-h-0 flex-1 flex-col overflow-y-auto">
                 {companies.map((company) => (
-                  <TicklerCompanySlot
-                    key={company.id}
-                    company={company}
-                    onActionable={onActionable}
-                    onStats={onStats}
-                    onData={onData}
-                    tokenThresholds={thresholdsFor(tokenSettings, company.id)}
-                    alertsEnabled={alertsEnabled}
-                    pinned={pinnedIds.includes(company.id)}
-                    onTogglePin={() => onTogglePin(company.id)}
-                    onFocusNeeds={() => toggleFocus(company.id)}
-                    needsFocused={focusCompanyId === company.id}
-                    usage={usage.byCompany[company.id]}
-                    usageScale={usage.scale}
-                  />
+                  // One org's bad data costs its own line, not the board.
+                  <TicklerErrorBoundary key={company.id} area={company.name} variant="row">
+                    <TicklerCompanySlot
+                      company={company}
+                      onActionable={onActionable}
+                      onStats={onStats}
+                      onData={onData}
+                      tokenThresholds={thresholdsFor(tokenSettings, company.id)}
+                      alertsEnabled={alertsEnabled}
+                      pinned={pinnedIds.includes(company.id)}
+                      onTogglePin={() => onTogglePin(company.id)}
+                      onFocusNeeds={() => toggleFocus(company.id)}
+                      needsFocused={focusCompanyId === company.id}
+                      usage={usage.byCompany[company.id]}
+                      usageScale={usage.scale}
+                    />
+                  </TicklerErrorBoundary>
                 ))}
               </ul>
             )}
@@ -633,67 +642,75 @@ export function TicklerBoardPage({
               fixes its height, so a run starting cannot shove Portfolio.
               Narrow there is no budget — see `narrow` on `useRailBudget` — and
               this is the one pane long enough to matter, so it is told. */}
-          <TicklerRecentTasks
-            tasks={recentExpanded ? recentDeep : recent}
-            nowMs={nowMs}
-            budget={budget.recent}
-            narrow={narrow}
-            expanded={recentExpanded}
-            expandable={recentExpandable}
-            onExpanded={(next) => onExpandedPane(next ? "recent" : null)}
-            className={cn(paneOrderClass(paneOrder, "recent"), "min-w-0 @[64rem]/board:order-none")}
-          />
-          <TicklerPortfolio
-            items={projectEntries}
-            nowMs={nowMs}
-            companies={companies}
-            sort={portfolioSort}
-            onSort={onPortfolioSort}
-            // No `min-h` floor here any more: the budget is what keeps Portfolio
-            // from being squeezed to nothing by a tall stack of orgs — it is
-            // given a height of its own, or demoted to its header, rather than
-            // left to fight the panes above it for the leftovers.
-            // Folded when either of the two panes above it is expanded. Wide the
-            // spec has already said so and this changes nothing; narrow there is
-            // no budget to say it in, and the fold is the reader's choice at
-            // either width.
-            budget={expandedPane ? collapsedPane(budget.portfolio) : budget.portfolio}
-            className={cn(paneOrderClass(paneOrder, "portfolio"), "min-h-0 min-w-0 flex-1 @[64rem]/board:order-none")}
-          />
-          <TicklerRoutineExceptions
-            items={routines}
-            pinned={pinnedRoutines}
-            onUnpin={togglePinnedRoutine}
-            picker={
-              <TicklerPinRoutinePicker entries={routineEntries} pinned={pinnedRoutineSet} onToggle={togglePinnedRoutine} />
-            }
-            nowMs={nowMs}
-            budget={expandedPane ? collapsedPane(budget.routines) : budget.routines}
-            className={cn(paneOrderClass(paneOrder, "routines"), "min-w-0 @[64rem]/board:order-none")}
-          />
+          <TicklerErrorBoundary area="Recent" className={recentClass}>
+            <TicklerRecentTasks
+              tasks={recentExpanded ? recentDeep : recent}
+              nowMs={nowMs}
+              budget={budget.recent}
+              narrow={narrow}
+              expanded={recentExpanded}
+              expandable={recentExpandable}
+              onExpanded={(next) => onExpandedPane(next ? "recent" : null)}
+              className={recentClass}
+            />
+          </TicklerErrorBoundary>
+          <TicklerErrorBoundary area="Portfolio" className={portfolioClass}>
+            <TicklerPortfolio
+              items={projectEntries}
+              nowMs={nowMs}
+              companies={companies}
+              sort={portfolioSort}
+              onSort={onPortfolioSort}
+              // No `min-h` floor here any more: the budget is what keeps Portfolio
+              // from being squeezed to nothing by a tall stack of orgs — it is
+              // given a height of its own, or demoted to its header, rather than
+              // left to fight the panes above it for the leftovers.
+              // Folded when either of the two panes above it is expanded. Wide the
+              // spec has already said so and this changes nothing; narrow there is
+              // no budget to say it in, and the fold is the reader's choice at
+              // either width.
+              budget={expandedPane ? collapsedPane(budget.portfolio) : budget.portfolio}
+              className={portfolioClass}
+            />
+          </TicklerErrorBoundary>
+          <TicklerErrorBoundary area="Routines" className={routinesClass}>
+            <TicklerRoutineExceptions
+              items={routines}
+              pinned={pinnedRoutines}
+              onUnpin={togglePinnedRoutine}
+              picker={
+                <TicklerPinRoutinePicker entries={routineEntries} pinned={pinnedRoutineSet} onToggle={togglePinnedRoutine} />
+              }
+              nowMs={nowMs}
+              budget={expandedPane ? collapsedPane(budget.routines) : budget.routines}
+              className={routinesClass}
+            />
+          </TicklerErrorBoundary>
         </div>
 
         <div className={cn(paneOrderClass(paneOrder, "queue"), "min-w-0 @[64rem]/board:order-none")}>
-          <TicklerQueue
-            groups={groups}
-            summary={summary}
-            grouping={grouping}
-            onGrouping={onGrouping}
-            sort={queueSort}
-            onSort={onQueueSort}
-            ageFilter={ageFilter}
-            onAgeFilter={onAgeFilter}
-            ageCounts={ageCounts}
-            companiesById={companiesById}
-            nowMs={nowMs}
-            onActed={(companyId) => dataByCompany[companyId]?.invalidate()}
-            decideSummary={decideSummary}
-            onTriage={triage}
-            triageBusy={triageBusy}
-            footer={footer}
-            filterCompany={focusCompany}
-            onClearFilter={() => setFocusCompanyId(null)}
-          />
+          <TicklerErrorBoundary area="Needs you">
+            <TicklerQueue
+              groups={groups}
+              summary={summary}
+              grouping={grouping}
+              onGrouping={onGrouping}
+              sort={queueSort}
+              onSort={onQueueSort}
+              ageFilter={ageFilter}
+              onAgeFilter={onAgeFilter}
+              ageCounts={ageCounts}
+              companiesById={companiesById}
+              nowMs={nowMs}
+              onActed={(companyId) => dataByCompany[companyId]?.invalidate()}
+              decideSummary={decideSummary}
+              onTriage={triage}
+              triageBusy={triageBusy}
+              footer={footer}
+              filterCompany={focusCompany}
+              onClearFilter={() => setFocusCompanyId(null)}
+            />
+          </TicklerErrorBoundary>
         </div>
       </div>
     </div>

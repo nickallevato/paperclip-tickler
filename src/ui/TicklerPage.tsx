@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { TicklerHud } from "./TicklerHud";
+import { TicklerErrorBoundary } from "./components/TicklerErrorBoundary";
 import { activateDemoMode, deactivateDemoMode } from "./demo/demo-runtime";
 import { resolveDemoMode } from "./demo/demo-mode";
 
@@ -88,7 +89,9 @@ export function TicklerPage() {
 
   return (
     <QueryClientProvider client={client}>
-      <TicklerHud demo={gate.demo} />
+      <TicklerErrorBoundary area="Tickler page" variant="page">
+        <TicklerHud demo={gate.demo} />
+      </TicklerErrorBoundary>
     </QueryClientProvider>
   );
 }
