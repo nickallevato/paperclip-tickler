@@ -30,8 +30,8 @@ const SQUARE_CLASS: Record<TicklerSquareState, string> = {
   working: "bg-tickler-live animate-[pulse_3s_ease-in-out_infinite] motion-reduce:animate-none",
   queued: "border border-tickler-live bg-transparent",
   stalled: "border border-tickler-wait bg-tickler-wait/20",
-  // Brick like an error, but hollow: the agent is fine, one of its runs is not.
-  over_limit: "border border-tickler-alarm bg-tickler-alarm/20",
+  // Brick like an error, but half-filled: the agent is fine, one of its runs is not.
+  over_limit: "border border-tickler-alarm bg-tickler-alarm/50",
   error: "bg-tickler-alarm",
   idle: "bg-muted-foreground/25",
 };
