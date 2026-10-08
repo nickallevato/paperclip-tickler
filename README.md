@@ -17,7 +17,7 @@
   <a href="https://github.com/nickallevato/paperclip-tickler/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
 </p>
 
-![The Tickler page: Orgs, Recent, portfolio and routines at left; the Needs-you queue, sorted by severity into Now, Soon and Later, owning the main column](https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/hero.png)
+![The Tickler page: Orgs, Recent, Portfolio and Routines at left; the Needs-you queue, grouped by when you said you'd decide — Today, Unsorted, This week — owning the main column](https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/hero.png)
 
 One page that answers "what needs me, across every org, right now" — and lets you say *when*
 you will deal with each thing — instead of visiting each org's dashboard in turn.
@@ -26,7 +26,7 @@ you will deal with each thing — instead of visiting each org's dashboard in tu
   the row.
 - 🗓️ **Decide by.** Say *when* you'll deal with each item — Today, This week, Whenever — and the
   queue sorts itself. It's Paperclip's own decision triage, so the dates follow you there.
-- 🏢 **Every org at a glance.** Who's working, runs per day, token burn, what's waiting on you.
+- 🏢 **Every org at a glance.** Who's working, token burn by the hour, what's waiting on you.
 - 👀 **What agents are actually doing.** Hover any agent or task for its live narration — not
   just "3 running".
 - 🚦 **Trouble surfaces itself.** Blocked projects, stalled runs, failed routines, overdue
@@ -54,7 +54,7 @@ and confirmations awaiting a response, blockers, failed runs, overdue heartbeats
 exceptions. Actions are inline — Approve, Reject, Reply, answer a question, choose on a
 confirmation — so you rarely need to open the org at all.
 
-![The Needs-you queue sorted by severity: a Now group of blockers and questions above a Soon group, each row carrying its own Approve, Reject, Reply or Open action](https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/needs-you.png)
+![The Needs-you queue in its default grouping: a Today group with an overdue blocker, then Unsorted, where each new row offers Today, This week and Whenever beside its own Open, Approve, Reject or Reply](https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/needs-you.png)
 
 By default it groups by **when you said you'd decide** — Today (and anything overdue), Unsorted,
 This week, Alerts, Whenever, Snoozed. New items land in Unsorted with **Today · This week ·
@@ -62,17 +62,17 @@ Whenever** right on the row. Those are Paperclip's own decision-triage records, 
 Tickler is the day Paperclip's Decisions page shows. It can also group by severity, org, kind,
 project or age — by project is how you find the one project quietly generating half the noise.
 
-**Orgs** — the left column: one line per org with who is working, runs per day and how much is
-waiting on you. Hover a name for everything else; hover a capacity square for which agent it is
+**Orgs** — the left column: one line per org with who is working, its tokens by the hour over the
+last 8 or 24 hours, and how much is waiting on you. Hover a name for everything else; hover a capacity square for which agent it is
 and what they are doing right now. Beneath it the rail stacks Recent, Portfolio and Routines, so
 the whole column is one scan: who's working, what just moved, what's stuck.
 
-<img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/left-rail.png" alt="The left rail: the Orgs list, then Recent, then Portfolio and Routines" width="427">
+<img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/left-rail.png" alt="The left rail: the Orgs list with hourly token bars, then Recent, Portfolio and Routines" width="424">
 
 **Recent** — what's been touched lately, live rows first. Hover a row for the ticket, its status,
 and the agent's own last sentence about it.
 
-<img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/recent-hover.png" alt="A Recent row's hover card: the ticket, its status, and what the agent last said" width="408">
+<img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/recent-hover.png" alt="A Recent row's hover card: the ticket, its status, and what the agent last said" width="424">
 
 **Routines** — only the broken ones, plus any you pin with the **+**: a pinned routine stays on
 top with a ▶ to run it now (press twice; it links the issue the run made).
