@@ -180,7 +180,10 @@ export function TicklerRailMore({
   const hidden = offscreen ? (down ? offscreen.below : offscreen.above) : null;
   const rows = hidden?.rows ?? [];
   const count = hidden ? rows.length : budget.hidden;
-  if (count === 0) return null;
+  // Not null: the ref is how the next read finds the pane. Without it the read
+  // comes back empty, the chip falls back on the budget's count and draws, reads
+  // 0 again and hides — every commit, until React gives up (#185, PLI-286).
+  if (count === 0) return <button ref={ref} type="button" hidden />;
   const needs = hidden?.needs ?? 0;
   const Arrow = down ? ArrowDown : ArrowUp;
   const where = down ? "below" : "above";
