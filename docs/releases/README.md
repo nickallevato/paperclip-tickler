@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.17.4](0.17.4.md) — the left rail no longer shrinks while you scroll a long queue.
 - [0.17.3](0.17.3.md) — expanding Recent now makes room when the rail has none.
 - [0.17.2](0.17.2.md) — switching org from the Tickler page no longer lands on "Page not found".
 - [0.17.1](0.17.1.md) — expanding Recent no longer collapses Orgs.

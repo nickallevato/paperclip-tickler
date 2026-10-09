@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.17.4
+
 - **The left rail no longer shrinks while you scroll a long queue.** With a
   long "Needs you" list scrolled down, the rail's panes used to collapse to
   their headers, then grow back as you scrolled up. Once the rail pinned,
