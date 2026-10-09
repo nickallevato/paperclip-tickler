@@ -48,10 +48,16 @@ function scrollPort(node: HTMLElement): HTMLElement | null {
 /**
  * How far the rail's top sits below the top of the box it scrolls inside.
  *
- * Laid-out offsets rather than client rects, because `position: sticky` moves
- * where a box is painted without moving where it was laid out: a pinned rail
- * reports a rect at the top of the band, and sizing against that is how the
- * height starts changing under a scroll.
+ * The answer has to be where the rail was laid out, not where it is stuck, or
+ * the height changes under a scroll. Neither a rect nor `offsetTop` gives that
+ * on its own: both include the sticky shift, so with the page scrolled 1000px
+ * a rail laid out 124px down reads as 1016px down a 600px band. The band then
+ * measures nothing, every pane demotes, and scrolling back up brings them all
+ * back — the rail that "dances and compacts itself" in GH#85, set off by any
+ * render while the page was scrolled. So the rail is unstuck for the read and
+ * stuck again straight after, inside the same layout effect: `static` lays a
+ * box out exactly where `sticky` does, only without the shift, and nothing is
+ * painted in between.
  */
 function offsetWithin(node: HTMLElement, port: HTMLElement): number {
   const laidOutTop = (from: HTMLElement): number => {
@@ -59,7 +65,11 @@ function offsetWithin(node: HTMLElement, port: HTMLElement): number {
     for (let el: HTMLElement | null = from; el; el = el.offsetParent as HTMLElement | null) top += el.offsetTop;
     return top;
   };
-  return Math.max(0, laidOutTop(node) - laidOutTop(port));
+  const held = node.style.position;
+  node.style.position = "static";
+  const top = laidOutTop(node);
+  node.style.position = held;
+  return Math.max(0, top - laidOutTop(port));
 }
 
 /**

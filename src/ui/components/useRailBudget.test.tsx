@@ -36,7 +36,7 @@ const PANES: TicklerRailPaneSpec[] = [
  * engine would: whatever the rail has been given, plus what it starts below,
  * plus the tail.
  */
-function stubGeometry(portHeight: number, railTop = 0, rowHeight = 32, tail = 16): () => void {
+function stubGeometry(portHeight: number, railTop = 0, rowHeight = 32, tail = 16, stuck = 0): () => void {
   const height = (node: HTMLElement): number => {
     if (node.dataset.railHead !== undefined) return 28;
     if (node.dataset.railFoot !== undefined) return 20;
@@ -69,12 +69,15 @@ function stubGeometry(portHeight: number, railTop = 0, rowHeight = 32, tail = 16
   });
   // What the rail starts below inside the scrolling box — the board's own
   // header, in the app. jsdom reports every `offsetTop` as zero, which is the
-  // pinned case; a test asks for the resting one by passing a height.
+  // pinned case; a test asks for the resting one by passing a height. `stuck`
+  // is how far a scrolled page has pushed the pinned rail down, which a real
+  // browser adds to `offsetTop` unless the rail is `static` (GH#85).
   const top = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetTop");
   Object.defineProperty(HTMLElement.prototype, "offsetTop", {
     configurable: true,
     get(this: HTMLElement) {
-      return this.dataset.rail === "rail" ? railTop : 0;
+      if (this.dataset.rail !== "rail") return 0;
+      return railTop + (this.style.position === "static" ? 0 : stuck);
     },
   });
   return () => {
@@ -141,8 +144,9 @@ function render(
   railTop = 0,
   rowHeight = 32,
   tail = 16,
+  stuck = 0,
 ): HTMLDivElement {
-  teardown.push(stubGeometry(portHeight, railTop, rowHeight, tail));
+  teardown.push(stubGeometry(portHeight, railTop, rowHeight, tail, stuck));
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -192,6 +196,19 @@ describe("useRailBudget", () => {
     expect(rail.style.height).toBe("490px");
     // The point of the number: the rail's column has to fit the band it is in.
     expect(118 + Number.parseInt(rail.style.height, 10) + 24).toBeLessThanOrEqual(632);
+  });
+
+  // GH#85: a long queue scrolled down pins the rail 900px below where it was
+  // laid out, and a browser counts that in `offsetTop`. Read that way, the band
+  // measured nothing, every pane demoted, and the rail grew back on the way up.
+  it("keeps the same height when the page is scrolled and the rail is pinned", () => {
+    const resting = render(632, { orgRows: 12, projectRows: 11 }, 118, 32, 24);
+    const scrolled = render(632, { orgRows: 12, projectRows: 11 }, 118, 32, 24, 900);
+    const rail = scrolled.querySelector<HTMLElement>("[data-rail='rail']")!;
+    expect(rail.style.height).toBe(resting.querySelector<HTMLElement>("[data-rail='rail']")!.style.height);
+    expect(pane(scrolled, "portfolio").dataset.demoted).toBe("false");
+    // Unstuck only for the read: the class's `sticky` is back in charge after.
+    expect(rail.style.position).toBe("");
   });
 
   it("pins each pane to a header plus whole rows", () => {
