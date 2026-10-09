@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { TicklerRailPaneSpec } from "../lib/rail-budget";
 import { railPaneBox } from "./TicklerRailPane";
 import { useRailBudget } from "./useRailBudget";
@@ -38,7 +38,9 @@ const PANES: TicklerRailPaneSpec[] = [
  */
 function stubGeometry(portHeight: number, railTop = 0, rowHeight = 32, tail = 16, stuck = 0): () => void {
   const height = (node: HTMLElement): number => {
-    if (node.dataset.railHead !== undefined) return 28;
+    // A header that wraps to a second line while its pane holds rows back —
+    // the "+N more" it gains is what wraps it, at kiosk's type scale (GH#84).
+    if (node.dataset.railHead !== undefined) return node.dataset.wraps === "true" ? 56 : 28;
     if (node.dataset.railFoot !== undefined) return 20;
     if (node.dataset.railRow !== undefined) return rowHeight;
     return 0;
@@ -88,7 +90,17 @@ function stubGeometry(portHeight: number, railTop = 0, rowHeight = 32, tail = 16
   };
 }
 
-function Rail({ orgRows, projectRows, contents }: { orgRows: number; projectRows: number; contents?: boolean }) {
+function Rail({
+  orgRows,
+  projectRows,
+  contents,
+  wraps,
+}: {
+  orgRows: number;
+  projectRows: number;
+  contents?: boolean;
+  wraps?: boolean;
+}) {
   const { railRef, budget, narrow } = useRailBudget(PANES);
   const pane = (key: string, rows: number) => {
     const box = railPaneBox(budget[key]);
@@ -103,7 +115,9 @@ function Rail({ orgRows, projectRows, contents }: { orgRows: number; projectRows
         style={{ borderTopWidth: "1px", borderBottomWidth: "1px", ...box.style }}
         className={box.className}
       >
-        <div data-rail-head>{key}</div>
+        <div data-rail-head data-wraps={Boolean(wraps && (budget[key]?.hidden ?? 0) > 0)}>
+          {key}
+        </div>
         {!budget[key]?.demoted && (
           <ul>
             {Array.from({ length: rows }, (_, index) => (
@@ -140,7 +154,7 @@ let teardown: (() => void)[] = [];
 /** `portHeight` is the scrolling box; the rail gets 32px less than it. */
 function render(
   portHeight: number,
-  rows: { orgRows: number; projectRows: number; contents?: boolean } = { orgRows: 12, projectRows: 11 },
+  rows: { orgRows: number; projectRows: number; contents?: boolean; wraps?: boolean } = { orgRows: 12, projectRows: 11 },
   railTop = 0,
   rowHeight = 32,
   tail = 16,
@@ -269,6 +283,27 @@ describe("useRailBudget", () => {
     // that one is over at the next frame, and a pane capping itself for it
     // would cap itself on every host without a ResizeObserver.
     expect(render(0).querySelector<HTMLElement>("[data-rail='rail']")!.dataset.narrow).toBe("false");
+  });
+
+  // GH#84: the header the budget measures is the one its last answer drew, and
+  // at 368px with four orgs the two never agree. Orgs whole leaves Portfolio
+  // demoted, wrapped under its "+11 more"; the taller Portfolio header hands
+  // Orgs' fourth row to Portfolio's floor; now Orgs wraps, Portfolio cannot
+  // afford its floor, and round it goes — every commit, until React gives up
+  // with #185 and the page goes with it. Measured at its tallest, it settles.
+  it("settles when a pane's header wraps only while it holds rows back", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const container = render(368, { orgRows: 4, projectRows: 11, wraps: true });
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+    // Settled, and still honest: every pane pinned is pinned to what it draws.
+    for (const key of ["orgs", "portfolio"]) {
+      const box = pane(container, key);
+      if (box.dataset.demoted === "true") continue;
+      const head = box.querySelector<HTMLElement>("[data-rail-head]")!.dataset.wraps === "true" ? 56 : 28;
+      const rows = Number.parseInt(box.dataset.rows!, 10);
+      expect(Number.parseInt(box.style.height, 10), key).toBeGreaterThanOrEqual(2 + head + 20 + rows * 32);
+    }
   });
 
   it("leaves the panes alone when nothing can be measured", () => {
