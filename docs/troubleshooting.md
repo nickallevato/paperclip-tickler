@@ -70,6 +70,32 @@ Work through, in order:
 4. **Anything in the browser console?** A failed chunk load usually means the
    installed path moved, or `dist` was deleted after install.
 
+## A pane or the page shows an error notice
+
+Tickler catches its own errors, so a crash costs only the part that hit it:
+one org's line in **Orgs**, one pane (Recent, Portfolio, Routines, Needs you),
+or — if nothing smaller contains it — the page. The notice shows the error
+message and offers:
+
+- **Try again** — draws that part again. Enough when the cause was a passing
+  bad response.
+- **Copy details** — copies the Tickler version, the error and where it
+  happened, ready to paste into a bug report.
+- **Report on GitHub** — opens a new issue on Tickler's repo with those
+  details prefilled. Nothing is sent until you submit it there.
+- **Roll back to x.y.z** — appears when a newer version broke something that
+  worked before. Tickler remembers, per browser, which versions drew the page
+  without an error; this reinstalls the newest of them from npm, in place,
+  keeps your settings, and reloads. Instance admins only, and only for an npm
+  install (a local checkout rolls back with git).
+
+If no earlier version has worked in this browser yet, the notice says so
+instead: open the gear → **Install an earlier version** and pick one.
+
+None of this can appear if the bundle fails before Tickler's own code runs;
+the host then shows its placeholder instead — see
+[the next section](#the-page-shows-tickler-tickler-where-the-board-should-be).
+
 ## The page shows "Tickler: Tickler" where the board should be
 
 That string is the host's slot placeholder: the bundle was fetched and then
