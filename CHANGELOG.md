@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.17.5
+
 - **Full screen no longer takes the page down.** Kiosk mode's larger type
   can make a rail pane's header wrap onto a second line when its "+N more"
   appears. A taller header changes how the rail divides its height, which can
