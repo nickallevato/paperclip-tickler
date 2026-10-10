@@ -29,8 +29,9 @@ you will deal with each thing — instead of visiting each org's dashboard in tu
 - 🏢 **Every org at a glance.** Who's working, token burn by the hour, what's waiting on you.
 - 👀 **What agents are actually doing.** Hover any agent or task for its live narration — not
   just "3 running".
-- 🚦 **Trouble surfaces itself.** Blocked projects, stalled runs, failed routines, overdue
-  heartbeats.
+- 🚦 **Trouble surfaces itself.** Blocked projects, stalled runs, runs stuck past their agent's
+  time limit, failed routines, overdue heartbeats.
+- ⬆️ **Updates itself from a button**, and rolls back from one too if a new version misbehaves.
 - 📱 **Works on a phone**, and 🧩 **changes nothing in core** — UI-only, prebuilt, and fits
   whichever Paperclip build it lands on.
 
@@ -52,7 +53,8 @@ same link lives behind the **?** in the Tickler page header.
 **Queue** — the main column. Every item across every org that wants a human: approvals, questions
 and confirmations awaiting a response, blockers, failed runs, overdue heartbeats, routine
 exceptions. Actions are inline — Approve, Reject, Reply, answer a question, choose on a
-confirmation — so you rarely need to open the org at all.
+confirmation — so you rarely need to open the org at all. A row's title opens it, and **Reject**
+asks twice, because a rejected approval cannot be undone.
 
 ![The Needs-you queue in its default grouping: a Today group with an overdue blocker, then Unsorted, where each new row offers Today, This week and Whenever beside its own Open, Approve, Reject or Reply](https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/needs-you.png)
 
@@ -65,7 +67,8 @@ project or age — by project is how you find the one project quietly generating
 **Orgs** — the left column: one line per org with who is working, its tokens by the hour over the
 last 8 or 24 hours, and how much is waiting on you. Hover a name for everything else; hover a capacity square for which agent it is
 and what they are doing right now. Beneath it the rail stacks Recent, Portfolio and Routines, so
-the whole column is one scan: who's working, what just moved, what's stuck.
+the whole column is one scan: who's working, what just moved, what's stuck. Orgs and Recent each
+have an **Expand** toggle for when the short list isn't enough.
 
 <img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/left-rail.png" alt="The left rail: the Orgs list with hourly token bars, then Recent, Portfolio and Routines" width="424">
 
@@ -77,10 +80,19 @@ and the agent's own last sentence about it.
 **Routines** — only the broken ones, plus any you pin with the **+**: a pinned routine stays on
 top with a ▶ to run it now (press twice; it links the issue the run made).
 
-**In the header** — the gear names the version you are on and offers the newer one in place
-when npm has it, and holds the [token thresholds](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#token-thresholds) that colour the spend
+**In the header** — the gear names the version you are on, offers the newer one in place
+when npm has it (or an earlier one, under **Install an earlier version**), and holds the [token thresholds](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#token-thresholds) that colour the spend
 figures; the bell turns on browser [alerts](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#alerts) for the edges worth knowing about (an org going
-red, a critical item arriving); the expand control is [kiosk mode](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#kiosk-mode), for a wall display.
+red, a critical item arriving); the expand control is [kiosk mode](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#kiosk-mode), for a wall display. On a phone the
+panes stack into one column, and **Pane order** in the header lets you drag them into the order
+you want.
+
+**When something breaks** — an error in one part of Tickler costs only that part: one org's line,
+one pane, or at worst the page shows a notice with the error, **Try again**, **Copy details** and
+**Report on GitHub** (a prefilled issue you review before submitting). If a new version is the
+cause, the notice offers **Roll back to x.y.z** — the newest version that worked in your browser —
+which reinstalls it in place and keeps your settings. See
+[troubleshooting](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/troubleshooting.md#a-pane-or-the-page-shows-an-error-notice).
 
 Full tours, with the rest of the screenshots: [the board](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/board.md) · [the queue](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/queue.md).
 
@@ -141,4 +153,6 @@ To send a change, read [CONTRIBUTING.md](https://github.com/nickallevato/papercl
 point. If the plugin surface cannot express a change, file it as a core limitation rather than
 working around it. CI enforces this, with no bypass.
 
-<sub>Formerly **Plica** (`paperclip-plugin-plica`, through 0.6.0). MIT licensed.</sub>
+<sub>Why "Tickler"? A tickler file is the office folder of dated reminders you work through by due
+date — which is what the decide-by queue is. Formerly **Plica** (`paperclip-plugin-plica`, through
+0.6.0). MIT licensed.</sub>

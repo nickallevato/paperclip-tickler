@@ -100,7 +100,7 @@ re-reads the manifest and re-registers Tickler against its existing config row,
 then the page reloads onto the new build. The same button appears as a chip in
 the header when an update is waiting, so it is one click from the board.
 
-Four things worth knowing:
+Five things worth knowing:
 
 - **Instance admins only.** Paperclip's upgrade route requires it; anyone else
   gets told so rather than a silent failure.
@@ -111,6 +111,11 @@ Four things worth knowing:
 - **A version that asks for a new capability is refused**, by Paperclip and not
   by Tickler: capabilities are granted at install. The panel says to uninstall
   and reinstall, and the release notes flag such a version.
+- **You can go back, too.** **Install an earlier version**, under the same
+  row, asks npm for every published release older than the one you are on and
+  installs the one you pick, in place, the same way. If a version crashes,
+  the error notice offers **Roll back to x.y.z** directly — see
+  [troubleshooting](troubleshooting.md#a-pane-or-the-page-shows-an-error-notice).
 - **A local checkout updates differently.** Installed from a path rather than
   npm, the panel says so and the affordance you want is the **Reload** chip —
   see [install.md](install.md#upgrading-tickler).
