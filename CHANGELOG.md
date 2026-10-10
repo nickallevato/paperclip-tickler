@@ -5,6 +5,17 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Full screen no longer takes the page down.** Kiosk mode's larger type
+  can make a rail pane's header wrap onto a second line when its "+N more"
+  appears. A taller header changes how the rail divides its height, which can
+  make the "+N more" go away again, and the rail kept switching between the
+  two until React stopped drawing the page (error #185). The rail now sizes
+  each header at the tallest it has been drawn until the window, the panes or
+  their rows change, so it settles. The cost is a few pixels of space under a
+  pane whose header has gone back to one line.
+  ([GH#84](https://github.com/nickallevato/paperclip-tickler/issues/84) —
+  reported by [@naeemakhtar110](https://github.com/naeemakhtar110)) (PLI-292)
+
 ## 0.17.4
 
 - **The left rail no longer shrinks while you scroll a long queue.** With a

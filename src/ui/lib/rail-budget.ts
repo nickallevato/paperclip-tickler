@@ -299,6 +299,45 @@ export function collapsedPane(budget: TicklerRailPaneBudget | undefined): Tickle
   return { rows: 0, height: null, hidden: budget?.hidden ?? 0, demoted: true };
 }
 
+/**
+ * The tallest each pane's parts have measured, for a rail that has not changed shape.
+ *
+ * A pane's header holds its "+N more", and the budget is what decides whether
+ * there is anything more to own up to. So the header the budget measures is the
+ * one its last answer drew. Where the chip is what makes a header wrap, which it
+ * is at kiosk's larger type, the two can disagree for ever: a pane holding rows
+ * back wraps its header, the taller header changes who can afford what, the pane
+ * holds nothing back, its header unwraps, and the budget it was measured for
+ * comes round again. Every turn of that is a layout effect setting state, and
+ * React gives up on the page after fifty (#185, GH#84).
+ *
+ * Measured parts only ever grow while the rail keeps its height, its specs and
+ * every pane's row count, so each pane can only step up to its tallest header
+ * and the budget settles within a few passes. What it costs is the height of a
+ * header that has since unwrapped, under the rows of that pane, until the rail
+ * next changes shape.
+ */
+export function holdTallest(
+  held: Record<string, TicklerRailPaneMetrics>,
+  next: Record<string, TicklerRailPaneMetrics>,
+): Record<string, TicklerRailPaneMetrics> {
+  return Object.fromEntries(
+    Object.entries(next).map(([key, box]) => {
+      const before = held[key];
+      if (!before) return [key, box];
+      return [
+        key,
+        {
+          ...box,
+          head: Math.max(before.head, box.head),
+          foot: Math.max(before.foot, box.foot),
+          row: Math.max(before.row, box.row),
+        },
+      ];
+    }),
+  );
+}
+
 /** Two budgets that would draw the same rail, so the hook can skip a re-render. */
 export function sameRailBudget(a: TicklerRailBudget, b: TicklerRailBudget): boolean {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]);

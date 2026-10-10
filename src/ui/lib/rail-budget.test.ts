@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   distributeRailHeight,
+  holdTallest,
   sameRailBudget,
   unbudgeted,
   type TicklerRailPaneMetrics,
@@ -376,6 +377,42 @@ describe("distributeRailHeight", () => {
     const gapped = distributeRailHeight(PANES, boxes, { available: 790, gap: 48 });
     const rows = (budget: typeof tight) => PANES.reduce((n, { key }) => n + budget[key]!.rows, 0);
     expect(rows(tight)).toBeGreaterThan(rows(gapped));
+  });
+});
+
+describe("holdTallest", () => {
+  it("keeps the tallest header, footer and row a pane has drawn, and takes everything else as measured", () => {
+    const held = { orgs: box(4, { head: 56, foot: 20, row: 32 }) };
+    const next = { orgs: box(4, { head: 28, foot: 24, row: 30, frame: 4 }), recent: box(9) };
+    expect(holdTallest(held, next)).toEqual({
+      orgs: { head: 56, foot: 24, row: 32, frame: 4, total: 4 },
+      // A pane measured for the first time has nothing to hold.
+      recent: box(9),
+    });
+  });
+
+  // GH#84, as arithmetic: a header 28px taller while its pane holds rows back,
+  // on a 336px rail of two panes, never settles when measured as last drawn.
+  it("settles a budget whose headers wrap only while their pane holds rows back", () => {
+    const panes = [PANES[0]!, PANES[2]!];
+    const drawn = (budget: ReturnType<typeof distributeRailHeight> | null) => ({
+      orgs: box(4, { head: (budget?.orgs?.hidden ?? 0) > 0 ? 56 : 28 }),
+      portfolio: box(11, { head: (budget?.portfolio?.hidden ?? 0) > 0 ? 56 : 28 }),
+    });
+    const run = (hold: boolean) => {
+      let budget: ReturnType<typeof distributeRailHeight> | null = null;
+      let measured: Record<string, TicklerRailPaneMetrics> | null = null;
+      for (let pass = 0; pass < 10; pass++) {
+        const fresh = drawn(budget);
+        measured = hold && measured ? holdTallest(measured, fresh) : fresh;
+        const next = distributeRailHeight(panes, measured, { available: 336, gap: GAP });
+        if (budget && sameRailBudget(budget, next)) return pass;
+        budget = next;
+      }
+      return null;
+    };
+    expect(run(false)).toBeNull();
+    expect(run(true)).not.toBeNull();
   });
 });
 

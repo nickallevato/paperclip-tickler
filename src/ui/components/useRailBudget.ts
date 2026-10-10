@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   distributeRailHeight,
+  holdTallest,
   sameRailBudget,
   unbudgeted,
   type TicklerRailBudget,
@@ -162,6 +163,14 @@ export function useRailBudget(specs: readonly TicklerRailPaneSpec[]): {
   // Kept across renders because a demoted pane has no rows on the page to
   // measure: without the last heights it had, it could never be promoted back.
   const remembered = useRef<Record<string, TicklerRailPaneMetrics>>({});
+  // What the budget was last handed, and the rail it was handed for — see
+  // `holdTallest`. A pane's header can only grow while this rail stands.
+  const settled = useRef<{
+    band: number;
+    specs: readonly TicklerRailPaneSpec[];
+    totals: string;
+    metrics: Record<string, TicklerRailPaneMetrics>;
+  } | null>(null);
   const [budget, setBudget] = useState<TicklerRailBudget>(() => unbudgeted(specs));
   // False until the rail has been looked at, which is the wide layout's answer
   // and also the one frame before the first measurement. Wrong for that frame
@@ -237,8 +246,18 @@ export function useRailBudget(specs: readonly TicklerRailPaneSpec[]): {
         total: rows.length || (held?.total ?? 0),
       };
     }
+    // The same rail as last time — same band, same specs, the same rows in
+    // every pane — is measured at the tallest it has drawn, or a header that
+    // wraps only while its pane holds rows back flips the budget every commit.
+    const totals = specs.map((spec) => remembered.current[spec.key]?.total ?? -1).join(",");
+    const held = settled.current;
+    const metrics =
+      held && held.band === band && held.specs === specs && held.totals === totals
+        ? holdTallest(held.metrics, remembered.current)
+        : { ...remembered.current };
+    settled.current = { band, specs, totals, metrics };
     const gap = Number.parseFloat(getComputedStyle(rail).rowGap);
-    const next = distributeRailHeight(specs, remembered.current, {
+    const next = distributeRailHeight(specs, metrics, {
       available: band,
       gap: Number.isFinite(gap) ? gap : FALLBACK_GAP,
     });
@@ -248,7 +267,9 @@ export function useRailBudget(specs: readonly TicklerRailPaneSpec[]): {
   // After every render, because the rail's contents are the thing that changes:
   // a run starts, an org is watched, a routine recovers. Reading a header, a
   // footer and a dozen row heights is cheap, and the budget is only applied
-  // when it differs, so this settles in one pass and cannot loop.
+  // when it differs. It settles because what it measures cannot shrink under
+  // it — `settled` — not because the budget cannot change what it measures:
+  // a pane's header carries its "+N more", and assuming otherwise is GH#84.
   useLayoutEffect(measure);
 
   const attach = useCallback(
