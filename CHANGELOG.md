@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.17.7
+
 - **The downloads badge on the npm page no longer gets stuck on an error for a
   day.** 0.17.6 asked for the badge to be cached for a day, and that applied to
   error badges too, so a brief "rate limited by upstream service" from
