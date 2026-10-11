@@ -233,6 +233,18 @@ paperclipai plugin target
 
 Run that first if you are not certain.
 
+## The version or downloads badge is broken on npmjs.com
+
+The README badges come from shields.io, and npmjs.com loads them through
+GitHub's image proxy, which gives up after about four seconds. When shields.io
+is slow to draw a badge it has not cached yet, the proxy returns an error and
+the page shows a broken image. The same badge URL opened in its own tab works,
+because your browser waits longer. Reload the page a few minutes later.
+
+The real figures are in the npm page's own sidebar, which does not depend on
+the badges. npm tallies downloads once a day, so today's installs show up in
+the count tomorrow.
+
 ## Something else
 
 Ask in the **Tickler thread** on the
