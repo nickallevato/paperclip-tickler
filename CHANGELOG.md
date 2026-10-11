@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.17.6
+
 - **The version and downloads badges on the npm page break less often.**
   npmjs.com loads them through GitHub's image proxy, which gives up after
   about 4 seconds, and shields.io is often slower than that when it hasn't
