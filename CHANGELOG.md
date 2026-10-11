@@ -5,6 +5,15 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The version and downloads badges on the npm page break less often.**
+  npmjs.com loads them through GitHub's image proxy, which gives up after
+  about 4 seconds, and shields.io is often slower than that when it hasn't
+  cached a badge. The badges now ask shields.io to cache them for longer
+  (version 1 hour, downloads 1 day), so the slow path comes round much less.
+  They can still break now and then; the npm page's sidebar always shows the
+  real version and weekly downloads. Troubleshooting has a new entry on it.
+  (PLI-299)
+
 ## 0.17.5
 
 - **Full screen no longer takes the page down.** Kiosk mode's larger type
