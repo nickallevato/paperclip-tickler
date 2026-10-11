@@ -245,6 +245,13 @@ The real figures are in the npm page's own sidebar, which does not depend on
 the badges. npm tallies downloads once a day, so today's installs show up in
 the count tomorrow.
 
+If a badge says **rate limited by upstream service**, npm's download API turned
+shields.io away for a moment. shields.io draws badges for a huge number of
+packages from a few shared servers, so this is about shields.io's traffic, not
+how many people install Tickler. GitHub's proxy keeps whatever it fetched,
+error included, for as long as the badge says it may: about two hours for
+downloads and an hour for the version.
+
 ## Something else
 
 Ask in the **Tickler thread** on the

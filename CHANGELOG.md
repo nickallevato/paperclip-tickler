@@ -5,6 +5,12 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The downloads badge on the npm page no longer gets stuck on an error for a
+  day.** 0.17.6 asked for the badge to be cached for a day, and that applied to
+  error badges too, so a brief "rate limited by upstream service" from
+  shields.io stayed on the npm page. The downloads badge is back to shields.io's
+  default two hours. The version badge keeps its one hour. (PLI-299)
+
 ## 0.17.6
 
 - **The version and downloads badges on the npm page break less often.**

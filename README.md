@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/paperclip-plugin-tickler"><img src="https://img.shields.io/npm/v/paperclip-plugin-tickler?logo=npm&color=cb3837&cacheSeconds=3600" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/paperclip-plugin-tickler"><img src="https://img.shields.io/npm/dm/paperclip-plugin-tickler?color=cb3837&cacheSeconds=86400" alt="npm downloads"></a>
+  <a href="https://www.npmjs.com/package/paperclip-plugin-tickler"><img src="https://img.shields.io/npm/dm/paperclip-plugin-tickler?color=cb3837" alt="npm downloads"></a>
   <a href="https://github.com/nickallevato/paperclip-tickler/actions/workflows/ci.yml"><img src="https://github.com/nickallevato/paperclip-tickler/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/paperclipai/paperclip"><img src="https://img.shields.io/badge/Paperclip-plugin-18181b" alt="Paperclip plugin"></a>
   <a href="https://github.com/nickallevato/paperclip-tickler/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
