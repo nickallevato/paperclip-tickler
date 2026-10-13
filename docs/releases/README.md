@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.18.0](0.18.0.md) — question and choice cards look better and are easier to answer; a question that wants a typed answer shows the box straight away; send stays off until the answers can be accepted, and says why.
 - [0.17.7](0.17.7.md)
 - [0.17.6](0.17.6.md) — the version and downloads badges on the npm page break less often.
 - [0.17.5](0.17.5.md) — full screen no longer takes the page down.

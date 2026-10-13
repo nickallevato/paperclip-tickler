@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.18.0
+
 - **Question and choice cards look better and are easier to answer.** Each
   option is now a full-width row you can click anywhere on, the picked one is
   clearly marked, and the questions are separated by a line and a "1 of 3"
