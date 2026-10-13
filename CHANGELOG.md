@@ -5,6 +5,23 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Question and choice cards look better and are easier to answer.** Each
+  option is now a full-width row you can click anywhere on, the picked one is
+  clearly marked, and the questions are separated by a line and a "1 of 3"
+  label instead of sitting in tinted boxes. A recommended option carries a
+  small tag. The optional note is behind **Add a note** so it no longer takes
+  up room on every card. (PLI-302)
+- **A question that wants a typed answer shows the box straight away.** It
+  used to appear as a single radio button you had to tick first. A number gets
+  a short field with a line under it saying what is wanted, such as "Whole
+  number from 1 to 30". (PLI-302)
+- **Send stays off until the answers can be accepted, and says why.** Paperclip
+  v2026.1012.0 refuses an empty or wrong answer on the server. Tickler now
+  checks first: the line beside the button reads "Answer question 2 to send" or
+  "Fix question 3 to send", and the field says "Enter a whole number". If the
+  server still refuses, the message names the question in plain words instead
+  of `/response/answers/days: must be a valid integer`. (PLI-302)
+
 ## 0.17.7
 
 - **The downloads badge on the npm page no longer gets stuck on an error for a
