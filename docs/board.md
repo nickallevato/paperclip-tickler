@@ -80,7 +80,8 @@ Hovering a company's name opens everything the line leaves out:
 | **Runs** | Runs per day over the last week, with a sparkline; brick at a 20% failure rate. |
 | **Lead** | The CEO agent and their heartbeat. |
 
-The card also carries **Watch** (the pin) and **Open** (the company's dashboard).
+The card also carries **Watch** (the pin), **Hide** (see
+[Hiding a company](#hiding-a-company)) and **Open** (the company's dashboard).
 
 ## Capacity
 
@@ -214,6 +215,18 @@ company's situation actually changes.
 **Watch** (the pin in a company's detail card) keeps a company at the top
 regardless of sort, marked with a small pin beside its name. Watches persist
 per browser.
+
+## Hiding a company
+
+Archived and paused companies are left out of Tickler on their Paperclip
+status, and Tickler makes no requests for them.
+
+To take an **active** company off Tickler without archiving or pausing it (both
+stop its agents), use **Hide** in its detail card. Tickler then stops loading it
+— no board line, no queue items, no requests — while it keeps running in
+Paperclip. Once something is hidden, the header shows **N hidden**; click it to
+open the list and **Show** a company again. Hides persist per browser, like
+watches.
 
 ## Clicking a company
 

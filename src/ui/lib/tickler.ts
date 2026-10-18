@@ -461,6 +461,34 @@ export function normalizePinnedIds(raw: string | null | undefined): string[] {
   }
 }
 
+/**
+ * Orgs hidden from Tickler (PLI-310), by id. Per browser, like pins: a plugin
+ * has no instance-wide key/value store to sync it through.
+ */
+export const TICKLER_HIDDEN_STORAGE_KEY = "tickler.hidden";
+
+/** Same shape as the pin list. */
+export const normalizeHiddenIds = normalizePinnedIds;
+
+/**
+ * Which orgs Tickler lists. Archived and paused orgs are left out by their
+ * Paperclip status; `hidden` holds the active orgs left out by your choice, so
+ * they can be offered back. Nothing downstream of `shown` polls an org that is
+ * not in it — every per-org fetch runs off this list.
+ */
+export function partitionTicklerCompanies<T extends { id: string; status: string }>(
+  companies: readonly T[],
+  hiddenIds: readonly string[],
+): { shown: T[]; hidden: T[] } {
+  const shown: T[] = [];
+  const hidden: T[] = [];
+  for (const company of companies) {
+    if (company.status === "archived" || company.status === "paused") continue;
+    (hiddenIds.includes(company.id) ? hidden : shown).push(company);
+  }
+  return { shown, hidden };
+}
+
 const SEVERITY_RANK: Record<AttentionSeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
 
 

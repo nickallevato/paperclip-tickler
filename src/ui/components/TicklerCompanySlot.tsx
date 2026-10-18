@@ -29,6 +29,7 @@ export function TicklerCompanySlot({
   onActionable,
   alertsEnabled = false,
   onTogglePin,
+  onHide,
   onStats,
   onData,
   tokenThresholds,
@@ -43,6 +44,8 @@ export function TicklerCompanySlot({
   alertsEnabled?: boolean;
   /** Watched companies sort to the top of the board. */
   onTogglePin?: () => void;
+  /** Takes this org off Tickler (PLI-310). */
+  onHide?: () => void;
   onStats?: (companyId: string, stats: TicklerCompanyStats) => void;
   /**
    * Fires only when a query's data actually changes (react-query keeps
@@ -121,6 +124,7 @@ export function TicklerCompanySlot({
       pulse={pulse}
       pinned={pinned}
       onTogglePin={onTogglePin}
+      onHide={onHide}
       onFocusNeeds={onFocusNeeds}
       needsFocused={needsFocused}
       nowMs={Date.now()}
