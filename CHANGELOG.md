@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.19.0
+
 - **You can hide an org from Tickler without archiving it.** Hover an org's
   name and its detail card has a **Hide** button beside the pin. A hidden org
   is left out before Tickler asks for anything, so Tickler makes no requests
