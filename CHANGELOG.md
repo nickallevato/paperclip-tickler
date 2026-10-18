@@ -5,6 +5,19 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **You can hide an org from Tickler without archiving it.** Hover an org's
+  name and its detail card has a **Hide** button beside the pin. A hidden org
+  is left out before Tickler asks for anything, so Tickler makes no requests
+  for it at all. It keeps running in Paperclip as before. The header shows
+  "1 hidden"; click it to open the list of hidden orgs and **Show** one again.
+  Hides are kept per browser, like pins. (PLI-310)
+- **Paused orgs are left out, the same as archived ones.** Tickler used to
+  leave out only archived orgs, so a paused org stayed on the board and was
+  still asked for its work. (PLI-310)
+- **Hiding the org the queue is filtered to now clears that filter.** Without
+  this you would be left with an empty queue and nothing to click to clear
+  it. (PLI-310)
+
 ## 0.18.0
 
 - **Question and choice cards look better and are easier to answer.** Each
