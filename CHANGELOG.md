@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.19.1
+
 - **An approval in the queue now says what it is for.** Its row used to be
   titled with the approval's type alone, such as "Hire Agent" or "Request
   Board Approval", so two pending approvals looked the same. The row is now
