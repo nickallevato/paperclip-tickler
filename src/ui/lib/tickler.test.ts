@@ -35,6 +35,7 @@ import {
   issueStatusLabel,
   normalizePinnedIds,
   normalizeSortMode,
+  partitionTicklerCompanies,
   normalizeTokenSettings,
   pruneClosedIssueAttention,
   partitionHotFirst,
@@ -513,6 +514,34 @@ describe("pane ordering", () => {
 
 
 
+
+describe("partitionTicklerCompanies", () => {
+  const companies = [
+    { id: "a", status: "active" },
+    { id: "b", status: "paused" },
+    { id: "c", status: "archived" },
+    { id: "d", status: "active" },
+    { id: "e", status: "paused" },
+  ];
+
+  it("leaves out archived and paused orgs, and shows every active one", () => {
+    const { shown, hidden } = partitionTicklerCompanies(companies, []);
+    expect(shown.map((c) => c.id)).toEqual(["a", "d"]);
+    expect(hidden).toEqual([]);
+  });
+
+  it("moves a hidden active org to `hidden`, keeping order", () => {
+    const { shown, hidden } = partitionTicklerCompanies(companies, ["d"]);
+    expect(shown.map((c) => c.id)).toEqual(["a"]);
+    expect(hidden.map((c) => c.id)).toEqual(["d"]);
+  });
+
+  it("does not offer back an org that is hidden but also paused or archived", () => {
+    // Showing it would bring nothing back, so it is not listed as hidden.
+    const { hidden } = partitionTicklerCompanies(companies, ["b", "c", "gone"]);
+    expect(hidden).toEqual([]);
+  });
+});
 
 describe("normalizePinnedIds", () => {
   it("round-trips a stored list", () => {

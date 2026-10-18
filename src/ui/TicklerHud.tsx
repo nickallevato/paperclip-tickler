@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, BellOff, Maximize, Minimize, Settings, TriangleAlert } from "lucide-react";
+import { Bell, BellOff, EyeOff, Maximize, Minimize, Settings, TriangleAlert } from "lucide-react";
 import { authApi } from "./host/api";
 import { companiesListQueryOptions } from "./host/companies-query";
 import { useBreadcrumbs } from "./host/shims";
@@ -15,6 +15,7 @@ import {
 import { TicklerBoardPage } from "./components/TicklerBoardPage";
 import { TicklerBriefing } from "./components/TicklerBriefing";
 import { TicklerHelp } from "./components/TicklerHelp";
+import { TicklerHiddenOrgs } from "./components/TicklerHiddenOrgs";
 import { TicklerMark } from "./components/TicklerMark";
 import { TicklerPaneOrder } from "./components/TicklerPaneOrder";
 import { TicklerReloadBadge } from "./components/TicklerReloadBadge";
@@ -43,11 +44,13 @@ import {
 import { cn, queryKeys } from "./host/util";
 import {
   TICKLER_ALERTS_STORAGE_KEY,
+  TICKLER_HIDDEN_STORAGE_KEY,
   TICKLER_LAST_VISIT_STORAGE_KEY,
   TICKLER_PINNED_STORAGE_KEY,
   TICKLER_SORT_STORAGE_KEY,
   TICKLER_TOKEN_THRESHOLDS_STORAGE_KEY,
   normalizeAlertsEnabled,
+  normalizeHiddenIds,
   normalizePinnedIds,
   normalizeSortMode,
   normalizeTokenSettings,
@@ -56,6 +59,7 @@ import {
   thresholdsFor,
   tokenState,
   shouldShowBriefing,
+  partitionTicklerCompanies,
   type TicklerActionable,
   type TicklerCompanyStats,
   type TicklerSortMode,
@@ -127,6 +131,15 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
     const next = pinnedIds.includes(companyId) ? pinnedIds.filter((id) => id !== companyId) : [...pinnedIds, companyId];
     setPinnedIds(next);
     writeStored(TICKLER_PINNED_STORAGE_KEY, JSON.stringify(next));
+  };
+
+  // Orgs taken off Tickler without touching them in Paperclip (PLI-310).
+  // Persisted per browser, like pins.
+  const [hiddenIds, setHiddenIds] = useState<string[]>(() => normalizeHiddenIds(readStored(TICKLER_HIDDEN_STORAGE_KEY)));
+  const setHidden = (companyId: string, hidden: boolean) => {
+    const next = hidden ? [...hiddenIds.filter((id) => id !== companyId), companyId] : hiddenIds.filter((id) => id !== companyId);
+    setHiddenIds(next);
+    writeStored(TICKLER_HIDDEN_STORAGE_KEY, JSON.stringify(next));
   };
 
   // Each company's slot owns the one data poll and reports up: a compact
@@ -306,7 +319,12 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
   // CompanyListResult, not a bare array — reusing its canonical query options
   // keeps the shape intact.
   const companiesQuery = useQuery(companiesListQueryOptions);
-  const activeCompanies = (companiesQuery.data?.companies ?? []).filter((company) => company.status !== "archived");
+  // Archived, paused and hidden orgs drop out here, before anything polls: every
+  // per-org fetch on the page runs off `activeCompanies`.
+  const { shown: activeCompanies, hidden: hiddenCompanies } = useMemo(
+    () => partitionTicklerCompanies(companiesQuery.data?.companies ?? [], hiddenIds),
+    [companiesQuery.data, hiddenIds],
+  );
   const { data: session } = useQuery({
     queryKey: queryKeys.auth.session,
     queryFn: () => authApi.getSession(),
@@ -405,6 +423,19 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
           {/* First in the group, and only when the board is a single column:
               it is the control that acts on that layout. */}
           {boardNarrow && <TicklerPaneOrder order={paneOrder} onOrder={selectPaneOrder} />}
+          {/* Only once something is hidden, and it opens the list to bring an
+              org back — the hide itself is in each org's hover card. */}
+          {hiddenCompanies.length > 0 && (
+            <button
+              type="button"
+              data-hidden-count={hiddenCompanies.length}
+              onClick={() => setTokenSettingsOpen(true)}
+              title={`Hidden from Tickler: ${hiddenCompanies.map((company) => company.name).join(", ")}. Click to show one again.`}
+              className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[length:var(--tickler-fs-micro,11px)] leading-[1.45] text-muted-foreground hover:text-foreground"
+            >
+              <EyeOff className="h-3 w-3" /> {hiddenCompanies.length} hidden
+            </button>
+          )}
           <button
             type="button"
             aria-pressed={tokenSettingsOpen}
@@ -445,6 +476,9 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
               companies to threshold: "which Tickler am I on" is the question
               somebody opens this panel with when nothing else is wrong. */}
           <TicklerSelfUpdatePanel />
+          {hiddenCompanies.length > 0 && (
+            <TicklerHiddenOrgs companies={hiddenCompanies} onShow={(companyId) => setHidden(companyId, false)} />
+          )}
           {companies.length > 0 && (
             <TicklerTokenSettingsPanel
               companies={companies}
@@ -460,12 +494,15 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
       {companiesQuery.isLoading ? (
         <p className="text-[length:var(--tickler-fs-body,14px)] leading-[1.45] text-muted-foreground">Loading orgs…</p>
       ) : companies.length === 0 ? (
-        <p className="text-[length:var(--tickler-fs-body,14px)] leading-[1.45] text-muted-foreground">No orgs to show.</p>
+        <p className="text-[length:var(--tickler-fs-body,14px)] leading-[1.45] text-muted-foreground">
+          {hiddenCompanies.length > 0 ? "Every org is hidden. Use “hidden” above to show one again." : "No orgs to show."}
+        </p>
       ) : (
         <TicklerBoardPage
           companies={boardCompanies}
           pinnedIds={pinnedIds}
           onTogglePin={togglePinned}
+          onHide={(companyId) => setHidden(companyId, true)}
           dataByCompany={dataByCompany}
           statsByCompany={statsByCompany}
           actionableByCompany={actionableByCompany}

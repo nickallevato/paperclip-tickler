@@ -203,6 +203,7 @@ export function TicklerBoardPage({
   companies,
   pinnedIds,
   onTogglePin,
+  onHide,
   dataByCompany,
   statsByCompany,
   actionableByCompany,
@@ -231,6 +232,8 @@ export function TicklerBoardPage({
   companies: Company[];
   pinnedIds: string[];
   onTogglePin: (companyId: string) => void;
+  /** Takes an org off Tickler until it is shown again (PLI-310). */
+  onHide: (companyId: string) => void;
   dataByCompany: Record<string, TicklerCompanyData | undefined>;
   statsByCompany: Record<string, TicklerCompanyStats | undefined>;
   actionableByCompany: Record<string, TicklerActionable | undefined>;
@@ -271,6 +274,10 @@ export function TicklerBoardPage({
   // glance, not a setting.
   const [focusCompanyId, setFocusCompanyId] = useState<string | null>(null);
   const focusCompany = focusCompanyId ? companies.find((company) => company.id === focusCompanyId) ?? null : null;
+  // The filter only holds while its org is still on the board: hiding the
+  // focused org (PLI-310) would otherwise leave an empty queue with no chip to
+  // clear it from.
+  const focusId = focusCompany?.id ?? null;
   const toggleFocus = (companyId: string) =>
     setFocusCompanyId((current) => (current === companyId ? null : companyId));
   const companiesById = useMemo(
@@ -290,7 +297,7 @@ export function TicklerBoardPage({
   const queueItems = useMemo(
     () =>
       loaded
-        .filter(({ company }) => !focusCompanyId || company.id === focusCompanyId)
+        .filter(({ company }) => !focusId || company.id === focusId)
         .flatMap(({ company, data }) =>
         deriveQueueItems({
           companyId: company.id,
@@ -302,7 +309,7 @@ export function TicklerBoardPage({
           nowMs,
         }),
       ),
-    [loaded, nowMs, focusCompanyId],
+    [loaded, nowMs, focusId],
   );
   const { overrides, busy: triageBusy, triage } = useQueueTriage((companyId) => dataByCompany[companyId]?.invalidate());
   // Pending decide-by / snooze / archive writes applied on top, so a row moves
@@ -635,6 +642,7 @@ export function TicklerBoardPage({
                       alertsEnabled={alertsEnabled}
                       pinned={pinnedIds.includes(company.id)}
                       onTogglePin={() => onTogglePin(company.id)}
+                      onHide={() => onHide(company.id)}
                       onFocusNeeds={() => toggleFocus(company.id)}
                       needsFocused={focusCompanyId === company.id}
                       usage={usage.byCompany[company.id]}

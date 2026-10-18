@@ -1,4 +1,4 @@
-import { ExternalLink, Pin } from "lucide-react";
+import { EyeOff, ExternalLink, Pin } from "lucide-react";
 import type { Company } from "@paperclipai/shared";
 import { CompanyPatternIcon, HoverCard, HoverCardContent, HoverCardTrigger } from "../host/ui-kit";
 import { cn } from "../host/util";
@@ -49,6 +49,7 @@ export function TicklerCompanyLine({
   pulse = false,
   pinned = false,
   onTogglePin,
+  onHide,
   onFocusNeeds,
   needsFocused = false,
   nowMs,
@@ -65,6 +66,12 @@ export function TicklerCompanyLine({
   /** Watched companies sort to the top. */
   pinned?: boolean;
   onTogglePin?: () => void;
+  /**
+   * Takes the org off Tickler (PLI-310). In the hover card beside the pin
+   * rather than on the line: it is rare, and a line already spends its clicks
+   * on filtering the queue.
+   */
+  onHide?: () => void;
   /** Filters the queue to this company (toggle). */
   onFocusNeeds?: () => void;
   needsFocused?: boolean;
@@ -145,6 +152,7 @@ export function TicklerCompanyLine({
                 nowMs={nowMs}
                 pinned={pinned}
                 onTogglePin={onTogglePin}
+                onHide={onHide}
               />
             </HoverCardContent>
           </HoverCard>
@@ -223,6 +231,7 @@ function CompanyDetail({
   nowMs,
   pinned,
   onTogglePin,
+  onHide,
 }: {
   company: Company;
   data: TicklerCompanyData;
@@ -233,6 +242,7 @@ function CompanyDetail({
   nowMs: number;
   pinned: boolean;
   onTogglePin?: () => void;
+  onHide?: () => void;
 }) {
   const needs = deriveNeedsBreakdown(data.attention);
   const throughput = deriveThroughput(data.summary?.runActivity ?? []);
@@ -286,6 +296,18 @@ function CompanyDetail({
             className={cn("rounded-md p-1", pinned ? "text-tickler-wait" : "text-muted-foreground hover:text-foreground")}
           >
             <Pin className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {onHide && (
+          <button
+            type="button"
+            onClick={onHide}
+            data-hide-company
+            aria-label={`Hide ${company.name} from Tickler`}
+            title="Hide from Tickler. Tickler stops loading this org until you show it again. Nothing changes in Paperclip."
+            className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+          >
+            <EyeOff className="h-3.5 w-3.5" />
           </button>
         )}
         <TicklerLink

@@ -20,9 +20,12 @@ vi.mock("./host/shims", async (importOriginal) => ({
   useBreadcrumbs: () => ({ setBreadcrumbs: vi.fn() }),
 }));
 vi.mock("./components/TicklerCompanySlot", () => ({
-  TicklerCompanySlot: ({ company }: { company: { name: string } }) => (
+  TicklerCompanySlot: ({ company, onHide }: { company: { name: string }; onHide?: () => void }) => (
     <tr data-company-slot>
       <td>row:{company.name}</td>
+      <td>
+        <button type="button" aria-label={`Hide ${company.name} from Tickler`} onClick={onHide} />
+      </td>
     </tr>
   ),
 }));
@@ -69,6 +72,7 @@ describe("TicklerHud", () => {
       { id: "c1", name: "Acme", status: "active", issuePrefix: "ACM" },
       { id: "c2", name: "Globex", status: "active", issuePrefix: "GLO" },
       { id: "c3", name: "Gone", status: "archived", issuePrefix: "GON" },
+      { id: "c4", name: "Sleepy", status: "paused", issuePrefix: "SLP" },
     ]);
     mockDashboardApi.summary.mockImplementation((companyId: string) =>
       Promise.resolve(companyId === "c1" ? summaryFor("c1", 2, 1) : summaryFor("c2", 1, 0)),
@@ -88,6 +92,7 @@ describe("TicklerHud", () => {
     expect(container.textContent).toContain("row:Acme");
     expect(container.textContent).toContain("row:Globex");
     expect(container.textContent).not.toContain("row:Gone");
+    expect(container.textContent).not.toContain("row:Sleepy");
     expect(container.querySelector('[data-view="board"]')).not.toBeNull();
     // The page titles itself with the brand mark, not with a stock icon.
     expect(container.querySelector("[data-tickler-mark]")).not.toBeNull();
@@ -102,6 +107,57 @@ describe("TicklerHud", () => {
     expect(container.querySelector('[aria-label="View mode"]')).toBeNull();
     expect(container.querySelector('[aria-label="Layout columns"]')).toBeNull();
     expect(container.querySelector("[data-tickler-bar]")).toBeNull();
+    act(() => root.unmount());
+  });
+
+  it("leaves a stored hidden org off the board and offers it back from the header", async () => {
+    localStorage.setItem("tickler.hidden", JSON.stringify(["c2"]));
+    const root = render();
+    await vi.waitFor(() => {
+      expect(container.textContent).toContain("row:Acme");
+    });
+    // No slot means no per-org poll: the slot is the only thing that fetches.
+    expect(container.textContent).not.toContain("row:Globex");
+    const chip = container.querySelector("[data-hidden-count]") as HTMLButtonElement;
+    expect(chip.textContent).toContain("1 hidden");
+    await act(async () => {
+      chip.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    const show = container.querySelector('[aria-label="Show Globex in Tickler"]') as HTMLButtonElement;
+    expect(show).not.toBeNull();
+    await act(async () => {
+      show.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.textContent).toContain("row:Globex");
+    expect(container.querySelector("[data-hidden-count]")).toBeNull();
+    expect(container.querySelector("[data-hidden-orgs]")).toBeNull();
+    expect(localStorage.getItem("tickler.hidden")).toBe("[]");
+    act(() => root.unmount());
+  });
+
+  it("hides an org from its line and persists it", async () => {
+    const root = render();
+    await vi.waitFor(() => {
+      expect(container.querySelector('[aria-label="Hide Globex from Tickler"]')).not.toBeNull();
+    });
+    await act(async () => {
+      (container.querySelector('[aria-label="Hide Globex from Tickler"]') as HTMLButtonElement).dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+    expect(container.textContent).not.toContain("row:Globex");
+    expect(JSON.parse(localStorage.getItem("tickler.hidden")!)).toEqual(["c2"]);
+    expect(container.querySelector("[data-hidden-count]")?.textContent).toContain("1 hidden");
+    act(() => root.unmount());
+  });
+
+  it("says so when every org is hidden", async () => {
+    localStorage.setItem("tickler.hidden", JSON.stringify(["c1", "c2"]));
+    const root = render();
+    await vi.waitFor(() => {
+      expect(container.textContent).toContain("Every org is hidden");
+    });
+    expect(container.querySelector("[data-hidden-count]")?.textContent).toContain("2 hidden");
     act(() => root.unmount());
   });
 
