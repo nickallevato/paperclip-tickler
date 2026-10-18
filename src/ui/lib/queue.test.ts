@@ -130,6 +130,33 @@ describe("deriveQueueItems", () => {
     expect(items.map((item) => (item.kind === "approval" ? item.requestedBy : "?"))).toEqual(["Atlas", null, null]);
   });
 
+  it("links an approval to the issue its attention twin names, when we hold it", () => {
+    const feed = attention([
+      { id: "a1", severity: "medium", sourceKind: "approval" },
+      { id: "a2", severity: "medium", sourceKind: "approval" },
+    ]);
+    feed.items[0].subject = { kind: "approval", id: "a1", metadata: { issueId: "i1" } } as never;
+    feed.items[1].subject = { kind: "approval", id: "a2", metadata: { issueId: "not-held" } } as never;
+    const items = deriveQueueItems({
+      companyId: "c1",
+      approvals: [
+        { id: "a1", createdAt: new Date(at(1)) },
+        { id: "a2", createdAt: new Date(at(1)) },
+        { id: "a3", createdAt: new Date(at(1)) },
+      ] as never,
+      attention: feed,
+      agents: [],
+      routines: [],
+      issues: [{ id: "i1", identifier: "PLI-7", title: "Ship the rail" }] as never,
+      nowMs: NOW,
+    });
+    expect(items.map((item) => (item.kind === "approval" ? (item.issue?.identifier ?? null) : "?"))).toEqual([
+      "PLI-7",
+      null,
+      null,
+    ]);
+  });
+
   it("adds an overdue CEO heartbeat to Now, aged from the last beat", () => {
     const items = deriveQueueItems({
       companyId: "c1",

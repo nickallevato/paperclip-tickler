@@ -5,6 +5,15 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **An approval in the queue now says what it is for.** Its row used to be
+  titled with the approval's type alone, such as "Hire Agent" or "Request
+  Board Approval", so two pending approvals looked the same. The row is now
+  titled with the task it belongs to, such as "PLI-7 Ship the rail". If there
+  is no task, the request's own title is used, then "Hire <name>" for a hire.
+  The type moves to the small line underneath ("request board approval · Atlas
+  asks · 3h"), and when the task is the title, the request's text shows under
+  it. (PLI-311)
+
 ## 0.19.0
 
 - **You can hide an org from Tickler without archiving it.** Hover an org's
