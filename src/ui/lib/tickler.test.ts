@@ -15,6 +15,7 @@ import {
   attentionActionLabel,
   attentionAskText,
   attentionHeadline,
+  approvalHeadline,
   attentionIssueId,
   attentionRowTitle,
   attentionSpecificText,
@@ -233,6 +234,19 @@ describe("attention headline / ask / action", () => {
     expect(attentionHeadline(interaction("ask_user_questions", "Questions need answers", null), issue)).toBe("Fall class registration");
     expect(attentionHeadline(interaction("ask_user_questions", "Questions need answers", null), null)).toBe("Questions need answers");
     expect(attentionHeadline(interaction("ask_user_questions", "Pick a fall class", null), issue)).toBe("Pick a fall class");
+  });
+
+  it("names an approval by its task, then its request, then who it hires, and only then its type", () => {
+    const board = { type: "request_board_approval", payload: { title: "Spend $40 on a domain" } } as never;
+    const hire = { type: "hire_agent", payload: { name: "Ingest Engineer", role: "engineer" } } as never;
+    const bare = { type: "approve_ceo_strategy", payload: {} } as never;
+    expect(approvalHeadline(board, issue)).toEqual({ title: "Fall class registration", ask: "Spend $40 on a domain" });
+    expect(approvalHeadline(board, null)).toEqual({ title: "Spend $40 on a domain", ask: null });
+    expect(approvalHeadline({ type: "x", payload: { title: "  ", summary: "Why we need it" } } as never, null).title).toBe("Why we need it");
+    expect(approvalHeadline(hire, issue)).toEqual({ title: "Fall class registration", ask: "Hire Ingest Engineer" });
+    expect(approvalHeadline(hire, null)).toEqual({ title: "Hire Ingest Engineer", ask: null });
+    expect(approvalHeadline(bare, issue)).toEqual({ title: "Fall class registration", ask: null });
+    expect(approvalHeadline(bare, null)).toEqual({ title: "Approve Ceo Strategy", ask: null });
   });
 
   it("surfaces the question, the prompt, or the blocker as the ask line", () => {

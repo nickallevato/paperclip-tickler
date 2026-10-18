@@ -61,7 +61,13 @@ interface TicklerQueueItemBase {
 }
 
 export type TicklerQueueItem =
-  | (TicklerQueueItemBase & { kind: "approval"; approval: Approval; requestedBy: string | null })
+  | (TicklerQueueItemBase & {
+      kind: "approval";
+      approval: Approval;
+      requestedBy: string | null;
+      /** The issue the approval is linked to, when it is one we hold. */
+      issue: Issue | null;
+    })
   | (TicklerQueueItemBase & {
       kind: "attention";
       item: AttentionItem;
@@ -129,6 +135,10 @@ export function deriveQueueItems(input: {
       atMs: epochMs(approval.createdAt),
       approval,
       requestedBy: approval.requestedByAgentId ? (agentName.get(approval.requestedByAgentId) ?? null) : null,
+      issue: (() => {
+        const issueId = twin ? attentionIssueId(twin) : null;
+        return issueId ? (issueById.get(issueId) ?? null) : null;
+      })(),
     });
   }
 

@@ -818,6 +818,29 @@ export function attentionHeadline(item: AttentionItem, issue: Pick<Issue, "title
 }
 
 /**
+ * Headline and ask for an approval row. The approval's type ("Hire Agent",
+ * "Request Board Approval") names the kind of decision, not which one, so the
+ * linked issue's title leads when we hold it; then the request's own title or
+ * summary, which is what the server titles it with; then, for a hire, who is
+ * being hired. The type is the last resort. Whatever the request says that the
+ * headline does not becomes the ask under it.
+ */
+export function approvalHeadline(
+  approval: Pick<Approval, "type" | "payload">,
+  issue: Pick<Issue, "title"> | null | undefined,
+): { title: string; ask: string | null } {
+  const text = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : null);
+  const payload = approval.payload ?? {};
+  const request = text(payload.title) ?? text(payload.summary);
+  const name = approval.type === "hire_agent" ? text(payload.name) : null;
+  const issueTitle = text(issue?.title);
+  if (issueTitle) return { title: issueTitle, ask: request ?? (name ? `Hire ${name}` : null) };
+  if (request) return { title: request, ask: null };
+  if (name) return { title: `Hire ${name}`, ask: null };
+  return { title: issueStatusLabel(approval.type), ask: null };
+}
+
+/**
  * The ask itself, as a second line under the headline: the first question
  * (with a count when there are more), the confirmation prompt, the blocking
  * issue, the failure reason. Null when the detail adds nothing a reader

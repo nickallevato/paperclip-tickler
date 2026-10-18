@@ -28,6 +28,7 @@ import {
   attentionActionLabel,
   attentionAskText,
   attentionHeadline,
+  approvalHeadline,
   formatAgeMinutes,
   intervalLabel,
   issueStatusLabel,
@@ -375,12 +376,17 @@ export function TicklerQueueItemRow({
 
   switch (item.kind) {
     case "approval": {
-      title = issueStatusLabel(item.approval.type);
+      const typeLabel = issueStatusLabel(item.approval.type);
+      ({ title, ask } = approvalHeadline(item.approval, item.issue));
+      identifier = item.issue?.identifier ?? null;
       href = `/${company.issuePrefix}/approvals/${item.approval.id}`;
+      // The headline is the task now, so the meta line keeps the type.
+      const kind = title === typeLabel ? "approval" : typeLabel.toLowerCase();
       meta = (
         <>
           <Check className="h-3 w-3 shrink-0" />
-          approval{item.requestedBy ? ` · ${item.requestedBy} asks` : ""} ·{" "}
+          {kind}
+          {item.requestedBy ? ` · ${item.requestedBy} asks` : ""} ·{" "}
           {relativeTimeLabel(
             new Date(item.approval.createdAt).toISOString(),
             nowMs,
