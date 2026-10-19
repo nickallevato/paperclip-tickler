@@ -117,7 +117,7 @@ company:
 
 ![A confirmation with its two choices on the row](screenshots/queue-confirmation.png)
 
-<img src="screenshots/queue-question.png" alt="An agent's multiple-choice question, answered in place with an optional note" width="400">
+<img src="screenshots/queue-question.png" alt="An agent's two questions, answered in place: each option a full-width row, the questions numbered 1 of 2 and 2 of 2, and Add a note below" width="400">
 
 - **Approve / Reject** on an approval.
 - **Answer** on a question, **Choose** on a confirmation — including structured

@@ -5,6 +5,11 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Demo mode answers its questions inline.** The demo's question rows showed
+  **Reply ↗**, a link out to a thread the demo does not have; they now show
+  **Answer**, and its dialog loads the question card. The Acme card asks two questions, so the "1 of 2" split is
+  on show. (PLI-318)
+
 ## 0.19.1
 
 - **An approval in the queue now says what it is for.** Its row used to be

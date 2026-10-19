@@ -79,6 +79,22 @@ describe("demo fixture integrity", () => {
     }
   });
 
+  it("points every interaction row at a card the dialog can load", () => {
+    // The queue offers an inline Answer only when the row carries the kind, and
+    // the dialog matches on the subject id — a mismatch reads as "no longer
+    // pending" in the demo, and the queue-question screenshot has nothing to show.
+    const rows = Object.values(FIXTURE.byCompany).flatMap((data) =>
+      data.attention.items.filter((item) => item.sourceKind === "issue_thread_interaction"),
+    );
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      const issueId = row.subject.metadata?.issueId as string;
+      const card = FIXTURE.interactionsByIssue[issueId]?.find((entry) => entry.id === row.subject.id);
+      expect(card, row.id).toBeDefined();
+      expect(row.subject.metadata?.kind).toBe(card?.kind);
+    }
+  });
+
   it("dates every row with a relative token, so it never reads as stale", () => {
     // A literal ISO timestamp anywhere means someone hand-edited the JSON and
     // the fixture will age. Tokens are resolved at load; see demo-time.ts.

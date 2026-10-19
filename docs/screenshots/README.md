@@ -156,9 +156,10 @@ them by hand when the UI they show changes.
 | File | Source |
 | --- | --- |
 | `queue-confirmation.png` | Tickler's own development org (live) |
-| `queue-question.png` | Tickler's own development org (live) |
 
 The README's own images — `hero`, `needs-you`, `left-rail`, `recent-hover` —
-and `portfolio-by-org` were on this list until PLI-288 and are scripted now.
+and `portfolio-by-org` were on this list until PLI-288 and are scripted now;
+`queue-question` followed in PLI-318, once the demo's question rows carried the
+kind that gives them an inline **Answer**.
 `hero` and `left-rail` are shot at a 1600 × 1150 window rather than the tall
 documentation viewport, so the rail shows what it budgets to a real screen.

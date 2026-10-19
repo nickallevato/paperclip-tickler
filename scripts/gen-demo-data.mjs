@@ -480,6 +480,7 @@ function buildAttention(key, prefix) {
   const issues = ISSUES[key] ?? [];
   const approvals = APPROVALS[key] ?? [];
   let approvalCursor = 0;
+  let interactionCursor = 0;
   const items = (ATTENTION[key] ?? []).map((row, i) => {
     const [sourceKind, severity, whyNow, issueIdx, at] = row;
     const relatedIssue =
@@ -508,13 +509,15 @@ function buildAttention(key, prefix) {
         : sourceKind === "issue_thread_interaction"
           ? {
               kind: "interaction",
-              id: id("interaction", `${key}-${i}`),
+              // The same id buildInteractions gives the card, and its kind, so
+              // the row gets an inline Answer and the dialog finds its payload.
+              id: id("interaction", `${key}-${interactionCursor++}`),
               companyId: companyId(key),
               title: whyNow,
               identifier: null,
               status: "pending",
               href: null,
-              metadata: { issueId: relatedIssue?.id },
+              metadata: { issueId: relatedIssue?.id, kind: "ask_user_questions" },
             }
           : (relatedIssue ?? {
               kind: "agent",
@@ -774,22 +777,32 @@ function buildTimeline(key) {
 // Interactions — the inline question cards the queue can answer
 // ---------------------------------------------------------------------------
 
+/**
+ * [issueIndex, [[prompt, options], …]]. Acme's card asks two questions, so the
+ * "n of m" split the answer dialog draws between them is on show.
+ */
 const INTERACTIONS = {
   acme: [
-    [0, "Which retention window should the backfill apply?", ["90 days (current policy)", "180 days", "Keep everything"]],
+    [
+      0,
+      [
+        ["Which retention window should the backfill apply?", ["90 days (current policy)", "180 days", "Keep everything"]],
+        ["Backfill every tenant in one pass?", ["One pass, overnight", "Tenant by tenant"]],
+      ],
+    ],
   ],
   globex: [
-    [0, "How should late-arriving duplicates be treated?", ["Last write wins", "First write wins", "Flag for review"]],
+    [0, [["How should late-arriving duplicates be treated?", ["Last write wins", "First write wins", "Flag for review"]]]],
   ],
   initech: [
-    [1, "Ship the retry idempotency fix straight to production?", ["Ship it", "Stage first", "Hold for review"]],
+    [1, [["Ship the retry idempotency fix straight to production?", ["Ship it", "Stage first", "Hold for review"]]]],
   ],
   umbra: [],
 };
 
 function buildInteractions(key) {
   const out = {};
-  (INTERACTIONS[key] ?? []).forEach(([issueIdx, question, options], i) => {
+  (INTERACTIONS[key] ?? []).forEach(([issueIdx, questions], i) => {
     const interactionId = id("interaction", `${key}-${i}`);
     out[issueId(key, issueIdx)] = [
       {
@@ -802,14 +815,12 @@ function buildInteractions(key) {
         createdByUserId: null,
         summaryMarkdown: null,
         payload: {
-          questions: [
-            {
-              id: `${interactionId}-q1`,
-              prompt: question,
-              options: options.map((label, oi) => ({ id: `${interactionId}-o${oi}`, label })),
-              multiSelect: false,
-            },
-          ],
+          questions: questions.map(([prompt, options], qi) => ({
+            id: `${interactionId}-q${qi + 1}`,
+            prompt,
+            options: options.map((label, oi) => ({ id: `${interactionId}-q${qi + 1}-o${oi}`, label })),
+            multiSelect: false,
+          })),
         },
         createdAt: t("-6m"),
         updatedAt: t("-6m"),
