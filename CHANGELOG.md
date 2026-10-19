@@ -5,6 +5,11 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The docs catch up with 0.18.0–0.19.1.** The README now mentions hiding an
+  org and that paused orgs are left out; the queue guide covers approval rows
+  titled by their task and the new question cards; and the queue, org-card and
+  phone screenshots are regenerated to match. (PLI-317)
+
 ## 0.19.1
 
 - **An approval in the queue now says what it is for.** Its row used to be
