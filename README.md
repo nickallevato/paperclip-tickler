@@ -68,7 +68,9 @@ project or age — by project is how you find the one project quietly generating
 last 8 or 24 hours, and how much is waiting on you. Hover a name for everything else; hover a capacity square for which agent it is
 and what they are doing right now. Beneath it the rail stacks Recent, Portfolio and Routines, so
 the whole column is one scan: who's working, what just moved, what's stuck. Orgs and Recent each
-have an **Expand** toggle for when the short list isn't enough.
+have an **Expand** toggle for when the short list isn't enough. Archived and paused orgs are left
+out; to take an active one off the board too, **Hide** it from its hover card — Tickler stops
+asking for it, it keeps running in Paperclip, and **N hidden** in the header brings it back.
 
 <img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/left-rail.png" alt="The left rail: the Orgs list with hourly token bars, then Recent, Portfolio and Routines" width="424">
 

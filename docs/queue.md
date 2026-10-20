@@ -119,9 +119,15 @@ company:
 
 <img src="screenshots/queue-question.png" alt="An agent's two questions, answered in place: each option a full-width row, the questions numbered 1 of 2 and 2 of 2, and Add a note below" width="400">
 
-- **Approve / Reject** on an approval.
+- **Approve / Reject** on an approval. The row is titled by the task the
+  approval belongs to (or the request's own words, or "Hire <name>"), with the
+  approval's type on the small line underneath, so two pending approvals never
+  look alike.
 - **Answer** on a question, **Choose** on a confirmation — including structured
-  `ask_user_questions` responses, with each question's options in place.
+  `ask_user_questions` responses, with each question's options in place. A
+  question that wants typed text shows its box straight away, the optional note
+  sits behind **Add a note**, and **Send** stays off until the answers would be
+  accepted — the line beside it says which question still needs one.
 - **Open ↗** on anything, which takes you to the item in its own company.
 
 Clicking the excerpt under a headline expands the full prompt in place. For
