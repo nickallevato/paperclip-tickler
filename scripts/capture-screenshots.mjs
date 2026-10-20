@@ -416,6 +416,22 @@ const SHOTS = [
     },
   },
   {
+    name: "queue-question",
+    doc: "An agent's questions answered from the queue: Answer opens the card, options as rows, n of m.",
+    // Acme's card, because it asks two questions and so shows the split.
+    before: async (page) => {
+      await page
+        .locator("[data-queue-item]")
+        .filter({ hasText: "Cleo asked" })
+        .first()
+        .getByRole("button", { name: "Answer" })
+        .click();
+      await page.waitForSelector("[role='dialog'] input[type='radio']", { state: "attached", timeout: 10_000 });
+      await page.waitForTimeout(400);
+    },
+    take: async (page) => ({ clip: await region(page, ["[role='dialog']"]) }),
+  },
+  {
     name: "portfolio",
     doc: "The portfolio rail and the routine exceptions beneath it.",
     take: async (page) => ({ clip: await region(page, ["[data-tickler-portfolio]", "[data-tickler-routines]"]) }),

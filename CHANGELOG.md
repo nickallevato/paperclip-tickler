@@ -5,6 +5,10 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Demo mode answers its questions inline.** The demo's question rows showed
+  **Reply ↗**, a link out to a thread the demo does not have; they now show
+  **Answer**, and its dialog loads the question card. The Acme card asks two questions, so the "1 of 2" split is
+  on show. (PLI-318)
 - **The docs catch up with 0.18.0–0.19.1.** The README now mentions hiding an
   org and that paused orgs are left out; the queue guide covers approval rows
   titled by their task and the new question cards; and the queue, org-card and

@@ -1146,7 +1146,8 @@
               "status": "pending",
               "href": null,
               "metadata": {
-                "issueId": "demo-issue-acme-0"
+                "issueId": "demo-issue-acme-0",
+                "kind": "ask_user_questions"
               }
             },
             "whyNow": "Cleo asked which retention window to apply before backfilling.",
@@ -2448,14 +2449,15 @@
             "sourceKind": "issue_thread_interaction",
             "subject": {
               "kind": "interaction",
-              "id": "demo-interaction-globex-1",
+              "id": "demo-interaction-globex-0",
               "companyId": "demo-company-globex",
               "title": "Jonas needs a call on how to treat late-arriving duplicates.",
               "identifier": null,
               "status": "pending",
               "href": null,
               "metadata": {
-                "issueId": "demo-issue-globex-0"
+                "issueId": "demo-issue-globex-0",
+                "kind": "ask_user_questions"
               }
             },
             "whyNow": "Jonas needs a call on how to treat late-arriving duplicates.",
@@ -3789,14 +3791,15 @@
             "sourceKind": "issue_thread_interaction",
             "subject": {
               "kind": "interaction",
-              "id": "demo-interaction-initech-3",
+              "id": "demo-interaction-initech-0",
               "companyId": "demo-company-initech",
               "title": "Quill needs sign-off before shipping the retry idempotency fix.",
               "identifier": null,
               "status": "pending",
               "href": null,
               "metadata": {
-                "issueId": "demo-issue-initech-1"
+                "issueId": "demo-issue-initech-1",
+                "kind": "ask_user_questions"
               }
             },
             "whyNow": "Quill needs sign-off before shipping the retry idempotency fix.",
@@ -4732,16 +4735,31 @@
               "prompt": "Which retention window should the backfill apply?",
               "options": [
                 {
-                  "id": "demo-interaction-acme-0-o0",
+                  "id": "demo-interaction-acme-0-q1-o0",
                   "label": "90 days (current policy)"
                 },
                 {
-                  "id": "demo-interaction-acme-0-o1",
+                  "id": "demo-interaction-acme-0-q1-o1",
                   "label": "180 days"
                 },
                 {
-                  "id": "demo-interaction-acme-0-o2",
+                  "id": "demo-interaction-acme-0-q1-o2",
                   "label": "Keep everything"
+                }
+              ],
+              "multiSelect": false
+            },
+            {
+              "id": "demo-interaction-acme-0-q2",
+              "prompt": "Backfill every tenant in one pass?",
+              "options": [
+                {
+                  "id": "demo-interaction-acme-0-q2-o0",
+                  "label": "One pass, overnight"
+                },
+                {
+                  "id": "demo-interaction-acme-0-q2-o1",
+                  "label": "Tenant by tenant"
                 }
               ],
               "multiSelect": false
@@ -4770,15 +4788,15 @@
               "prompt": "How should late-arriving duplicates be treated?",
               "options": [
                 {
-                  "id": "demo-interaction-globex-0-o0",
+                  "id": "demo-interaction-globex-0-q1-o0",
                   "label": "Last write wins"
                 },
                 {
-                  "id": "demo-interaction-globex-0-o1",
+                  "id": "demo-interaction-globex-0-q1-o1",
                   "label": "First write wins"
                 },
                 {
-                  "id": "demo-interaction-globex-0-o2",
+                  "id": "demo-interaction-globex-0-q1-o2",
                   "label": "Flag for review"
                 }
               ],
@@ -4808,15 +4826,15 @@
               "prompt": "Ship the retry idempotency fix straight to production?",
               "options": [
                 {
-                  "id": "demo-interaction-initech-0-o0",
+                  "id": "demo-interaction-initech-0-q1-o0",
                   "label": "Ship it"
                 },
                 {
-                  "id": "demo-interaction-initech-0-o1",
+                  "id": "demo-interaction-initech-0-q1-o1",
                   "label": "Stage first"
                 },
                 {
-                  "id": "demo-interaction-initech-0-o2",
+                  "id": "demo-interaction-initech-0-q1-o2",
                   "label": "Hold for review"
                 }
               ],
