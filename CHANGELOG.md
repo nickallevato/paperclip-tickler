@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.20.3
+
 - **A typed question starts from the agent's text.** When an agent asks a
   question that is answered by typing and gives starting text
   (`initialText`), the answer box opens with that text, ready to edit. A
