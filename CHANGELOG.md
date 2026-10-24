@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.20.1
+
 - **Agents stuck in setup are shown, not counted.** Paperclip now tells
   plugins whether an agent has finished setting up. An agent that has not is
   no longer drawn as an idle square, because it cannot take work. When its
