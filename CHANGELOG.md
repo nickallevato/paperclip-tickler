@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.20.0
+
 - **A queue row says when its agent checks back.** Agents can now ask
   Paperclip to wake them on a task at a set time. When a row's task has one
   of these check-backs still to come, its small line ends with "agent checks

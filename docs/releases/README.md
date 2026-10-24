@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.20.0](0.20.0.md) — a queue row says when its agent checks back; demo mode answers its questions inline; the docs catch up with 0.18.0–0.19.1.
 - [0.19.1](0.19.1.md) — an approval in the queue now says what it is for.
 - [0.19.0](0.19.0.md) — you can hide an org from Tickler without archiving it; paused orgs are left out, the same as archived ones; hiding the org the queue is filtered to now clears that filter.
 - [0.18.0](0.18.0.md) — question and choice cards look better and are easier to answer; a question that wants a typed answer shows the box straight away; send stays off until the answers can be accepted, and says why.
