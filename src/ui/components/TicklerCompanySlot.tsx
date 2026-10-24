@@ -67,7 +67,7 @@ export function TicklerCompanySlot({
 
   // An unavailable company must alert as red too (never alert an unreachable
   // company as healthy).
-  const health = data.unavailable ? "red" : derivePaneHealth(data.summary, data.attention);
+  const health = data.unavailable ? "red" : derivePaneHealth(data.summary, data.attention, data.approvals);
   const criticalAttentionIds = (data.attention?.items ?? [])
     .filter((item) => !item.dismissal && item.severity === "critical")
     .map((item) => item.id);

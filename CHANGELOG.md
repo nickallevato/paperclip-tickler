@@ -5,6 +5,19 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Someone else's private run no longer shows as a stalled agent.** Since
+  Paperclip v2026.1023.0, a run on a private task you cannot read comes back as
+  a locked row with no activity timestamps, so after 20 minutes Tickler called
+  it stalled and counted it in the HUD. Such a run is now working, and its
+  square and Recent row say **Private task** instead of a narration. It is still
+  flagged once it runs past its agent's time limit, which needs only its start
+  time. (PLI-328)
+- **A pane no longer turns amber for an approval you cannot see.** Amber came
+  from the dashboard's pending-approval count, which is company-wide and
+  includes approvals on other people's private tasks; the approvals list hides
+  those, so the dot could have nothing behind it. Amber now comes from the
+  pending approvals Tickler actually loaded. Red is unchanged. (PLI-328)
+
 ## 0.20.1
 
 - **Agents stuck in setup are shown, not counted.** Paperclip now tells

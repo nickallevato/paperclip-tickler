@@ -242,6 +242,13 @@ export interface LiveRunForIssue {
   currentToolName?: string | null;
   lastAssistantSnippet?: string | null;
   lastEventAt?: string | null;
+  /**
+   * The run is on a private task this user cannot read (Paperclip
+   * v2026.1023.0+). The host sends a locked row: identity, status and timing
+   * only — no `issueId`, `triggerDetail`, status message or activity
+   * timestamps, whatever the types above say.
+   */
+  redacted?: boolean;
 }
 
 export const heartbeatsApi = {

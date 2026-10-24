@@ -27,6 +27,11 @@ describe("run helpers", () => {
     expect(runNarration(run({ status: "queued" }), undefined)).toBe("Waiting for a runner");
   });
 
+  it("names a run on a private task the user cannot read as private", () => {
+    expect(runNarration(run({ redacted: true, triggerDetail: null }), undefined)).toBe("Private task");
+    expect(runNarration(run({ redacted: true, status: "queued" }), undefined)).toBe("Private task · waiting for a runner");
+  });
+
   it("labels elapsed time from startedAt and knows which statuses are active", () => {
     const now = Date.parse("2026-08-21T12:30:00Z");
     expect(elapsedLabel(run({}), now)).toBe("1h 25m");
