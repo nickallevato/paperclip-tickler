@@ -393,6 +393,17 @@ export function isSnoozed(item: Pick<TicklerQueueItem, "snoozedUntil">, nowMs: n
   return until !== null && until > nowMs;
 }
 
+/**
+ * When the agent on an item's issue has said it will look again (Paperclip's
+ * one-shot issue monitor), in epoch ms — or null when there is no issue, no
+ * monitor, or the check is already due. Read-only: Tickler never sets one.
+ */
+export function agentCheckBackMs(item: TicklerQueueItem, nowMs: number): number | null {
+  const issue = item.kind === "approval" || item.kind === "attention" ? item.issue : null;
+  const at = epochMs(issue?.monitorNextCheckAt);
+  return at !== null && at > nowMs ? at : null;
+}
+
 /** A decide-by date that has already passed (a preset never goes overdue). */
 export function isDecideOverdue(item: Pick<TicklerQueueItem, "decideBy">, nowMs: number): boolean {
   return !!item.decideBy && DATE_KEY.test(item.decideBy) && item.decideBy < localDateKey(nowMs);

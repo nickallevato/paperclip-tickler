@@ -38,6 +38,7 @@ import {
   TICKLER_QUEUE_AGE_FILTERS,
   TICKLER_QUEUE_GROUPINGS,
   TICKLER_SNOOZE_PRESETS,
+  agentCheckBackMs,
   ageTone,
   decideByLabel,
   isDecideOverdue,
@@ -213,6 +214,13 @@ const DECIDE_PRESETS = [
   { value: "whenever", label: "Whenever" },
 ] as const;
 
+/** A moment later on: a clock time today, a weekday and time after that. */
+function laterLabel(at: Date, nowMs: number): string {
+  return at.toDateString() === new Date(nowMs).toDateString()
+    ? at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : at.toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" });
+}
+
 /**
  * Where a triaged item stands, for its meta line: a date it is due by, how
  * overdue it is, or when a snooze ends. The preset lanes need no restating —
@@ -220,12 +228,7 @@ const DECIDE_PRESETS = [
  */
 function triageNote(item: TicklerQueueItem, nowMs: number): { text: string; tone: "alarm" | "muted" } | null {
   if (isSnoozed(item, nowMs) && item.snoozedUntil) {
-    const until = new Date(item.snoozedUntil);
-    const sameDay = until.toDateString() === new Date(nowMs).toDateString();
-    const when = sameDay
-      ? until.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      : until.toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" });
-    return { text: `back ${when}`, tone: "muted" };
+    return { text: `back ${laterLabel(new Date(item.snoozedUntil), nowMs)}`, tone: "muted" };
   }
   if (isDecideOverdue(item, nowMs)) return { text: `overdue · was due ${decideByLabel(item.decideBy)}`, tone: "alarm" };
   if (item.decideBy && /^\d{4}-\d{2}-\d{2}$/.test(item.decideBy)) {
@@ -497,6 +500,7 @@ export function TicklerQueueItemRow({
   }
 
   const note = item.triage ? triageNote(item, nowMs) : null;
+  const checkBackMs = agentCheckBackMs(item, nowMs);
   const canTriage = Boolean(onTriage && item.triage);
 
   // Narrow (a phone, or a squeezed column), the actions drop to their own
@@ -562,6 +566,15 @@ export function TicklerQueueItemRow({
             className={cn("shrink-0", note.tone === "alarm" ? "font-medium text-tickler-alarm" : "text-muted-foreground")}
           >
             · {note.text}
+          </span>
+        )}
+        {checkBackMs !== null && (
+          <span
+            data-agent-check-back
+            className="shrink-0"
+            title={new Date(checkBackMs).toLocaleString()}
+          >
+            · agent checks back {laterLabel(new Date(checkBackMs), nowMs)}
           </span>
         )}
         {inline && (

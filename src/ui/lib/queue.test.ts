@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AttentionFeed, Company } from "@paperclipai/shared";
 import {
+  agentCheckBackMs,
   compareQueueItems,
   deriveQueueItems,
   describeCron,
@@ -197,6 +198,38 @@ describe("deriveQueueItems", () => {
       "routine:late:overdue",
     ]);
     expect(items.every((item) => item.bucket === "soon")).toBe(true);
+  });
+});
+
+describe("agentCheckBackMs", () => {
+  it("reads a future monitor off the item's issue and ignores a due, absent or issueless one", () => {
+    const items = deriveQueueItems({
+      companyId: "c1",
+      approvals: [],
+      attention: attention([
+        { id: "later", severity: "high" },
+        { id: "due", severity: "high" },
+        { id: "unset", severity: "high" },
+        { id: "unheld", severity: "high" },
+      ]),
+      agents: [ceo({ lastHeartbeatAt: new Date(at(130)) })],
+      routines: [],
+      // Over the wire the date is a string, not the Date the type promises.
+      issues: [
+        { id: "later", monitorNextCheckAt: inMins(90) },
+        { id: "due", monitorNextCheckAt: at(1) },
+        { id: "unset", monitorNextCheckAt: null },
+      ] as never,
+      nowMs: NOW,
+    });
+    const byId = Object.fromEntries(items.map((item) => [item.id, agentCheckBackMs(item, NOW)]));
+    expect(byId).toEqual({
+      "attention:later": NOW + 90 * 60_000,
+      "attention:due": null,
+      "attention:unset": null,
+      "attention:unheld": null,
+      "heartbeat:agent-ceo": null,
+    });
   });
 });
 
