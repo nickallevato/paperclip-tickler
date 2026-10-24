@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.20.2](0.20.2.md) — someone else's private run no longer shows as a stalled agent; a pane no longer turns amber for an approval you cannot see.
 - [0.20.1](0.20.1.md) — agents stuck in setup are shown, not counted.
 - [0.20.0](0.20.0.md) — a queue row says when its agent checks back; demo mode answers its questions inline; the docs catch up with 0.18.0–0.19.1.
 - [0.19.1](0.19.1.md) — an approval in the queue now says what it is for.

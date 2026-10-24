@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.20.2
+
 - **Someone else's private run no longer shows as a stalled agent.** Since
   Paperclip v2026.1023.0, a run on a private task you cannot read comes back as
   a locked row with no activity timestamps, so after 20 minutes Tickler called
