@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.20.4
+
 - **Tickler's worker no longer keeps an idle host awake.** Hosts that sleep
   idle instances ask each plugin worker whether it has background work, and
   one that does not answer counts as busy. Tickler's worker has none, and now
