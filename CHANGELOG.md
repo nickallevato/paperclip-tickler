@@ -5,6 +5,11 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **A queue row says when its agent checks back.** Agents can now ask
+  Paperclip to wake them on a task at a set time. When a row's task has one
+  of these check-backs still to come, its small line ends with "agent checks
+  back 14:30" (or "Tue 09:00" after today). Tickler only shows the time; it
+  cannot set or change it. (PLI-330)
 - **Demo mode answers its questions inline.** The demo's question rows showed
   **Reply ↗**, a link out to a thread the demo does not have; they now show
   **Answer**, and its dialog loads the question card. The Acme card asks two questions, so the "1 of 2" split is

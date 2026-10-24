@@ -107,7 +107,15 @@ function buildItems() {
       } as never,
       agents: [],
       routines: [],
-      issues: [{ id: "i-77", identifier: "ACM-77", title: "Fall class registration", status: "in_review" }] as never,
+      issues: [
+        {
+          id: "i-77",
+          identifier: "ACM-77",
+          title: "Fall class registration",
+          status: "in_review",
+          monitorNextCheckAt: new Date(NOW + 90 * 60_000).toISOString(),
+        },
+      ] as never,
       nowMs: NOW,
     }),
     ...deriveQueueItems({
@@ -236,6 +244,21 @@ describe("TicklerQueue", () => {
     expect(row.querySelector("[data-queue-ask]")?.textContent).toContain("3 questions · Which class do you select for the fall term?");
     expect(row.textContent).toContain("questions");
     expect(row.querySelector('[aria-label="Answer"], a:not([title])')?.textContent).toContain("Answer");
+    act(() => root.unmount());
+  });
+
+  it("says when the agent on a row's issue checks back, and stays quiet on rows without one", async () => {
+    const root = render();
+    await act(async () => {
+      (container.querySelector('[data-queue-group="later"] button[aria-expanded]') as HTMLButtonElement).dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+    const note = container.querySelector('[data-queue-item="attention:ask"] [data-agent-check-back]');
+    const when = new Date(NOW + 90 * 60_000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    expect(note?.textContent).toBe(`· agent checks back ${when}`);
+    expect(container.querySelector('[data-queue-item="attention:blk"] [data-agent-check-back]')).toBeNull();
+    expect(container.querySelector('[data-queue-item="attention:low"] [data-agent-check-back]')).toBeNull();
     act(() => root.unmount());
   });
 

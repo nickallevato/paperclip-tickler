@@ -56,6 +56,14 @@ Every row that can be triaged has a calendar button at the end:
 Changes show at once and are confirmed on the next refetch; if the write
 fails, the row goes back and a toast says why.
 
+### When the agent checks back
+
+An agent can tell Paperclip it will look at a task again at a set time (a
+one-shot issue monitor). When a row's task has one still to come, the row's
+small line ends with *agent checks back 14:30* — a time today, or a day and
+time after today. Hover it for the full date. It is read-only: Tickler shows
+the time but cannot set or clear it, and it goes away once that time passes.
+
 ## The three severity buckets
 
 Grouped by **Severity**, the queue is "how long can this wait":
