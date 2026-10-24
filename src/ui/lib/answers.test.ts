@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AskUserQuestionsQuestion } from "@paperclipai/shared";
-import { answerState, describeAnswerError, isTextOnly, questionExtras, rulesHint, textProblem } from "./answers";
+import { answerState, describeAnswerError, isTextOnly, questionExtras, rulesHint, sentText, startingAnswers, textProblem } from "./answers";
 
 const q = (over: Partial<AskUserQuestionsQuestion>): AskUserQuestionsQuestion => ({
   id: "q",
@@ -35,8 +35,30 @@ describe("questionExtras", () => {
 
   it("falls back to nothing on a host that sends no question set, or a malformed one", () => {
     for (const value of [undefined, null, {}, { questionSet: 3 }, { questionSet: { questions: "x" } }, { questionSet: { questions: [null] } }]) {
-      expect(questionExtras(value, "days")).toEqual({ text: false, rules: {}, placeholder: null, recommendedOptionIds: [] });
+      expect(questionExtras(value, "days")).toEqual({ text: false, rules: {}, placeholder: null, recommendedOptionIds: [], initialText: null });
     }
+  });
+});
+
+describe("starting text", () => {
+  const typed = (initialText: unknown, answerMode = "text") => ({
+    questionSet: { questions: [{ id: "note", answerMode, initialText }] },
+  });
+  const question = q({ id: "note" });
+
+  it("keeps the agent's text exactly, and only on a typed question", () => {
+    expect(questionExtras(typed("  Draft\n"), "note").initialText).toBe("  Draft\n");
+    expect(questionExtras(typed("a", "single_select"), "note").initialText).toBeNull();
+    expect(questionExtras(typed(3), "note").initialText).toBeNull();
+    expect(startingAnswers(typed("  Draft\n"), [question])).toEqual({ note: { optionIds: [], otherText: "  Draft\n" } });
+    expect(startingAnswers(typed(undefined), [question])).toEqual({});
+  });
+
+  it("sends typed text untrimmed but still sees whitespace as empty", () => {
+    const extras = questionExtras(typed(""), "note");
+    expect(sentText(extras, { optionIds: [], otherText: " x " })).toBe(" x ");
+    expect(answerState(question, extras, { optionIds: [], otherText: "   " })).toEqual({ status: "empty", blocking: true });
+    expect(sentText(questionExtras(null, "note"), { optionIds: [], otherText: " x " })).toBe("x");
   });
 });
 
