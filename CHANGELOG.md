@@ -5,6 +5,11 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Tickler's worker no longer keeps an idle host awake.** Hosts that sleep
+  idle instances ask each plugin worker whether it has background work, and
+  one that does not answer counts as busy. Tickler's worker has none, and now
+  says so. Older hosts ignore the question. (PLI-333)
+
 ## 0.20.3
 
 - **A typed question starts from the agent's text.** When an agent asks a

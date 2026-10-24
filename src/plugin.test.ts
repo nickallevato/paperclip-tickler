@@ -18,6 +18,11 @@ describe("plugin worker lifecycle", () => {
     expect(health).toMatchObject({ status: "ok" });
   });
 
+  it("never holds an instance awake: the worker has no background work", async () => {
+    // Without the hook the host counts the worker as busy and blocks idle sleep.
+    await expect(plugin.definition.onIdleDrain?.(new AbortController().signal)).resolves.toBe("none");
+  });
+
   it("logs on setup without throwing", async () => {
     const logger = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
     await expect(
