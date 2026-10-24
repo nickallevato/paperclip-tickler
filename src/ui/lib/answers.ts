@@ -23,11 +23,13 @@ export type QuestionExtras = {
   rules: TextRules;
   placeholder: string | null;
   recommendedOptionIds: string[];
+  /** The agent's editable starting text for a typed question, exactly as sent. */
+  initialText: string | null;
 };
 
 export type Answer = { optionIds: string[]; otherText: string };
 
-const NO_EXTRAS: QuestionExtras = { text: false, rules: {}, placeholder: null, recommendedOptionIds: [] };
+const NO_EXTRAS: QuestionExtras = { text: false, rules: {}, placeholder: null, recommendedOptionIds: [], initialText: null };
 
 function record(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -60,7 +62,29 @@ export function questionExtras(payload: unknown, questionId: string): QuestionEx
       const entry = record(option);
       return entry?.recommended === true && typeof entry.id === "string" ? [entry.id] : [];
     }),
+    initialText: question.answerMode === "text" && typeof question.initialText === "string" ? question.initialText : null,
   };
+}
+
+/**
+ * The text that goes to the server. A typed question (`answerMode: "text"`)
+ * may hold code or deliberate whitespace, and the server keeps it as sent; the
+ * older free-text answers are trimmed on both sides.
+ */
+export function sentText(extras: QuestionExtras, answer: Answer): string {
+  return extras.text ? answer.otherText : answer.otherText.trim();
+}
+
+/** Typed questions start from the agent's draft text; everything else starts empty. */
+export function startingAnswers(payload: unknown, questions: ReadonlyArray<AskUserQuestionsQuestion>): Record<string, Answer> {
+  return Object.fromEntries(
+    questions.flatMap((question) => {
+      const { initialText } = questionExtras(payload, question.id);
+      if (initialText === null) return [];
+      const freeId = freeTextOptionId(question);
+      return [[question.id, { optionIds: initialText.trim() && freeId ? [freeId] : [], otherText: initialText }]];
+    }),
+  );
 }
 
 /** The option that stands for "type your own answer", if the question has one. */
@@ -111,9 +135,8 @@ export function rulesHint(rules: TextRules): string | null {
  * checks except `pattern`: that one is an agent-authored regular expression,
  * which the server runs in a bounded worker and a browser tab cannot.
  */
-export function textProblem(text: string, rules: TextRules): string | null {
-  const value = text.trim();
-  if (!value) return null;
+export function textProblem(value: string, rules: TextRules): string | null {
+  if (!value.trim()) return null;
   if (isNumeric(rules)) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return rules.inputType === "integer" ? "Enter a whole number" : "Enter a number";
@@ -134,19 +157,19 @@ export type AnswerState =
 /** Where one question stands: nothing yet, good to send, or something to fix first. */
 export function answerState(question: AskUserQuestionsQuestion, extras: QuestionExtras, answer: Answer): AnswerState {
   const required = question.required !== false;
-  const text = answer.otherText.trim();
+  const text = sentText(extras, answer);
   if (isTextOnly(question, extras)) {
-    if (!text) return { status: "empty", blocking: required };
+    if (!text.trim()) return { status: "empty", blocking: required };
     const problem = textProblem(text, extras.rules);
     return problem ? { status: "invalid", message: problem } : { status: "ok" };
   }
   if (textCounts(question, extras, answer)) {
-    if (!text) return { status: "invalid", message: "Type your answer, or pick another option" };
+    if (!text.trim()) return { status: "invalid", message: "Type your answer, or pick another option" };
     const problem = textProblem(text, extras.rules);
     return problem ? { status: "invalid", message: problem } : { status: "ok" };
   }
   // Before free-text options existed, a typed answer with nothing picked was the fallback.
-  if (answer.optionIds.length === 0 && !text) return { status: "empty", blocking: required };
+  if (answer.optionIds.length === 0 && !text.trim()) return { status: "empty", blocking: required };
   return { status: "ok" };
 }
 

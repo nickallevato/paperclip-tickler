@@ -5,6 +5,13 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **A typed question starts from the agent's text.** When an agent asks a
+  question that is answered by typing and gives starting text
+  (`initialText`), the answer box opens with that text, ready to edit. A
+  saved draft still wins, including one you cleared on purpose. A typed
+  answer is now sent exactly as written, spaces and line breaks included;
+  only a blank answer counts as empty. (PLI-329)
+
 ## 0.20.2
 
 - **Someone else's private run no longer shows as a stalled agent.** Since

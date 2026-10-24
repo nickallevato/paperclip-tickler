@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AttentionItem } from "@paperclipai/shared";
+import { TICKLER_DRAFT_DEBOUNCE_MS } from "../lib/drafts";
 import { TicklerInteractionActions } from "./TicklerInteractionActions";
 
 const mockIssuesApi = vi.hoisted(() => ({ listInteractions: vi.fn(), respondInteraction: vi.fn() }));
@@ -147,7 +148,7 @@ describe("question card", () => {
     expect(submit().disabled).toBe(false);
   });
 
-  it("sends a typed answer in the shape the server stores it", async () => {
+  it("sends a typed answer as written, the way the server stores it", async () => {
     mockIssuesApi.respondInteraction.mockResolvedValue({ ...interaction, status: "answered" });
     await open();
     await act(async () => (dialog().querySelectorAll('[data-question="channel"] input')[0] as HTMLInputElement).click());
@@ -157,7 +158,7 @@ describe("question card", () => {
     expect(mockIssuesApi.respondInteraction).toHaveBeenCalledWith("i-1", "int-1", {
       answers: [
         { questionId: "channel", optionIds: ["npm"], otherText: null },
-        { questionId: "days", optionIds: ["days-text"], otherText: "7" },
+        { questionId: "days", optionIds: ["days-text"], otherText: " 7 " },
       ],
       summaryMarkdown: null,
     });
@@ -178,5 +179,64 @@ describe("question card", () => {
     expect(dialog().querySelector('[data-question="days"] [data-answer-problem]')?.textContent).toBe(
       "This question is not in the format the agent asked for.",
     );
+  });
+});
+
+describe("starting text", () => {
+  const draftText = "  Draft\n漢字\n";
+  const withInitialText = (initialText: string) => ({
+    ...interaction,
+    payload: {
+      ...interaction.payload,
+      questions: [{ id: "note", prompt: "Edit the draft", selectionMode: "single", options: [] }],
+      questionSet: {
+        schema: "paperclip.question_set.v1",
+        questions: [{ id: "note", prompt: "Edit the draft", required: true, answerMode: "text", initialText }],
+      },
+    },
+  });
+  const box = () => dialog().querySelector('[data-question="note"] textarea') as HTMLTextAreaElement;
+  async function reopen() {
+    act(() => root.unmount());
+    root = createRoot(container);
+    await open();
+  }
+
+  it("fills the box with the agent's text and sends it exactly as written", async () => {
+    mockIssuesApi.listInteractions.mockResolvedValue([withInitialText(draftText)]);
+    mockIssuesApi.respondInteraction.mockResolvedValue({ ...interaction, status: "answered" });
+    await open();
+    expect(box().value).toBe(draftText);
+    expect(mockIssuesApi.respondInteraction).not.toHaveBeenCalled();
+    await act(async () => submit().click());
+    await flush();
+    expect(mockIssuesApi.respondInteraction).toHaveBeenCalledWith("i-1", "int-1", {
+      answers: [{ questionId: "note", optionIds: [], otherText: draftText }],
+      summaryMarkdown: null,
+    });
+  });
+
+  it("keeps the reader's edit, and a cleared box, over the agent's text after a reload", async () => {
+    const saveDraft = () => act(async () => void (await new Promise((resolve) => setTimeout(resolve, TICKLER_DRAFT_DEBOUNCE_MS + 50))));
+    mockIssuesApi.listInteractions.mockResolvedValue([withInitialText(draftText)]);
+    await open();
+    await type(box(), "Reader edit\n");
+    await saveDraft();
+    mockIssuesApi.listInteractions.mockResolvedValue([withInitialText("New agent text")]);
+    await reopen();
+    expect(box().value).toBe("Reader edit\n");
+
+    await type(box(), "");
+    await saveDraft();
+    await reopen();
+    expect(box().value).toBe("");
+    expect(submit().disabled).toBe(true);
+  });
+
+  it("treats whitespace-only starting text as no answer", async () => {
+    mockIssuesApi.listInteractions.mockResolvedValue([withInitialText("   ")]);
+    await open();
+    expect(box().value).toBe("   ");
+    expect(submit().disabled).toBe(true);
   });
 });

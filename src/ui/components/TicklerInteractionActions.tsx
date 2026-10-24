@@ -20,6 +20,8 @@ import {
   isTextOnly,
   questionExtras,
   rulesHint,
+  sentText,
+  startingAnswers,
   textCounts,
   type Answer,
   type TextRules,
@@ -402,7 +404,10 @@ function QuestionsForm({
   const questions = interaction.payload.questions;
   const draftKey = draftKeyFor(interaction.id);
   const [draft] = useState(() => loadDraft<{ answers?: Record<string, Answer>; summary?: string }>(draftKey));
-  const [answers, setAnswers] = useState<Record<string, Answer>>(draft?.answers ?? {});
+  // The agent's starting text is only a draft: a saved draft, even one the
+  // reader cleared on purpose, always wins over it.
+  const [starting] = useState(() => startingAnswers(interaction.payload, questions));
+  const [answers, setAnswers] = useState<Record<string, Answer>>(draft?.answers ?? starting);
   const [summary, setSummary] = useState(draft?.summary ?? "");
   const [noteOpen, setNoteOpen] = useState(() => !!draft?.summary?.trim());
   // A problem is only shown once the reader has left the box (or the server
@@ -411,7 +416,14 @@ function QuestionsForm({
   const [refused, setRefused] = useState<{ questionId: string; text: string } | null>(null);
   const answerOf = (id: string): Answer => answers[id] ?? { optionIds: [], otherText: "" };
   const untouched =
-    !summary.trim() && Object.values(answers).every((answer) => answer.optionIds.length === 0 && !answer.otherText.trim());
+    !summary.trim() &&
+    questions.every((question) => {
+      const answer = answerOf(question.id);
+      const start = starting[question.id];
+      return start
+        ? answer.otherText === start.otherText && answer.optionIds.join() === start.optionIds.join()
+        : answer.optionIds.length === 0 && !answer.otherText.trim();
+    });
   useDraftSaver(draftKey, { answers, summary }, untouched);
   const setAnswer = (id: string, next: Answer) => {
     setAnswers((current) => ({ ...current, [id]: next }));
@@ -423,9 +435,12 @@ function QuestionsForm({
       issuesApi.respondInteraction(issueId, interaction.id, {
         answers: questions.map((question) => {
           const answer = answerOf(question.id);
-          const text = answer.otherText.trim();
+          const extras = questionExtras(interaction.payload, question.id);
+          // Trimmed only to tell an empty answer; a typed answer goes as written.
+          const sent = sentText(extras, answer);
+          const text = sent.trim() ? sent : "";
           const freeId = freeTextOptionId(question);
-          if (isTextOnly(question, questionExtras(interaction.payload, question.id))) {
+          if (isTextOnly(question, extras)) {
             return { questionId: question.id, optionIds: text && freeId ? [freeId] : [], otherText: text || null };
           }
           const freeTextSelected = freeId !== null && answer.optionIds.includes(freeId);
