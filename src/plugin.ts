@@ -24,6 +24,16 @@ export const plugin = definePlugin({
       details: { surfaces: ["page", "sidebar"] },
     };
   },
+
+  /**
+   * Hosts that park idle instances ask each worker whether it holds background
+   * work, and a worker without this hook blocks sleep. Tickler's worker has no
+   * timers, sockets or jobs — everything runs in the browser — so it never
+   * does. Hosts and SDKs that predate the hook ignore it.
+   */
+  async onIdleDrain() {
+    return "none" as const;
+  },
 });
 
 export default plugin;
