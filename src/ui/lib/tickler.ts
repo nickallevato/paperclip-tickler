@@ -116,12 +116,21 @@ export function derivePaneHealth(
    * without this a company with three of them reads green.
    */
   attention?: AttentionFeed,
+  /**
+   * The approvals this user actually loaded. Amber is judged from these, not
+   * `summary.pendingApprovals`: the dashboard count is company-wide and still
+   * includes approvals on other people's private tasks, which the approvals
+   * list hides — so an amber dot from it could have nothing behind it to act
+   * on. The red rules stay on the summary; incidents and agent errors are
+   * company-wide facts whoever is looking.
+   */
+  approvals?: ReadonlyArray<Pick<Approval, "status">>,
 ): TicklerHealth {
   const live = (attention?.items ?? []).filter((item) => !item.dismissal);
   if (summary && (summary.budgets.activeIncidents > 0 || summary.agents.error > 0)) return "red";
   if (live.some((item) => item.severity === "critical")) return "red";
   if (!summary) return "green";
-  if (summary.pendingApprovals > 0) return "amber";
+  if (pendingCount(approvals) > 0) return "amber";
   if (live.some((item) => item.severity === "high")) return "amber";
   return "green";
 }
@@ -130,7 +139,16 @@ export function derivePaneHealth(
  * Accessible/plain-language label for a pane's health dot, naming the reason
  * (incidents, agent errors, approvals) rather than just the color.
  */
-export function healthLabel(health: TicklerHealth, summary: DashboardSummary | undefined): string {
+function pendingCount(approvals: ReadonlyArray<Pick<Approval, "status">> | undefined): number {
+  return (approvals ?? []).filter((approval) => approval.status === "pending").length;
+}
+
+export function healthLabel(
+  health: TicklerHealth,
+  summary: DashboardSummary | undefined,
+  /** The loaded approvals, as for {@link derivePaneHealth}. */
+  approvals?: ReadonlyArray<Pick<Approval, "status">>,
+): string {
   if (health === "red") {
     const reasons: string[] = [];
     const incidents = summary?.budgets.activeIncidents ?? 0;
@@ -140,8 +158,9 @@ export function healthLabel(health: TicklerHealth, summary: DashboardSummary | u
     return reasons.length > 0 ? `Health: red — ${reasons.join(", ")}` : "Health: red — unreachable";
   }
   if (health === "amber") {
-    const approvals = summary?.pendingApprovals ?? 0;
-    return `Health: amber — ${approvals} approval${approvals === 1 ? "" : "s"} pending`;
+    const pending = pendingCount(approvals);
+    if (pending === 0) return "Health: amber — high-priority attention";
+    return `Health: amber — ${pending} approval${pending === 1 ? "" : "s"} pending`;
   }
   return "Health: green — all clear";
 }

@@ -80,11 +80,21 @@ describe("derivePaneHealth", () => {
   it("is green when nothing is wrong", () => {
     expect(derivePaneHealth(summaryWith({}))).toBe("green");
   });
-  it("is amber when approvals are pending", () => {
-    expect(derivePaneHealth(summaryWith({ pendingApprovals: 2 }))).toBe("amber");
+  const pending = [{ status: "pending" }] as const;
+  it("is amber when a loaded approval is pending", () => {
+    expect(derivePaneHealth(summaryWith({ pendingApprovals: 1 }), undefined, pending)).toBe("amber");
+  });
+  it("ignores the dashboard's approval count, which includes private tasks the user cannot see", () => {
+    // /dashboard still counts approvals on other people's private tasks;
+    // /approvals hides them. Amber with nothing to act on is a false signal.
+    expect(derivePaneHealth(summaryWith({ pendingApprovals: 2 }), undefined, [])).toBe("green");
+    expect(derivePaneHealth(summaryWith({ pendingApprovals: 2 }))).toBe("green");
+  });
+  it("only counts approvals that are still pending", () => {
+    expect(derivePaneHealth(summaryWith({}), undefined, [{ status: "approved" }, { status: "rejected" }])).toBe("green");
   });
   it("is red on budget incident or errored agents, beating amber", () => {
-    expect(derivePaneHealth(summaryWith({ incidents: 1, pendingApprovals: 2 }))).toBe("red");
+    expect(derivePaneHealth(summaryWith({ incidents: 1, pendingApprovals: 2 }), undefined, pending)).toBe("red");
     expect(derivePaneHealth(summaryWith({ errorAgents: 1 }))).toBe("red");
   });
   it("is green while summary is undefined (loading)", () => {
@@ -159,7 +169,10 @@ describe("healthLabel", () => {
       pendingApprovals: 3,
     } as never;
     expect(healthLabel("red", summary)).toBe("Health: red — 1 incident, 2 agent errors");
-    expect(healthLabel("amber", summary)).toBe("Health: amber — 3 approvals pending");
+    const approvals = [{ status: "pending" }, { status: "pending" }] as const;
+    expect(healthLabel("amber", summary, approvals)).toBe("Health: amber — 2 approvals pending");
+    // The dashboard's 3 includes an approval on a private task; it is not counted.
+    expect(healthLabel("amber", summary)).toBe("Health: amber — high-priority attention");
     expect(healthLabel("green", summary)).toBe("Health: green — all clear");
     expect(healthLabel("red", undefined)).toBe("Health: red — unreachable");
   });

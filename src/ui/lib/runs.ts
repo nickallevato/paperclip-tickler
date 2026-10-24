@@ -61,8 +61,13 @@ export function isStartingUp(run: LiveRunForIssue): boolean {
  * "system", "assignment", "automation" — and nearly every run carries the same
  * one, so a fleet of queued runs whose tickets had not loaded read as a column
  * of "system" (PLI-274).
+ *
+ * A run on a private task the user cannot read says so, rather than a bare
+ * "Working" that reads like a run nobody bothered to name.
  */
 export function runNarration(run: LiveRunForIssue, issue: Issue | undefined): string {
+  // A locked row has no narration and no ticket to fall back on.
+  if (run.redacted) return runPhase(run) === "queued" ? "Private task · waiting for a runner" : "Private task";
   return (
     humanStatus(run) ||
     run.nextAction?.trim() ||

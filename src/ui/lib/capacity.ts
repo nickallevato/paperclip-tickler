@@ -150,6 +150,12 @@ function stateForRun(run: LiveRunForIssue, nowMs: number, agent?: Agent): RunVer
       return { state: "over_limit", silentMins: null, runningMins: Math.floor(runningMs / 60_000), limitSec: limit.timeoutSec };
     }
   }
+  // A private run the user cannot read arrives with every activity field
+  // stripped, so its silence is ours, not the agent's. Judging it would mark
+  // every private run over 20 minutes stalled; it is working, and private.
+  // The over-limit check above still applies — it reads only `startedAt` and
+  // the agent's own limit, both of which the locked row keeps.
+  if (run.redacted) return { state: "working", ...plain };
   const lastSign = lastSignAtMs(run);
   if (lastSign === null) return { state: "working", ...plain };
   const silentMs = nowMs - lastSign;

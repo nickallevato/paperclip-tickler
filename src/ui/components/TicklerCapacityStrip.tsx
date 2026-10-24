@@ -112,7 +112,9 @@ function SquareDetail({
               ? `Nothing reported for ${square.silentMins}m — still holding a runner.`
               : square.state === "queued"
                 ? "Waiting for a runner; no agent is on it yet."
-                : (humanStatus(run) ?? (isStartingUp(run) ? "Starting up — nothing to report yet." : "Working — nothing reported yet."))}
+                : run.redacted
+                  ? "Working on a private task you cannot read."
+                  : (humanStatus(run) ?? (isStartingUp(run) ? "Starting up — nothing to report yet." : "Working — nothing reported yet."))}
           </p>
           <p className={cn("text-muted-foreground", MICRO)}>
             {company.name} ·{" "}

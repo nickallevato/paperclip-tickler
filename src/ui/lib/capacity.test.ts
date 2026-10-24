@@ -138,6 +138,29 @@ describe("deriveCapacity", () => {
     expect(deriveCapacity([agent("a", "Al")], [chatty], NOW)[0].state).toBe("working");
   });
 
+  describe("a private run the user cannot read", () => {
+    // Paperclip v2026.1023.0 sends someone else's private run as a locked row:
+    // identity, status and timing, with no issueId and no activity fields.
+    const locked = (over: Partial<LiveRunForIssue> = {}) =>
+      run({ agentId: "a", redacted: true, startedAt: agoIso(3 * TICKLER_STALL_MS), ...over });
+
+    it("is working, not stalled, however long it has run", () => {
+      const [square] = deriveCapacity([agent("a", "Al")], [locked()], NOW);
+      expect(square).toMatchObject({ state: "working", silentMins: null });
+      expect(countCapacity([square]).stalled).toBe(0);
+    });
+
+    it("is still queued while it waits for a runner", () => {
+      const waiting = locked({ status: "queued", startedAt: null });
+      expect(deriveCapacity([agent("a", "Al")], [waiting], NOW)[0].state).toBe("queued");
+    });
+
+    it("is still over its agent's limit, which needs only startedAt", () => {
+      const [square] = deriveCapacity([limited("a")], [locked({ startedAt: agoIso(3 * HOUR) })], NOW);
+      expect(square.state).toBe("over_limit");
+    });
+  });
+
   it("never calls a queued run stalled, however long it has waited", () => {
     const waiting = run({ agentId: "a", status: "queued", startedAt: null, createdAt: agoIso(4 * TICKLER_STALL_MS) });
     expect(deriveCapacity([agent("a", "Al")], [waiting], NOW)[0].state).toBe("queued");
