@@ -55,6 +55,43 @@ export interface TicklerSquare {
  */
 const NOT_CAPACITY = new Set(["paused", "terminated", "pending_approval"]);
 
+/**
+ * Whether the host has admitted the agent to work.
+ *
+ * `lifecycleState` is the host's admission gate: an agent still preparing or
+ * verifying its workspace, or one that failed there, holds no runner and will
+ * take nothing, whatever its `status` says. A host too old to send the field
+ * admits every agent, so a missing value counts as ready.
+ */
+export function isLifecycleReady(agent: Agent): boolean {
+  return agent.lifecycleState === undefined || agent.lifecycleState === "ready";
+}
+
+/** Lifecycle phases on the way into work, where a failure means setup failed. */
+const SETUP_STATES = new Set(["preparing", "verifying", "resuming"]);
+
+export interface TicklerSetupFailure {
+  agent: Agent;
+  error: string;
+}
+
+/**
+ * Agents stuck in setup with an error the host recorded, in org order.
+ *
+ * These are left out of the capacity strip (see {@link isLifecycleReady}), so
+ * without a row of their own an agent that failed setup would simply vanish
+ * from the board. Paused or terminating agents are not here: they are not
+ * trying to start, and a `lifecycleError` on them is not a setup failure.
+ */
+export function deriveSetupFailures(agents: ReadonlyArray<Agent>): TicklerSetupFailure[] {
+  return orgOrder(agents)
+    .filter((agent) => agent.lifecycleState !== undefined && SETUP_STATES.has(agent.lifecycleState))
+    .flatMap((agent) => {
+      const error = text(agent.lifecycleError);
+      return error ? [{ agent, error }] : [];
+    });
+}
+
 /** The most alarming state wins when one agent somehow has several runs. */
 const RANK: Record<TicklerSquareState, number> = { error: 0, over_limit: 1, stalled: 2, working: 3, queued: 4, idle: 5 };
 
@@ -177,8 +214,10 @@ function orgOrder(agents: ReadonlyArray<Agent>): Agent[] {
 /**
  * One square per agent in org order (see {@link orgOrder}): the top-level
  * agent first, each manager followed by their reports. Stable across polls —
- * only the squares' states change. Agents that cannot take work are dropped
- * rather than drawn idle, which would overstate the company's capacity.
+ * only the squares' states change. Agents that cannot take work — by status,
+ * or because the host has not admitted them (see {@link isLifecycleReady}) —
+ * are dropped rather than drawn idle, which would overstate the company's
+ * capacity.
  */
 export function deriveCapacity(
   agents: ReadonlyArray<Agent>,
@@ -192,7 +231,7 @@ export function deriveCapacity(
     else runsByAgent.set(run.agentId, [run]);
   }
 
-  return orgOrder(agents.filter((agent) => !NOT_CAPACITY.has(agent.status)))
+  return orgOrder(agents.filter((agent) => !NOT_CAPACITY.has(agent.status) && isLifecycleReady(agent)))
     .map((agent) => {
       const plain = { run: null, silentMins: null, runningMins: null, limitSec: null };
       if (agent.status === "error") {

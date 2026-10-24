@@ -5,6 +5,12 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Agents stuck in setup are shown, not counted.** Paperclip now tells
+  plugins whether an agent has finished setting up. An agent that has not is
+  no longer drawn as an idle square, because it cannot take work. When its
+  setup failed, the company line shows "Bo failed setup: …" with the host's
+  error, and the row links to the agent's page. (PLI-331)
+
 ## 0.20.0
 
 - **A queue row says when its agent checks back.** Agents can now ask

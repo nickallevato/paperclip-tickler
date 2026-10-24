@@ -13,7 +13,7 @@ import {
   type TicklerCompanyStats,
   type TicklerTokenThresholds,
 } from "../lib/tickler";
-import { countOverLimitRuns } from "../lib/capacity";
+import { countOverLimitRuns, deriveSetupFailures } from "../lib/capacity";
 import { TicklerCapacityStrip } from "./TicklerCapacityStrip";
 import { TicklerCeoStrip } from "./TicklerCeoStrip";
 import { TicklerLink } from "./TicklerLink";
@@ -88,6 +88,7 @@ export function TicklerCompanyLine({
   const blind = loading || data.unavailable;
   const throughput = deriveThroughput(data.summary?.runActivity ?? []);
   const ceo = selectCeo(data.agents);
+  const setupFailures = deriveSetupFailures(data.agents);
   const needsTone =
     actionable.count === 0 ? ZERO : actionable.criticalOrHigh ? "text-tickler-alarm" : "text-tickler-wait";
   const focusTitle = needsFocused
@@ -179,6 +180,21 @@ export function TicklerCompanyLine({
             leadAgentId={ceo?.id ?? null}
           />
         </div>
+        {!data.unavailable &&
+          setupFailures.map(({ agent, error }) => (
+            // Out of the strip, since it holds no runner, so it needs its own
+            // row or a failed setup would just look like one fewer agent.
+            <span key={agent.id} data-setup-failed={agent.id} className="flex min-w-0">
+              <TicklerLink
+                to={`/${company.issuePrefix}/agents/${agent.urlKey ?? agent.id}`}
+                companyId={company.id}
+                title={`${agent.name} failed setup: ${error}`}
+                className={cn(MICRO, "min-w-0 truncate text-tickler-alarm hover:underline")}
+              >
+                <span className="font-medium">{agent.name}</span> failed setup: {error}
+              </TicklerLink>
+            </span>
+          ))}
       </div>
       {usage ? (
         // Usage takes the runs-per-day column: which org burned tokens today

@@ -6,6 +6,7 @@ import {
   countCapacity,
   countOverLimitRuns,
   deriveCapacity,
+  deriveSetupFailures,
   durationLabel,
   limitLabel,
   TICKLER_OVER_LIMIT_SLACK_MS,
@@ -19,9 +20,15 @@ const agent = (
   id: string,
   name: string,
   status = "idle",
-  extra: { role?: string; reportsTo?: string | null; adapterConfig?: Record<string, unknown> } = {},
+  extra: {
+    role?: string;
+    reportsTo?: string | null;
+    adapterConfig?: Record<string, unknown>;
+    lifecycleState?: string;
+    lifecycleError?: string | null;
+  } = {},
 ): Agent =>
-  ({ id, name, status, role: extra.role ?? "worker", reportsTo: extra.reportsTo ?? null, adapterConfig: extra.adapterConfig ?? {} }) as never;
+  ({ id, name, status, role: extra.role ?? "worker", reportsTo: extra.reportsTo ?? null, adapterConfig: extra.adapterConfig ?? {}, lifecycleState: extra.lifecycleState, lifecycleError: extra.lifecycleError }) as never;
 
 const HOUR = 60 * 60_000;
 /** An opencode-style agent with the two-hour limit from GH#72. */
@@ -299,5 +306,49 @@ describe("agentProfile", () => {
       runtimeConfig: { heartbeat: [] },
     } as never as Agent;
     expect(agentProfile(junk)).toMatchObject({ model: null, maxTurnsPerRun: null, heartbeatSec: null, skills: [] });
+  });
+});
+
+describe("lifecycle (PLI-331)", () => {
+  it("leaves an agent the host has not admitted out of capacity", () => {
+    const squares = deriveCapacity(
+      [
+        agent("a", "Al", "idle", { lifecycleState: "ready" }),
+        agent("b", "Bo", "idle", { lifecycleState: "preparing" }),
+        agent("c", "Cy", "idle", { lifecycleState: "verifying", lifecycleError: "workspace clone failed" }),
+      ],
+      [],
+      NOW,
+    );
+    expect(squares.map((square) => square.agentId)).toEqual(["a"]);
+  });
+
+  it("counts an agent with no lifecycleState, as an older host sends", () => {
+    expect(deriveCapacity([agent("a", "Al")], [], NOW)).toHaveLength(1);
+  });
+
+  it("lists agents that failed setup with the host's error, in org order", () => {
+    const failures = deriveSetupFailures([
+      agent("z", "Zed", "idle", { lifecycleState: "preparing", lifecycleError: "  no runner image  " }),
+      agent("b", "Bo", "idle", { lifecycleState: "verifying", lifecycleError: "skills failed to sync" }),
+      agent("r", "Ru", "idle", { lifecycleState: "resuming", lifecycleError: "lease expired" }),
+    ]);
+    expect(failures.map(({ agent, error }) => [agent.id, error])).toEqual([
+      ["b", "skills failed to sync"],
+      ["r", "lease expired"],
+      ["z", "no runner image"],
+    ]);
+  });
+
+  it("does not call a still-preparing agent, or a ready, paused or terminating one, a setup failure", () => {
+    const failures = deriveSetupFailures([
+      agent("a", "Al", "idle", { lifecycleState: "preparing", lifecycleError: null }),
+      agent("b", "Bo", "idle", { lifecycleState: "verifying", lifecycleError: "   " }),
+      agent("c", "Cy", "idle", { lifecycleState: "ready", lifecycleError: "old error" }),
+      agent("d", "Di", "paused", { lifecycleState: "paused", lifecycleError: "paused by board" }),
+      agent("e", "Ed", "idle", { lifecycleState: "terminating", lifecycleError: "cleanup failed" }),
+      agent("f", "Fi", "idle", { lifecycleError: "no state at all" }),
+    ]);
+    expect(failures).toEqual([]);
   });
 });
