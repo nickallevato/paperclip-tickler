@@ -3,10 +3,11 @@ import { render } from "@testing-library/react";
 import type { Agent, Company } from "@paperclipai/shared";
 import { TicklerCompanyLine } from "./TicklerCompanyLine";
 import type { TicklerCompanyData } from "./useTicklerCompanyData";
+import type { AgentWithLifecycle } from "../lib/capacity";
 
 const NOW = Date.UTC(2026, 9, 24, 12);
 const company = { id: "c1", name: "Acme", issuePrefix: "ACM" } as Company;
-const agent = (id: string, name: string, extra: Partial<Agent> = {}) =>
+const agent = (id: string, name: string, extra: Partial<AgentWithLifecycle> = {}) =>
   ({ id, name, urlKey: name.toLowerCase(), status: "idle", role: "worker", reportsTo: null, adapterConfig: {}, ...extra }) as Agent;
 
 const data = (agents: Agent[], over: Partial<TicklerCompanyData> = {}) =>

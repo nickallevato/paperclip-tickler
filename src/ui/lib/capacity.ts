@@ -56,6 +56,13 @@ export interface TicklerSquare {
 const NOT_CAPACITY = new Set(["paused", "terminated", "pending_approval"]);
 
 /**
+ * An agent with the host's lifecycle fields. Declared here, optional, because
+ * older hosts do not send them and the core CI pins (`.github/paperclip-core.ref`)
+ * predates them; on a newer core the intersection narrows to the host's types.
+ */
+export type AgentWithLifecycle = Agent & { lifecycleState?: string; lifecycleError?: string | null };
+
+/**
  * Whether the host has admitted the agent to work.
  *
  * `lifecycleState` is the host's admission gate: an agent still preparing or
@@ -64,7 +71,8 @@ const NOT_CAPACITY = new Set(["paused", "terminated", "pending_approval"]);
  * admits every agent, so a missing value counts as ready.
  */
 export function isLifecycleReady(agent: Agent): boolean {
-  return agent.lifecycleState === undefined || agent.lifecycleState === "ready";
+  const { lifecycleState } = agent as AgentWithLifecycle;
+  return lifecycleState === undefined || lifecycleState === "ready";
 }
 
 /** Lifecycle phases on the way into work, where a failure means setup failed. */
@@ -84,7 +92,7 @@ export interface TicklerSetupFailure {
  * trying to start, and a `lifecycleError` on them is not a setup failure.
  */
 export function deriveSetupFailures(agents: ReadonlyArray<Agent>): TicklerSetupFailure[] {
-  return orgOrder(agents)
+  return (orgOrder(agents) as AgentWithLifecycle[])
     .filter((agent) => agent.lifecycleState !== undefined && SETUP_STATES.has(agent.lifecycleState))
     .flatMap((agent) => {
       const error = text(agent.lifecycleError);
