@@ -111,7 +111,7 @@ const BOARD_ROUTE_ROOTS = new Set([
  * root-level global route. As a plugin page Tickler lives at /:prefix/tickler and
  * is company-scoped like any other board route, so the entry is omitted.
  */
-const GLOBAL_ROUTE_ROOTS = new Set(["auth", "invite", "board-claim", "cli-auth", "mcp-connect", "assistant-connections", "docs", "instance"]);
+const GLOBAL_ROUTE_ROOTS = new Set(["auth", "invite", "board-claim", "cli-auth", "mcp-connect", "dot-connect", "assistant-connections", "docs", "instance"]);
 
 export function normalizeCompanyPrefix(prefix: string): string {
   return prefix.trim().toUpperCase();
