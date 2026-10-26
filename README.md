@@ -30,7 +30,7 @@ you will deal with each thing — instead of visiting each org's dashboard in tu
 - 👀 **What agents are actually doing.** Hover any agent or task for its live narration — not
   just "3 running".
 - 🚦 **Trouble surfaces itself.** Blocked projects, stalled runs, runs stuck past their agent's
-  time limit, failed routines, overdue heartbeats.
+  time limit, agents that failed setup, failed routines, overdue heartbeats.
 - ⬆️ **Updates itself from a button**, and rolls back from one too if a new version misbehaves.
 - 📱 **Works on a phone**, and 🧩 **changes nothing in core** — UI-only, prebuilt, and fits
   whichever Paperclip build it lands on.
@@ -54,7 +54,8 @@ same link lives behind the **?** in the Tickler page header.
 and confirmations awaiting a response, blockers, failed runs, overdue heartbeats, routine
 exceptions. Actions are inline — Approve, Reject, Reply, answer a question, choose on a
 confirmation — so you rarely need to open the org at all. A row's title opens it, and **Reject**
-asks twice, because a rejected approval cannot be undone.
+asks twice, because a rejected approval cannot be undone. When an agent has said it will look
+at a task again at a set time, its row says so: *agent checks back 14:30*.
 
 ![The Needs-you queue in its default grouping: a Today group with an overdue blocker, then Unsorted, where each new row offers Today, This week and Whenever beside its own Open, Approve, Reject or Reply](https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/needs-you.png)
 

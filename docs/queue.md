@@ -143,8 +143,12 @@ thread interactions the feed only carries a server-truncated excerpt, so
 expanding fetches the payload and shows every question; for anything else it
 just unclamps the text.
 
-A partly-typed answer is kept as a draft, so a poll that arrives mid-sentence
-does not lose what you have written.
+When the agent gives starting text for a typed question, the box opens with it,
+ready to edit. A partly-typed answer is kept as a draft — and wins over that
+starting text, even when you cleared it on purpose — so a poll that arrives
+mid-sentence does not lose what you have written. A typed answer is sent
+exactly as written, spaces and line breaks included; only a blank one counts as
+empty.
 
 Cross-company links do a **full page load** rather than an in-app transition.
 That is deliberate and is a workaround for a core defect: an in-app hop across
