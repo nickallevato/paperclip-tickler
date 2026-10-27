@@ -5,6 +5,12 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The docs catch up with 0.20.0–0.20.3.** The README mentions check-back
+  times on queue rows and agents that failed setup; the board guide says which
+  agents get a capacity square, what a private-task run shows, and the
+  failed-setup row; the queue guide covers typed answers that start from the
+  agent's text. (PLI-337)
+
 ## 0.20.4
 
 - **Tickler's worker no longer keeps an idle host awake.** Hosts that sleep

@@ -85,7 +85,8 @@ The card also carries **Watch** (the pin), **Hide** (see
 
 ## Capacity
 
-Under each company name is a row of small squares, **one per agent**:
+Under each company name is a row of small squares, **one per agent that can
+take work**:
 
 | Square | Means |
 | --- | --- |
@@ -103,6 +104,18 @@ Hovering one says who it is and what they are actually doing — the thing a bar
 A stall is the case worth knowing about: the run has not failed, so nothing
 alerts, and the count still says three agents are working. The square goes
 amber at twenty minutes of silence.
+
+A run on someone else's **private task** is the exception. Paperclip sends it
+with its activity stripped, so its silence says nothing about the agent: the
+square stays working, and its hover card and Recent row say **Private task**
+instead of a narration. It is still flagged if it runs past its agent's time
+limit, which needs only its start time.
+
+Paused and terminated agents get no square, and neither does an agent Paperclip
+has not finished setting up — it cannot take work, so an idle square would
+overstate the company. If its setup **failed**, the company line gets a row of
+its own, *Bo failed setup: …* with the host's error, linking to the agent's
+page; without it, a failed agent would just look like one fewer square.
 
 ## Recent
 

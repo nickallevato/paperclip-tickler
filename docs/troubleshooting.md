@@ -186,6 +186,10 @@ Capacity state is derived from the live-run list. If an agent is genuinely
 running but drawn idle, its run is not in that list — check that the run started
 against the company you are looking at.
 
+An agent with **no square at all** is paused, terminated, or not yet set up by
+Paperclip. If its setup failed, the company line says so, with the error
+([Capacity](board.md#capacity)).
+
 A **stalled** (amber) square is different: the run is live, but nothing has come
 out of it for 20 minutes. That is the case worth chasing, because nothing else
 alerts on it.
