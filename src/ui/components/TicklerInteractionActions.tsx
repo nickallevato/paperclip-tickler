@@ -26,8 +26,8 @@ import {
   type Answer,
   type TextRules,
 } from "../lib/answers";
-import { attentionIssueId, isInteractionAwaitingAnswer } from "../lib/tickler";
-import { recordInteraction } from "./useTicklerCompanyData";
+import { attentionIssueId, hostCanDismiss, isInteractionAwaitingAnswer } from "../lib/tickler";
+import { lastQuestionState, recordInteraction } from "./useTicklerCompanyData";
 
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
 const BODY = "text-[length:var(--tickler-fs-body,14px)] leading-[1.45]";
@@ -65,6 +65,7 @@ export function TicklerInteractionActions({
   // Set once a Dismiss from this row lands, so the row reads as dismissed for
   // the moment before the board drops it.
   const [dismissed, setDismissed] = useState(false);
+  const queryClient = useQueryClient();
   const issueId = attentionIssueId(item);
   const kind = item.subject.metadata?.kind;
   if (!issueId || item.subject.kind !== "interaction") return null;
@@ -86,6 +87,9 @@ export function TicklerInteractionActions({
     );
   }
   if (!answer) return null;
+  // A host older than v2026.1106.0 has no dismiss route; its request lookup
+  // says so by leaving `dismissedAt` off. Unknown (nothing looked up yet) shows it.
+  if (hostCanDismiss(lastQuestionState(queryClient, issueId)) === false) return answer;
   return (
     <>
       {answer}

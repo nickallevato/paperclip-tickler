@@ -55,15 +55,33 @@ export function pruneClosedIssueAttention(
 }
 
 /**
+ * A thread request as far as dismissal goes. `dismissedAt` is declared here
+ * rather than read off the host's type because it arrived in Paperclip
+ * v2026.1106.0, and Tickler still builds against older hosts, whose requests
+ * simply never carry it.
+ */
+export type DismissibleInteraction = Pick<IssueThreadInteraction, "id" | "status"> & {
+  dismissedAt?: Date | string | null;
+};
+
+/**
  * Whether a thread request is still waiting on an answer — the host's own rule.
  * Since Paperclip v2026.1106.0 a request can be dismissed into the thread's
  * history: it keeps `status: "pending"` (it stays answerable there) but gains a
  * `dismissedAt`, and the host stops asking for it.
  */
-export function isInteractionAwaitingAnswer(
-  interaction: Pick<IssueThreadInteraction, "status" | "dismissedAt">,
-): boolean {
+export function isInteractionAwaitingAnswer(interaction: Omit<DismissibleInteraction, "id">): boolean {
   return interaction.status === "pending" && !interaction.dismissedAt;
+}
+
+/**
+ * Whether the host can dismiss requests: a host that can puts `dismissedAt`
+ * on every request it lists, null or not. Null when there is nothing to tell
+ * from.
+ */
+export function hostCanDismiss(interactions: ReadonlyArray<object> | undefined): boolean | null {
+  if (!interactions || interactions.length === 0) return null;
+  return interactions.some((interaction) => "dismissedAt" in interaction);
 }
 
 /**
@@ -102,7 +120,7 @@ export function questionIssueStamps(feed: AttentionFeed | undefined): Array<{ is
  */
 export function pruneDismissedQuestionAttention(
   feed: AttentionFeed | undefined,
-  interactionsByIssue: ReadonlyMap<string, ReadonlyArray<Pick<IssueThreadInteraction, "id" | "status" | "dismissedAt">>>,
+  interactionsByIssue: ReadonlyMap<string, ReadonlyArray<DismissibleInteraction>>,
 ): AttentionFeed | undefined {
   if (!feed || feed.items.length === 0 || interactionsByIssue.size === 0) return feed;
   const items = feed.items.filter((item) => {

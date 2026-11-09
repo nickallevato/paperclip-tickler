@@ -140,8 +140,9 @@ company:
   request into the task thread's history, as Paperclip's own Dismiss does:
   nothing is answered or declined, the agent is not woken, and the request can
   still be answered from the thread. There is no confirm step, and the row
-  reads **Dismissed, in history** until it leaves the queue. This is not
-  **Archive**, which only takes the row off your own feed.
+  reads **Dismissed, in history** until it leaves the queue. On an older
+  Paperclip it is not offered. This is not **Archive**, which only takes the
+  row off your own feed.
 - **Open ↗** on anything, which takes you to the item in its own company.
 
 A request dismissed anywhere — here, or in Paperclip — leaves the queue,

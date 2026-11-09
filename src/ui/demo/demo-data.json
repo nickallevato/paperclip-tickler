@@ -4824,7 +4824,9 @@
         },
         "createdAt": "@t:-6m",
         "updatedAt": "@t:-6m",
-        "resolvedAt": null
+        "resolvedAt": null,
+        "dismissedAt": null,
+        "dismissedByUserId": null
       }
     ],
     "demo-issue-globex-0": [
@@ -4862,7 +4864,9 @@
         },
         "createdAt": "@t:-6m",
         "updatedAt": "@t:-6m",
-        "resolvedAt": null
+        "resolvedAt": null,
+        "dismissedAt": null,
+        "dismissedByUserId": null
       }
     ],
     "demo-issue-globex-2": [
@@ -4940,7 +4944,9 @@
         },
         "createdAt": "@t:-6m",
         "updatedAt": "@t:-6m",
-        "resolvedAt": null
+        "resolvedAt": null,
+        "dismissedAt": null,
+        "dismissedByUserId": null
       }
     ]
   },

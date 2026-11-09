@@ -14,8 +14,8 @@ Short-form. The reader-facing write-up for each version is in
   (PLI-354)
 - **Dismiss on a queue question.** Beside Answer, Choose and Confirm, on
   Paperclip v2026.1106.0 or later. Nothing is answered or declined, and the
-  request can still be answered from the thread. Works in demo mode too.
-  (PLI-354)
+  request can still be answered from the thread. Not offered on older hosts.
+  Works in demo mode too. (PLI-354)
 - **Menus and popovers match Paperclip v2026.1106.0's components.** The copies
   Tickler keeps of four host components were brought up to date; nothing looks
   different. (PLI-354)

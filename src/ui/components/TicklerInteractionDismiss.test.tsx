@@ -100,6 +100,14 @@ describe("Dismiss on a queue row", () => {
     expect(button("Dismiss")).toBeUndefined();
   });
 
+  it("is not offered once the issue's lookup shows a host older than v2026.1106.0", async () => {
+    const { dismissedAt: _omitted, ...older } = interaction(null);
+    queryClient.setQueryData(["tickler", "question-state", "c1", "i-1", "stamp"], [older]);
+    await mount(<TicklerInteractionActions item={question("request_confirmation")} onActed={() => {}} />);
+    expect(button("Dismiss")).toBeUndefined();
+    expect(button("Confirm")).toBeDefined();
+  });
+
   it("dismisses with no confirm step, then reads as dismissed with no answer controls", async () => {
     const onActed = vi.fn();
     mockIssuesApi.dismissInteraction.mockResolvedValue(interaction("2026-11-09T10:05:00.000Z"));

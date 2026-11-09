@@ -103,11 +103,14 @@ const NO_AGENTS: Agent[] = [];
 const NO_APPROVALS: Approval[] = [];
 const NO_ROUTINES: RoutineListItem[] = [];
 
+const isQuestionStateOf = (issueId: string) => (query: { queryKey: readonly unknown[] }) =>
+  query.queryKey[1] === "question-state" && query.queryKey[3] === issueId;
+
 /** The newest landed request lookup for an issue, under any stamp. */
-function lastQuestionState(queryClient: QueryClient, companyId: string, issueId: string): IssueThreadInteraction[] | undefined {
+export function lastQuestionState(queryClient: QueryClient, issueId: string): IssueThreadInteraction[] | undefined {
   const landed = queryClient
     .getQueryCache()
-    .findAll({ queryKey: ["tickler", "question-state", companyId, issueId] })
+    .findAll({ predicate: isQuestionStateOf(issueId) })
     .filter((query) => query.state.data !== undefined)
     .sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt);
   return landed[0]?.state.data as IssueThreadInteraction[] | undefined;
@@ -120,7 +123,7 @@ function lastQuestionState(queryClient: QueryClient, companyId: string, issueId:
  */
 export function recordInteraction(queryClient: QueryClient, issueId: string, interaction: IssueThreadInteraction): void {
   queryClient.setQueriesData<IssueThreadInteraction[]>(
-    { predicate: (query) => query.queryKey[1] === "question-state" && query.queryKey[3] === issueId },
+    { predicate: isQuestionStateOf(issueId) },
     (current) => current?.map((entry) => (entry.id === interaction.id ? interaction : entry)),
   );
 }
@@ -250,7 +253,7 @@ export function useTicklerCompanyData(companyId: string): TicklerCompanyData {
       // While a new stamp's lookup is in flight, the issue's last lookup stands
       // in. It can only keep rows, never wrongly hide one: a dismissal is not
       // undone, and a request it does not hold is kept.
-      const data = query.data ?? (query.isPending ? lastQuestionState(queryClient, companyId, issueId) : undefined);
+      const data = query.data ?? (query.isPending ? lastQuestionState(queryClient, issueId) : undefined);
       if (data) byIssue.set(issueId, data);
     });
     return byIssue;

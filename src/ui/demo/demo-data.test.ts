@@ -4,6 +4,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import fixtureJson from "./demo-data.json";
 import type { DemoFixture } from "./demo-types";
+import type { DismissibleInteraction } from "../lib/tickler";
 
 const FIXTURE = fixtureJson as unknown as DemoFixture;
 const ROOT = path.resolve(__dirname, "../../..");
@@ -98,7 +99,9 @@ describe("demo fixture integrity", () => {
   it("keeps a dismissed request in the feed, so the board's filter is on show", () => {
     // The live feed still returns a request dismissed into history; the board
     // drops it after looking the request up. The fixture keeps one to prove it.
-    const dismissed = Object.values(FIXTURE.interactionsByIssue).flat().filter((entry) => entry.dismissedAt);
+    const dismissed = Object.values(FIXTURE.interactionsByIssue)
+      .flat()
+      .filter((entry) => (entry as DismissibleInteraction).dismissedAt);
     expect(dismissed.length).toBeGreaterThan(0);
     const rows = Object.values(FIXTURE.byCompany).flatMap((data) => data.attention.items);
     for (const entry of dismissed) {

@@ -1,5 +1,6 @@
 import type { Issue } from "@paperclipai/shared";
 import { PLUGIN_ID } from "../../plugin-id";
+import { isInteractionAwaitingAnswer } from "../lib/tickler";
 import { resolveTimeTokens } from "./demo-time";
 import type { DemoCompanyData, DemoFixture } from "./demo-types";
 
@@ -304,7 +305,7 @@ export function demoRespond(method: string, path: string, body?: unknown): unkno
       if (rest[2] === "dismiss") {
         // As live: the request stays pending and its feed row stays, with a
         // newer updatedAt; the board's own lookup is what drops it.
-        if (interaction.status !== "pending" || interaction.dismissedAt) return interaction;
+        if (!isInteractionAwaitingAnswer(interaction)) return interaction;
         const now = new Date().toISOString();
         Object.assign(interaction, { dismissedAt: now, dismissedByUserId: fixture.session.user?.id ?? null, updatedAt: now });
         const items = data.attention.items.map((item) =>

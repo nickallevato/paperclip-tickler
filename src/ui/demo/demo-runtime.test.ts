@@ -10,6 +10,7 @@ import {
   resolveDemoDataUrl,
 } from "./demo-runtime";
 import type { DemoFixture } from "./demo-types";
+import type { DismissibleInteraction } from "../lib/tickler";
 
 const FIXTURE = fixtureJson as unknown as DemoFixture;
 const COMPANY = FIXTURE.companyOrder[0];
@@ -130,7 +131,7 @@ describe("writes", () => {
   });
 
   it("dismisses a request as the host does: still pending, still in the feed, newer", () => {
-    const [issueId, list] = Object.entries(FIXTURE.interactionsByIssue).find(([, entries]) => !entries[0].dismissedAt)!;
+    const [issueId, list] = Object.entries(FIXTURE.interactionsByIssue).find(([, entries]) => !(entries[0] as DismissibleInteraction).dismissedAt)!;
     const interaction = list[0];
     const companyId = interaction.companyId;
     const row = () =>
@@ -138,7 +139,7 @@ describe("writes", () => {
         (item) => item.subject.id === interaction.id,
       );
     const before = row()!.updatedAt;
-    const dismissed = demoRespond("POST", `/issues/${issueId}/interactions/${interaction.id}/dismiss`) as typeof interaction;
+    const dismissed = demoRespond("POST", `/issues/${issueId}/interactions/${interaction.id}/dismiss`) as DismissibleInteraction;
     expect(dismissed).toMatchObject({ status: "pending", dismissedByUserId: FIXTURE.session.user.id });
     expect(dismissed.dismissedAt).toBeTruthy();
     expect(row()).toBeDefined();

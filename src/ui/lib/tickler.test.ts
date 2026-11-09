@@ -42,6 +42,7 @@ import {
   pruneDismissedQuestionAttention,
   questionIssueStamps,
   isInteractionAwaitingAnswer,
+  hostCanDismiss,
   partitionHotFirst,
   relativeTimeLabel,
   selectCeo,
@@ -264,6 +265,13 @@ describe("dismissed thread requests", () => {
     expect(isInteractionAwaitingAnswer(dismissed)).toBe(false);
     expect(isInteractionAwaitingAnswer({ status: "answered", dismissedAt: null })).toBe(false);
     expect(isInteractionAwaitingAnswer({ status: "accepted", dismissedAt: "2026-11-09T10:05:00.000Z" })).toBe(false);
+  });
+
+  it("tells a host that can dismiss by dismissedAt being on its requests at all", () => {
+    expect(hostCanDismiss([{ id: "a", status: "pending", dismissedAt: null }])).toBe(true);
+    expect(hostCanDismiss([{ id: "a", status: "pending" }])).toBe(false);
+    expect(hostCanDismiss([])).toBeNull();
+    expect(hostCanDismiss(undefined)).toBeNull();
   });
 
   it("stamps each issue with a request in the feed by its requests' updatedAt", () => {

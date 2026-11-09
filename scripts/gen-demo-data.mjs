@@ -830,7 +830,9 @@ function buildInteractions(key) {
         createdAt: t("-6m"),
         updatedAt: t(dismissedAt ?? "-6m"),
         resolvedAt: null,
-        ...(dismissedAt ? { dismissedAt: t(dismissedAt), dismissedByUserId: id("user", "demo") } : {}),
+        // Present on every request, null or not, as a v2026.1106.0+ host lists them.
+        dismissedAt: dismissedAt ? t(dismissedAt) : null,
+        dismissedByUserId: dismissedAt ? id("user", "demo") : null,
       },
     ];
   });
