@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.21.0](0.21.0.md) — a question dismissed in Paperclip stops counting as needing you; dismiss on a queue question; menus and popovers match Paperclip v2026.1106.0's components; the docs catch up with 0.20.0–0.20.3.
 - [0.20.4](0.20.4.md) — tickler's worker no longer keeps an idle host awake.
 - [0.20.3](0.20.3.md) — a typed question starts from the agent's text.
 - [0.20.2](0.20.2.md) — someone else's private run no longer shows as a stalled agent; a pane no longer turns amber for an approval you cannot see.

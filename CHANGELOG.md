@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.21.0
+
 - **A question dismissed in Paperclip stops counting as needing you.**
   Paperclip v2026.1106.0 lets you dismiss an agent's request into the task
   thread's history. It stays answerable there, so the attention feed still
