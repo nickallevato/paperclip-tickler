@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.22.0
+
 - **Tasks stopped until you act show up, once.** On Paperclip v2026.1106.0 or
   later, a task interrupted until you reconnect an account, choose a model,
   assign an agent and so on gets an **Interrupted · reconnect** chip (or
