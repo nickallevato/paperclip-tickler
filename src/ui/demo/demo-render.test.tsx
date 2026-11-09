@@ -117,6 +117,12 @@ describe("TicklerHud on demo data", () => {
     expect(orgs!.getAttribute("title")).toContain("Nothing to expand");
   });
 
+  it("leaves a request dismissed into history off the queue, beside one still asked", async () => {
+    renderHud();
+    expect(await screen.findAllByText(/late-arriving duplicates/)).not.toHaveLength(0);
+    await waitFor(() => expect(screen.queryAllByText(/drift detector should watch/)).toHaveLength(0));
+  });
+
   it("labels itself as demo data so a screenshot cannot be mistaken", async () => {
     renderHud();
     expect(await screen.findByText("Demo data")).toBeInTheDocument();

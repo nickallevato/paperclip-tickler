@@ -1,5 +1,6 @@
 import type { Issue } from "@paperclipai/shared";
 import { PLUGIN_ID } from "../../plugin-id";
+import { isInteractionAwaitingAnswer } from "../lib/tickler";
 import { resolveTimeTokens } from "./demo-time";
 import type { DemoCompanyData, DemoFixture } from "./demo-types";
 
@@ -296,11 +297,23 @@ export function demoRespond(method: string, path: string, body?: unknown): unkno
         updatedAt: new Date().toISOString(),
       };
     }
-    // .../interactions/:interactionId/(accept|reject|respond)
+    // .../interactions/:interactionId/(accept|reject|respond|dismiss)
     if (verb === "POST" && rest[0] === "interactions" && rest[1] && rest[2]) {
       const list = fixture.interactionsByIssue[issue.id] ?? [];
       const interaction = list.find((candidate) => candidate.id === rest[1]);
       if (!interaction) throw new DemoRouteError(path);
+      if (rest[2] === "dismiss") {
+        // As live: the request stays pending and its feed row stays, with a
+        // newer updatedAt; the board's own lookup is what drops it.
+        if (!isInteractionAwaitingAnswer(interaction)) return interaction;
+        const now = new Date().toISOString();
+        Object.assign(interaction, { dismissedAt: now, dismissedByUserId: fixture.session.user?.id ?? null, updatedAt: now });
+        const items = data.attention.items.map((item) =>
+          item.subject.id === interaction.id ? { ...item, updatedAt: now } : item,
+        );
+        data.attention = { ...data.attention, items };
+        return interaction;
+      }
       const status = rest[2] === "reject" ? "rejected" : "accepted";
       Object.assign(interaction, { status, resolvedAt: new Date().toISOString() });
       fixture.interactionsByIssue[issue.id] = list.filter(

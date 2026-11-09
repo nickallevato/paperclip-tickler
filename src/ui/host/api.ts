@@ -353,6 +353,9 @@ export const issuesApi = {
     interactionId: string,
     data: { answers: Array<{ questionId: string; optionIds: string[]; otherText?: string | null }>; summaryMarkdown?: string | null },
   ) => api.post<IssueThreadInteraction>(`/issues/${id}/interactions/${interactionId}/respond`, data),
+  /** Moves a pending request into the thread's history; it stays answerable there. */
+  dismissInteraction: (id: string, interactionId: string) =>
+    api.post<IssueThreadInteraction>(`/issues/${id}/interactions/${interactionId}/dismiss`, {}),
 };
 
 // ---------------------------------------------------------------------------

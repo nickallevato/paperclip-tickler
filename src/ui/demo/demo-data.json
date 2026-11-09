@@ -2389,12 +2389,12 @@
       "attention": {
         "companyId": "demo-company-globex",
         "generatedAt": "@t:0",
-        "totalCount": 4,
+        "totalCount": 5,
         "deskBadgeCount": 3,
         "nextCursor": null,
         "countsBySourceKind": {
           "approval": 1,
-          "issue_thread_interaction": 1,
+          "issue_thread_interaction": 2,
           "blocker_attention": 1,
           "review": 1
         },
@@ -2502,6 +2502,62 @@
           {
             "id": "demo-attention-globex-2",
             "companyId": "demo-company-globex",
+            "sourceKind": "issue_thread_interaction",
+            "subject": {
+              "kind": "interaction",
+              "id": "demo-interaction-globex-1",
+              "companyId": "demo-company-globex",
+              "title": "Jonas asked which partner feeds the drift detector should watch first.",
+              "identifier": null,
+              "status": "pending",
+              "href": null,
+              "metadata": {
+                "issueId": "demo-issue-globex-2",
+                "kind": "ask_user_questions"
+              }
+            },
+            "whyNow": "Jonas asked which partner feeds the drift detector should watch first.",
+            "decisionVerbs": [],
+            "inlineResolvable": true,
+            "entryRule": "demo",
+            "exitRule": "demo",
+            "dedupKey": "demo:globex:2",
+            "dismissalKey": "demo:globex:2",
+            "dismissal": null,
+            "severity": "medium",
+            "rank": 2,
+            "activityAt": "@t:-50m",
+            "createdAt": "@t:-50m",
+            "updatedAt": "@t:-50m",
+            "relatedIssue": {
+              "kind": "issue",
+              "id": "demo-issue-globex-2",
+              "companyId": "demo-company-globex",
+              "title": "Schema drift detector for partner feeds",
+              "identifier": "GLBX-102",
+              "status": "todo",
+              "href": null
+            },
+            "project": null,
+            "workspace": null,
+            "expiresAt": null,
+            "ruleKey": null,
+            "originAgentName": "Jonas",
+            "queues": [],
+            "shelf": false,
+            "retentionDays": 30,
+            "keep": false,
+            "archivedAt": null,
+            "retentionVersion": 1,
+            "decideBy": null,
+            "decideByAttribution": null,
+            "snoozedUntil": null,
+            "detail": null,
+            "trainingExampleId": null
+          },
+          {
+            "id": "demo-attention-globex-3",
+            "companyId": "demo-company-globex",
             "sourceKind": "blocker_attention",
             "subject": {
               "kind": "issue",
@@ -2517,11 +2573,11 @@
             "inlineResolvable": false,
             "entryRule": "demo",
             "exitRule": "demo",
-            "dedupKey": "demo:globex:2",
-            "dismissalKey": "demo:globex:2",
+            "dedupKey": "demo:globex:3",
+            "dismissalKey": "demo:globex:3",
             "dismissal": null,
             "severity": "high",
-            "rank": 2,
+            "rank": 3,
             "activityAt": "@t:-6h",
             "createdAt": "@t:-6h",
             "updatedAt": "@t:-6h",
@@ -2552,7 +2608,7 @@
             "trainingExampleId": null
           },
           {
-            "id": "demo-attention-globex-3",
+            "id": "demo-attention-globex-4",
             "companyId": "demo-company-globex",
             "sourceKind": "review",
             "subject": {
@@ -2569,11 +2625,11 @@
             "inlineResolvable": false,
             "entryRule": "demo",
             "exitRule": "demo",
-            "dedupKey": "demo:globex:3",
-            "dismissalKey": "demo:globex:3",
+            "dedupKey": "demo:globex:4",
+            "dismissalKey": "demo:globex:4",
             "dismissal": null,
             "severity": "medium",
-            "rank": 3,
+            "rank": 4,
             "activityAt": "@t:-1h",
             "createdAt": "@t:-1h",
             "updatedAt": "@t:-1h",
@@ -2826,7 +2882,7 @@
         }
       },
       "sidebarBadges": {
-        "inbox": 4,
+        "inbox": 5,
         "approvals": 1,
         "failedRuns": 0,
         "joinRequests": 0
@@ -4768,7 +4824,9 @@
         },
         "createdAt": "@t:-6m",
         "updatedAt": "@t:-6m",
-        "resolvedAt": null
+        "resolvedAt": null,
+        "dismissedAt": null,
+        "dismissedByUserId": null
       }
     ],
     "demo-issue-globex-0": [
@@ -4806,7 +4864,49 @@
         },
         "createdAt": "@t:-6m",
         "updatedAt": "@t:-6m",
-        "resolvedAt": null
+        "resolvedAt": null,
+        "dismissedAt": null,
+        "dismissedByUserId": null
+      }
+    ],
+    "demo-issue-globex-2": [
+      {
+        "id": "demo-interaction-globex-1",
+        "issueId": "demo-issue-globex-2",
+        "companyId": "demo-company-globex",
+        "kind": "ask_user_questions",
+        "status": "pending",
+        "createdByAgentId": "demo-agent-globex-2",
+        "createdByUserId": null,
+        "summaryMarkdown": null,
+        "payload": {
+          "questions": [
+            {
+              "id": "demo-interaction-globex-1-q1",
+              "prompt": "Which partner feeds should the drift detector watch first?",
+              "options": [
+                {
+                  "id": "demo-interaction-globex-1-q1-o0",
+                  "label": "Top five by volume"
+                },
+                {
+                  "id": "demo-interaction-globex-1-q1-o1",
+                  "label": "All of them"
+                },
+                {
+                  "id": "demo-interaction-globex-1-q1-o2",
+                  "label": "Only the flaky ones"
+                }
+              ],
+              "multiSelect": false
+            }
+          ]
+        },
+        "createdAt": "@t:-6m",
+        "updatedAt": "@t:-50m",
+        "resolvedAt": null,
+        "dismissedAt": "@t:-50m",
+        "dismissedByUserId": "demo-user-demo"
       }
     ],
     "demo-issue-initech-1": [
@@ -4844,7 +4944,9 @@
         },
         "createdAt": "@t:-6m",
         "updatedAt": "@t:-6m",
-        "resolvedAt": null
+        "resolvedAt": null,
+        "dismissedAt": null,
+        "dismissedByUserId": null
       }
     ]
   },

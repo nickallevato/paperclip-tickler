@@ -9,6 +9,7 @@ import type {
   DashboardRunActivityDay,
   DashboardSummary,
   Issue,
+  IssueThreadInteraction,
   Project,
   RoutineListItem,
 } from "@paperclipai/shared";
@@ -49,6 +50,85 @@ export function pruneClosedIssueAttention(
   const items = feed.items.filter((item) => {
     const issueId = attentionIssueId(item);
     return !issueId || !closed.has(issueId);
+  });
+  return items.length === feed.items.length ? feed : { ...feed, items };
+}
+
+/**
+ * A thread request as far as dismissal goes. `dismissedAt` is declared here
+ * rather than read off the host's type because it arrived in Paperclip
+ * v2026.1106.0, and Tickler still builds against older hosts, whose requests
+ * simply never carry it.
+ */
+export type DismissibleInteraction = Pick<IssueThreadInteraction, "id" | "status"> & {
+  dismissedAt?: Date | string | null;
+};
+
+/**
+ * Whether a thread request is still waiting on an answer — the host's own rule.
+ * Since Paperclip v2026.1106.0 a request can be dismissed into the thread's
+ * history: it keeps `status: "pending"` (it stays answerable there) but gains a
+ * `dismissedAt`, and the host stops asking for it.
+ */
+export function isInteractionAwaitingAnswer(interaction: Omit<DismissibleInteraction, "id">): boolean {
+  return interaction.status === "pending" && !interaction.dismissedAt;
+}
+
+/**
+ * Whether the host can dismiss requests: a host that can puts `dismissedAt`
+ * on every request it lists, null or not. Null when there is nothing to tell
+ * from.
+ */
+export function hostCanDismiss(interactions: ReadonlyArray<object> | undefined): boolean | null {
+  if (!interactions || interactions.length === 0) return null;
+  return interactions.some((interaction) => "dismissedAt" in interaction);
+}
+
+/**
+ * The issues whose thread requests are in the feed, each with a stamp built
+ * from those requests' `updatedAt`. The feed item does not say whether its
+ * request was dismissed, so each issue's requests are looked up; the stamp
+ * changes when one of them does (a dismissal bumps it), which is what lets a
+ * lookup be cached until then. Sorted by issue id so the list is stable.
+ */
+export function questionIssueStamps(feed: AttentionFeed | undefined): Array<{ issueId: string; stamp: string }> {
+  const stamps = new Map<string, string[]>();
+  for (const item of feed?.items ?? []) {
+    if (item.sourceKind !== "issue_thread_interaction") continue;
+    const issueId = attentionIssueId(item);
+    if (!issueId) continue;
+    const list = stamps.get(issueId) ?? [];
+    list.push(`${item.subject.id}@${item.updatedAt}`);
+    stamps.set(issueId, list);
+  }
+  return [...stamps]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([issueId, list]) => ({ issueId, stamp: list.sort().join(",") }));
+}
+
+/**
+ * Drops thread requests that were dismissed into history. The attention feed
+ * still returns them (it selects on `status = 'pending'` alone), so without
+ * this they stay in the queue, Need-you and alerts after the host has stopped
+ * asking.
+ *
+ * `interactionsByIssue` holds each issue's requests as looked up. An issue with
+ * no entry — the lookup failed or has not landed — keeps its rows, as does a
+ * request the lookup does not hold: hiding a real question is worse than
+ * showing a dismissed one. Returns the same feed reference when nothing
+ * changes, like {@link pruneClosedIssueAttention}.
+ */
+export function pruneDismissedQuestionAttention(
+  feed: AttentionFeed | undefined,
+  interactionsByIssue: ReadonlyMap<string, ReadonlyArray<DismissibleInteraction>>,
+): AttentionFeed | undefined {
+  if (!feed || feed.items.length === 0 || interactionsByIssue.size === 0) return feed;
+  const items = feed.items.filter((item) => {
+    if (item.sourceKind !== "issue_thread_interaction") return true;
+    const issueId = attentionIssueId(item);
+    const interactions = issueId ? interactionsByIssue.get(issueId) : undefined;
+    const interaction = interactions?.find((entry) => entry.id === item.subject.id);
+    return !interaction || isInteractionAwaitingAnswer(interaction);
   });
   return items.length === feed.items.length ? feed : { ...feed, items };
 }
