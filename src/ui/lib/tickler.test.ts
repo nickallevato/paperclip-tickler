@@ -39,6 +39,9 @@ import {
   partitionTicklerCompanies,
   normalizeTokenSettings,
   pruneClosedIssueAttention,
+  pruneDismissedQuestionAttention,
+  questionIssueStamps,
+  isInteractionAwaitingAnswer,
   partitionHotFirst,
   relativeTimeLabel,
   selectCeo,
@@ -225,6 +228,85 @@ describe("pruneClosedIssueAttention", () => {
     expect(pruneClosedIssueAttention(untouched, issues)).toBe(untouched);
     expect(pruneClosedIssueAttention(untouched, [])).toBe(untouched);
     expect(pruneClosedIssueAttention(undefined, issues)).toBeUndefined();
+  });
+});
+
+describe("dismissed thread requests", () => {
+  const item = (id: string, issueId: string | null, updatedAt = "2026-11-09T10:00:00.000Z", sourceKind = "issue_thread_interaction"): AttentionItem =>
+    ({
+      id: `att-${id}`,
+      companyId: "c1",
+      sourceKind,
+      severity: "high",
+      rank: 0,
+      whyNow: "",
+      dismissal: null,
+      updatedAt,
+      subject: {
+        kind: sourceKind === "issue_thread_interaction" ? "interaction" : "issue",
+        id,
+        companyId: "c1",
+        title: null,
+        identifier: null,
+        status: "pending",
+        href: null,
+        metadata: issueId ? { issueId } : undefined,
+      },
+    }) as never;
+  const feed = (items: AttentionItem[]): AttentionFeed =>
+    ({ companyId: "c1", generatedAt: "", totalCount: items.length, countsBySourceKind: {}, items }) as never;
+  const pending = { status: "pending" as const, dismissedAt: null };
+  const dismissed = { status: "pending" as const, dismissedAt: "2026-11-09T10:05:00.000Z" };
+
+  it("awaits an answer only while pending and not dismissed", () => {
+    expect(isInteractionAwaitingAnswer(pending)).toBe(true);
+    expect(isInteractionAwaitingAnswer({ status: "pending" })).toBe(true);
+    expect(isInteractionAwaitingAnswer(dismissed)).toBe(false);
+    expect(isInteractionAwaitingAnswer({ status: "answered", dismissedAt: null })).toBe(false);
+    expect(isInteractionAwaitingAnswer({ status: "accepted", dismissedAt: "2026-11-09T10:05:00.000Z" })).toBe(false);
+  });
+
+  it("stamps each issue with a request in the feed by its requests' updatedAt", () => {
+    const stamps = questionIssueStamps(
+      feed([
+        item("q2", "i-b", "2026-11-09T11:00:00.000Z"),
+        item("q1", "i-a"),
+        item("q3", "i-b"),
+        item("orphan", null),
+        item("i-c", "i-c", undefined, "blocker_attention"),
+      ]),
+    );
+    expect(stamps).toEqual([
+      { issueId: "i-a", stamp: "q1@2026-11-09T10:00:00.000Z" },
+      { issueId: "i-b", stamp: "q2@2026-11-09T11:00:00.000Z,q3@2026-11-09T10:00:00.000Z" },
+    ]);
+    // A dismissal bumps updatedAt, so the stamp — and the lookup's cache key — moves.
+    expect(questionIssueStamps(feed([item("q1", "i-a", "2026-11-09T10:05:00.000Z")]))[0].stamp).not.toBe(stamps[0].stamp);
+    expect(questionIssueStamps(undefined)).toEqual([]);
+  });
+
+  it("drops a dismissed request and keeps the rest", () => {
+    const pruned = pruneDismissedQuestionAttention(
+      feed([item("asked", "i-a"), item("waved-off", "i-a"), item("i-z", "i-z", undefined, "blocker_attention")]),
+      new Map([["i-a", [{ id: "asked", ...pending }, { id: "waved-off", ...dismissed }]]]),
+    );
+    expect(pruned?.items.map((entry) => entry.subject.id)).toEqual(["asked", "i-z"]);
+  });
+
+  it("keeps a request whose lookup failed or does not hold it (fails open)", () => {
+    const untouched = feed([item("no-lookup", "i-a"), item("not-listed", "i-b"), item("no-issue", null)]);
+    const lookups = new Map([["i-b", [{ id: "other", ...dismissed }]]]);
+    expect(pruneDismissedQuestionAttention(untouched, lookups)).toBe(untouched);
+    expect(pruneDismissedQuestionAttention(untouched, new Map())).toBe(untouched);
+    expect(pruneDismissedQuestionAttention(undefined, lookups)).toBeUndefined();
+  });
+
+  it("takes a dismissed request out of Need-you, its breakdown and its severity", () => {
+    const raw = feed([item("waved-off", "i-a")]);
+    const pruned = pruneDismissedQuestionAttention(raw, new Map([["i-a", [{ id: "waved-off", ...dismissed }]]]));
+    expect(deriveActionable({ approvals: [], attention: raw, ceoOverdue: false })).toEqual({ criticalOrHigh: true, count: 1 });
+    expect(deriveActionable({ approvals: [], attention: pruned, ceoOverdue: false })).toEqual({ criticalOrHigh: false, count: 0 });
+    expect(deriveNeedsBreakdown(pruned).questions).toBe(0);
   });
 });
 

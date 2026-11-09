@@ -1,11 +1,12 @@
 import { useCallback, useMemo } from "react";
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type {
   Agent,
   Approval,
   AttentionFeed,
   DashboardSummary,
   Issue,
+  IssueThreadInteraction,
   Project,
   RoutineListItem,
 } from "@paperclipai/shared";
@@ -24,6 +25,8 @@ import {
   currentMonthRange,
   ticklerRefetchInterval,
   pruneClosedIssueAttention,
+  pruneDismissedQuestionAttention,
+  questionIssueStamps,
   sumAgentTokens,
   type TicklerNeedsBreakdown,
 } from "../lib/tickler";
@@ -99,6 +102,28 @@ const NO_ISSUES: Issue[] = [];
 const NO_AGENTS: Agent[] = [];
 const NO_APPROVALS: Approval[] = [];
 const NO_ROUTINES: RoutineListItem[] = [];
+
+/** The newest landed request lookup for an issue, under any stamp. */
+function lastQuestionState(queryClient: QueryClient, companyId: string, issueId: string): IssueThreadInteraction[] | undefined {
+  const landed = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: ["tickler", "question-state", companyId, issueId] })
+    .filter((query) => query.state.data !== undefined)
+    .sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt);
+  return landed[0]?.state.data as IssueThreadInteraction[] | undefined;
+}
+
+/**
+ * Writes a request the user just changed into every cached lookup of its
+ * issue, so the row leaves the board as the click lands rather than one feed
+ * round trip later.
+ */
+export function recordInteraction(queryClient: QueryClient, issueId: string, interaction: IssueThreadInteraction): void {
+  queryClient.setQueriesData<IssueThreadInteraction[]>(
+    { predicate: (query) => query.queryKey[1] === "question-state" && query.queryKey[3] === issueId },
+    (current) => current?.map((entry) => (entry.id === interaction.id ? interaction : entry)),
+  );
+}
 
 const LIVE = { refetchInterval: ticklerRefetchInterval, staleTime: 4_000 } as const;
 const BRISK = { refetchInterval: TICKLER_FREEZE ? false : 15_000, staleTime: 14_000 } as const;
@@ -205,11 +230,39 @@ export function useTicklerCompanyData(companyId: string): TicklerCompanyData {
     ? Math.min(...erroring.map((query) => query.dataUpdatedAt))
     : null;
 
-  // Attention items on closed issues are noise the server doesn't filter;
-  // pruned here, once, so the rail, the counts and the board rows agree.
+  // One lookup per issue with a request in the feed, cached until the feed says
+  // one of that issue's requests changed. A failed lookup is not retried and
+  // leaves its rows in (see pruneDismissedQuestionAttention).
+  const questionIssues = useMemo(() => questionIssueStamps(attention.data), [attention.data]);
+  const questionQueries = useQueries({
+    queries: questionIssues.map(({ issueId, stamp }) => ({
+      queryKey: queryKeys.tickler.questionState(companyId, issueId, stamp),
+      queryFn: () => issuesApi.listInteractions(issueId),
+      staleTime: Infinity,
+      retry: false,
+    })),
+  });
+  const questionStamp = questionQueries.map((query) => query.dataUpdatedAt).join(",");
+  const interactionsByIssue = useMemo(() => {
+    const byIssue = new Map<string, IssueThreadInteraction[]>();
+    questionQueries.forEach((query, index) => {
+      const { issueId } = questionIssues[index];
+      // While a new stamp's lookup is in flight, the issue's last lookup stands
+      // in. It can only keep rows, never wrongly hide one: a dismissal is not
+      // undone, and a request it does not hold is kept.
+      const data = query.data ?? (query.isPending ? lastQuestionState(queryClient, companyId, issueId) : undefined);
+      if (data) byIssue.set(issueId, data);
+    });
+    return byIssue;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionIssues, questionStamp]);
+
+  // Attention items on closed issues, and requests dismissed into history, are
+  // noise the server doesn't filter; pruned here, once, so the rail, the counts
+  // and the board rows agree.
   const attentionData = useMemo(
-    () => pruneClosedIssueAttention(attention.data, issues.data ?? []),
-    [attention.data, issues.data],
+    () => pruneDismissedQuestionAttention(pruneClosedIssueAttention(attention.data, issues.data ?? []), interactionsByIssue),
+    [attention.data, issues.data, interactionsByIssue],
   );
 
   // Memoised on the feed it derives from. Without this it is a fresh object on

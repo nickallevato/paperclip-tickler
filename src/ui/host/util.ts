@@ -54,6 +54,10 @@ export const queryKeys = {
     projects: (companyId: string) => ["tickler", "projects", companyId] as const,
     issues: (companyId: string) => ["tickler", "issues", companyId] as const,
     runIssue: (companyId: string, issueId: string) => ["tickler", "run-issue", companyId, issueId] as const,
+    // `stamp` is the feed's own updatedAt for the issue's requests, so a request
+    // that changes (a dismissal bumps it) is looked up again and nothing else is.
+    questionState: (companyId: string, issueId: string, stamp: string) =>
+      ["tickler", "question-state", companyId, issueId, stamp] as const,
     approvals: (companyId: string) => ["tickler", "approvals", companyId] as const,
     agents: (companyId: string) => ["tickler", "agents", companyId] as const,
     company: (companyId: string) => ["tickler", "company", companyId] as const,

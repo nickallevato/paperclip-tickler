@@ -95,6 +95,20 @@ describe("demo fixture integrity", () => {
     }
   });
 
+  it("keeps a dismissed request in the feed, so the board's filter is on show", () => {
+    // The live feed still returns a request dismissed into history; the board
+    // drops it after looking the request up. The fixture keeps one to prove it.
+    const dismissed = Object.values(FIXTURE.interactionsByIssue).flat().filter((entry) => entry.dismissedAt);
+    expect(dismissed.length).toBeGreaterThan(0);
+    const rows = Object.values(FIXTURE.byCompany).flatMap((data) => data.attention.items);
+    for (const entry of dismissed) {
+      expect(entry.status).toBe("pending");
+      const row = rows.find((item) => item.subject.id === entry.id);
+      expect(row, entry.id).toBeDefined();
+      expect(row?.updatedAt).toBe(entry.updatedAt);
+    }
+  });
+
   it("dates every row with a relative token, so it never reads as stale", () => {
     // A literal ISO timestamp anywhere means someone hand-edited the JSON and
     // the fixture will age. Tokens are resolved at load; see demo-time.ts.

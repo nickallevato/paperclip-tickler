@@ -5,6 +5,21 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **A question dismissed in Paperclip stops counting as needing you.**
+  Paperclip v2026.1106.0 lets you dismiss an agent's request into the task
+  thread's history. It stays answerable there, so the attention feed still
+  lists it, and Tickler kept it in the queue, Need-you and alerts. Tickler now
+  looks up each task's requests and leaves dismissed ones out. If the lookup
+  fails, the row stays, so a question that is still asked is never hidden.
+  (PLI-354)
+- **Dismiss on a queue question.** Beside Answer, Choose and Confirm, on
+  Paperclip v2026.1106.0 or later. Nothing is answered or declined, and the
+  request can still be answered from the thread. Works in demo mode too.
+  (PLI-354)
+- **Menus and popovers match Paperclip v2026.1106.0's components.** The copies
+  Tickler keeps of four host components were brought up to date; nothing looks
+  different. (PLI-354)
+
 - **The docs catch up with 0.20.0–0.20.3.** The README mentions check-back
   times on queue rows and agents that failed setup; the board guide says which
   agents get a capacity square, what a private-task run shows, and the

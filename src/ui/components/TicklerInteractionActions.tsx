@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Loader2, Plus, X } from "lucide-react";
 import type {
   AskUserQuestionsInteraction,
@@ -26,7 +26,8 @@ import {
   type Answer,
   type TextRules,
 } from "../lib/answers";
-import { attentionIssueId } from "../lib/tickler";
+import { attentionIssueId, isInteractionAwaitingAnswer } from "../lib/tickler";
+import { recordInteraction } from "./useTicklerCompanyData";
 
 const MICRO = "text-[length:var(--tickler-fs-micro,11px)] leading-[1.45]";
 const BODY = "text-[length:var(--tickler-fs-body,14px)] leading-[1.45]";
@@ -61,15 +62,19 @@ export function TicklerInteractionActions({
   headline?: string;
   onActed: () => void;
 }) {
+  // Set once a Dismiss from this row lands, so the row reads as dismissed for
+  // the moment before the board drops it.
+  const [dismissed, setDismissed] = useState(false);
   const issueId = attentionIssueId(item);
   const kind = item.subject.metadata?.kind;
   if (!issueId || item.subject.kind !== "interaction") return null;
   const interactionId = item.subject.id;
+  if (dismissed) return <DismissedNote />;
+  let answer: ReactNode = null;
   if (kind === "request_confirmation") {
-    return <ConfirmButtons item={item} issueId={issueId} interactionId={interactionId} onActed={onActed} />;
-  }
-  if (kind === "ask_user_questions" || kind === "request_checkbox_confirmation") {
-    return (
+    answer = <ConfirmButtons item={item} issueId={issueId} interactionId={interactionId} onActed={onActed} />;
+  } else if (kind === "ask_user_questions" || kind === "request_checkbox_confirmation") {
+    answer = (
       <InteractionFormPopover
         item={item}
         issueId={issueId}
@@ -80,7 +85,70 @@ export function TicklerInteractionActions({
       />
     );
   }
-  return null;
+  if (!answer) return null;
+  return (
+    <>
+      {answer}
+      <DismissButton
+        issueId={issueId}
+        interactionId={interactionId}
+        onDismissed={() => {
+          setDismissed(true);
+          onActed();
+        }}
+      />
+    </>
+  );
+}
+
+function DismissedNote() {
+  return (
+    <span data-interaction-dismissed className={cn("whitespace-nowrap text-muted-foreground", MICRO)}>
+      Dismissed, in history
+    </span>
+  );
+}
+
+/**
+ * Moves the request into the task thread's history (Paperclip v2026.1106.0+).
+ * Nothing is answered or declined, and it stays answerable from the thread,
+ * so there is no confirm step — the same as the host's own Dismiss. Not the
+ * feed's snooze or archive: those only hide the row for this user, while this
+ * tells the host the request no longer needs anyone.
+ */
+function DismissButton({
+  issueId,
+  interactionId,
+  onDismissed,
+}: {
+  issueId: string;
+  interactionId: string;
+  onDismissed: () => void;
+}) {
+  const { pushToast } = useToastActions();
+  const queryClient = useQueryClient();
+  const dismiss = useMutation({
+    mutationFn: () => issuesApi.dismissInteraction(issueId, interactionId),
+    onSuccess: (interaction) => {
+      recordInteraction(queryClient, issueId, interaction);
+      pushToast({ title: "Dismissed", body: "It is in the task's history and can still be answered there.", tone: "success" });
+      onDismissed();
+    },
+    onError: (error) => pushToast({ title: "Could not dismiss", body: errorMessage(error), tone: "error" }),
+  });
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className={cn("h-6 whitespace-nowrap px-2 text-muted-foreground hover:text-foreground", MICRO)}
+      disabled={dismiss.isPending}
+      title="Move to the task's history. You can still answer it there."
+      onClick={() => dismiss.mutate()}
+    >
+      {dismiss.isPending && <Loader2 className="mr-1 h-3 w-3 shrink-0 animate-spin" />}
+      Dismiss
+    </Button>
+  );
 }
 
 export function hasInlineInteraction(item: AttentionItem): boolean {
@@ -206,6 +274,7 @@ function InteractionFormPopover({
     staleTime: 10_000,
   });
   const interaction = interactions.data?.find((entry) => entry.id === interactionId);
+  const awaiting = interaction !== undefined && isInteractionAwaitingAnswer(interaction);
   const issueLabel = headline?.trim() || item.subject.title?.trim() || "Thread request";
   // If this row is removed while its dialog is open — which the queue does
   // routinely, since answering resolves the item it was rendered from —
@@ -238,7 +307,10 @@ function InteractionFormPopover({
         {interaction && interaction.status !== "pending" && (
           <p className={cn("text-muted-foreground", MICRO)}>Already {interaction.status}.</p>
         )}
-        {interaction?.status === "pending" && interaction.kind === "ask_user_questions" && (
+        {interaction && interaction.status === "pending" && !awaiting && (
+          <p className={cn("text-muted-foreground", MICRO)}>Dismissed, in history. Open the thread to answer it.</p>
+        )}
+        {awaiting && interaction.kind === "ask_user_questions" && (
           <QuestionsForm
             interaction={interaction}
             issueId={issueId}
@@ -248,7 +320,7 @@ function InteractionFormPopover({
             }}
           />
         )}
-        {interaction?.status === "pending" && interaction.kind === "request_checkbox_confirmation" && (
+        {awaiting && interaction.kind === "request_checkbox_confirmation" && (
           <CheckboxForm
             interaction={interaction}
             item={item}
@@ -259,7 +331,7 @@ function InteractionFormPopover({
             }}
           />
         )}
-        {interaction?.status === "pending" &&
+        {awaiting &&
           interaction.kind !== "ask_user_questions" &&
           interaction.kind !== "request_checkbox_confirmation" && (
             <p className={cn("text-muted-foreground", MICRO)}>Open the thread to resolve this one.</p>

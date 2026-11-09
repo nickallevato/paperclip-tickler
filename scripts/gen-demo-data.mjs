@@ -459,6 +459,8 @@ const ATTENTION = {
   globex: [
     ["approval", "high", "Hiring approval is waiting on you.", null, "-3h"],
     ["issue_thread_interaction", "high", "Jonas needs a call on how to treat late-arriving duplicates.", 0, "-9m"],
+    // Dismissed into the thread's history — the feed still returns it, the board drops it.
+    ["issue_thread_interaction", "medium", "Jonas asked which partner feeds the drift detector should watch first.", 2, "-50m"],
     ["blocker_attention", "high", "Cost attribution is blocked on a tenant mapping you own.", 4, "-6h"],
     ["review", "medium", "CSV export fix is ready for review.", 3, "-1h"],
   ],
@@ -778,8 +780,10 @@ function buildTimeline(key) {
 // ---------------------------------------------------------------------------
 
 /**
- * [issueIndex, [[prompt, options], …]]. Acme's card asks two questions, so the
- * "n of m" split the answer dialog draws between them is on show.
+ * [issueIndex, [[prompt, options], …], dismissedAt?]. Acme's card asks two
+ * questions, so the "n of m" split the answer dialog draws between them is on
+ * show. Globex's second card was dismissed into history (Paperclip
+ * v2026.1106.0+): still pending, still in the feed, and kept off the board.
  */
 const INTERACTIONS = {
   acme: [
@@ -793,6 +797,7 @@ const INTERACTIONS = {
   ],
   globex: [
     [0, [["How should late-arriving duplicates be treated?", ["Last write wins", "First write wins", "Flag for review"]]]],
+    [2, [["Which partner feeds should the drift detector watch first?", ["Top five by volume", "All of them", "Only the flaky ones"]]], "-50m"],
   ],
   initech: [
     [1, [["Ship the retry idempotency fix straight to production?", ["Ship it", "Stage first", "Hold for review"]]]],
@@ -802,7 +807,7 @@ const INTERACTIONS = {
 
 function buildInteractions(key) {
   const out = {};
-  (INTERACTIONS[key] ?? []).forEach(([issueIdx, questions], i) => {
+  (INTERACTIONS[key] ?? []).forEach(([issueIdx, questions, dismissedAt], i) => {
     const interactionId = id("interaction", `${key}-${i}`);
     out[issueId(key, issueIdx)] = [
       {
@@ -823,8 +828,9 @@ function buildInteractions(key) {
           })),
         },
         createdAt: t("-6m"),
-        updatedAt: t("-6m"),
+        updatedAt: t(dismissedAt ?? "-6m"),
         resolvedAt: null,
+        ...(dismissedAt ? { dismissedAt: t(dismissedAt), dismissedByUserId: id("user", "demo") } : {}),
       },
     ];
   });

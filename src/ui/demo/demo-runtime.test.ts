@@ -129,6 +129,27 @@ describe("writes", () => {
     expect(demoRespond("GET", `/issues/${issueId}/interactions`)).toEqual([]);
   });
 
+  it("dismisses a request as the host does: still pending, still in the feed, newer", () => {
+    const [issueId, list] = Object.entries(FIXTURE.interactionsByIssue).find(([, entries]) => !entries[0].dismissedAt)!;
+    const interaction = list[0];
+    const companyId = interaction.companyId;
+    const row = () =>
+      (demoRespond("GET", `/companies/${companyId}/attention`) as DemoFixture["byCompany"][string]["attention"]).items.find(
+        (item) => item.subject.id === interaction.id,
+      );
+    const before = row()!.updatedAt;
+    const dismissed = demoRespond("POST", `/issues/${issueId}/interactions/${interaction.id}/dismiss`) as typeof interaction;
+    expect(dismissed).toMatchObject({ status: "pending", dismissedByUserId: FIXTURE.session.user.id });
+    expect(dismissed.dismissedAt).toBeTruthy();
+    expect(row()).toBeDefined();
+    expect(row()!.updatedAt).not.toBe(before);
+    expect(demoRespond("GET", `/issues/${issueId}/interactions`)).toEqual([dismissed]);
+    // Idempotent, like the host: a second dismiss changes nothing.
+    const stamp = row()!.updatedAt;
+    expect(demoRespond("POST", `/issues/${issueId}/interactions/${interaction.id}/dismiss`)).toEqual(dismissed);
+    expect(row()!.updatedAt).toBe(stamp);
+  });
+
   it("accepts a comment and a status patch without touching the network", () => {
     const issue = FIXTURE.byCompany[COMPANY].issues[0];
     expect(demoRespond("POST", `/issues/${issue.id}/comments`, { body: "hi" })).toMatchObject({
