@@ -346,16 +346,21 @@ export function deriveActionable(data: {
   approvals: Approval[];
   attention: AttentionFeed | undefined;
   ceoOverdue: boolean;
+  /**
+   * Open tasks stopped until you act, not already in the feed — see
+   * deriveUserInterruptions. Each counts as high: no work moves on it.
+   */
+  interrupted?: number;
 }): TicklerActionable {
   const undismissedAttention = (data.attention?.items ?? []).filter((item) => !item.dismissal);
-  const criticalOrHigh = undismissedAttention.some(
-    (item) => item.severity === "critical" || item.severity === "high",
-  );
+  const interrupted = data.interrupted ?? 0;
+  const criticalOrHigh =
+    interrupted > 0 || undismissedAttention.some((item) => item.severity === "critical" || item.severity === "high");
   // The attention feed emits one item per pending approval — those are
   // already counted via `approvals`, so exclude them here or every approval
   // counts twice. (Severity still contributes to criticalOrHigh above.)
   const nonApprovalAttention = undismissedAttention.filter((item) => item.sourceKind !== "approval");
-  const count = data.approvals.length + nonApprovalAttention.length + (data.ceoOverdue ? 1 : 0);
+  const count = data.approvals.length + nonApprovalAttention.length + (data.ceoOverdue ? 1 : 0) + interrupted;
   return { criticalOrHigh, count };
 }
 

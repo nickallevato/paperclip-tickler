@@ -9,6 +9,8 @@ import {
 import { cn } from "../host/util";
 import { formatAgeMinutes } from "../lib/tickler";
 import type { TicklerRecentTask, TicklerRecentTasks as TicklerRecentTasksModel } from "../lib/queue";
+import { classifyInterruption } from "../lib/interruption";
+import { TicklerInterruptionChip } from "./TicklerInterruptionChip";
 import type { TicklerRailPaneBudget } from "../lib/rail-budget";
 import { elapsedLabel, humanStatus, isStartingUp, runNarration } from "../lib/runs";
 import { LiveDot, QueuedDot } from "./LiveDot";
@@ -120,6 +122,7 @@ function TaskRow({ task, nowMs }: { task: TicklerRecentTask; nowMs: number }) {
   // A run without a ticket has no title to show, so it borrows the narration
   // the strip used to put on its pill, under the name of the agent it is for.
   const title = issue?.title ?? (run ? `${run.agentName} · ${runNarration(run, undefined)}` : "");
+  const interruption = issue ? classifyInterruption(issue) : null;
   const body = (
     <span className="flex min-w-0 items-center gap-2">
       <CompanyPatternIcon
@@ -140,6 +143,7 @@ function TaskRow({ task, nowMs }: { task: TicklerRecentTask; nowMs: number }) {
       )}
       {issue?.identifier && <span className={cn("shrink-0 font-mono font-medium text-foreground", MICRO)}>{issue.identifier}</span>}
       <span className={cn("min-w-0 flex-1 truncate", phase === null && "text-muted-foreground")}>{title}</span>
+      {interruption && <TicklerInterruptionChip interruption={interruption} />}
       <span className={cn("shrink-0 tabular-nums text-muted-foreground", MICRO)}>
         {/* Said in words as well as by the ring: a queued row's clock is how
             long it has waited, not how long anyone has worked on it. */}

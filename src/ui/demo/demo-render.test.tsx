@@ -123,6 +123,20 @@ describe("TicklerHud on demo data", () => {
     await waitFor(() => expect(screen.queryAllByText(/drift detector should watch/)).toHaveLength(0));
   });
 
+  it("queues a task waiting on you once, with its chip, and keeps the host's retries quiet", async () => {
+    renderHud();
+    const queue = await screen.findByLabelText("Needs you");
+    await waitFor(() =>
+      expect(Array.from(queue.querySelectorAll('[data-interruption="needs_you"]')).map((chip) => chip.textContent)).toEqual([
+        "Interrupted · reconnect",
+      ]),
+    );
+    // System recoveries never reach the queue; the task's own row says it quietly.
+    expect(queue.querySelector('[data-interruption="recovering"], [data-interruption="recovery_failed"]')).toBeNull();
+    const recent = await screen.findByLabelText("Recent tasks");
+    await waitFor(() => expect(recent.querySelector('[data-interruption="recovering"]')?.textContent).toBe("Recovering"));
+  });
+
   it("labels itself as demo data so a screenshot cannot be mistaken", async () => {
     renderHud();
     expect(await screen.findByText("Demo data")).toBeInTheDocument();

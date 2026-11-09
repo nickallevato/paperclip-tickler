@@ -9,6 +9,7 @@ import type {
   RoutineListItem,
 } from "@paperclipai/shared";
 import type { LiveRunForIssue } from "../host/api";
+import { deriveUserInterruptions, type TicklerInterruptionClass } from "./interruption";
 import { isRunActive, runPhase, type RunPhase } from "./runs";
 import {
   TICKLER_ROUTINE_OVERDUE_GRACE_MS,
@@ -75,6 +76,12 @@ export type TicklerQueueItem =
       issue: Issue | null;
     })
   | (TicklerQueueItemBase & { kind: "heartbeat"; ceo: Agent; beat: TicklerCeoHeartbeat })
+  | (TicklerQueueItemBase & {
+      kind: "interruption";
+      /** The task whose work is stopped until you act (Paperclip v2026.1106.0+). */
+      issue: Issue;
+      interruption: Extract<TicklerInterruptionClass, { kind: "needs_you" }>;
+    })
   | (TicklerQueueItemBase & { kind: "routine"; routine: RoutineListItem; reason: "overdue" | "failed" });
 
 const BUCKET_ORDER: Record<TicklerQueueBucket, number> = { now: 0, soon: 1, later: 2 };
@@ -163,6 +170,25 @@ export function deriveQueueItems(input: {
         const issueId = attentionIssueId(item);
         return issueId ? (issueById.get(issueId) ?? null) : null;
       })(),
+    });
+  }
+
+  // A task stopped until you act, when nothing in the feed already stands for
+  // it. The recovery actions are the host's, so the row only links there; it
+  // clears itself when the interruption does.
+  for (const { issue, interruption } of deriveUserInterruptions(input.issues ?? [], input.attention)) {
+    items.push({
+      triage: null,
+      decideBy: null,
+      snoozedUntil: null,
+      kind: "interruption",
+      id: `interruption:${issue.id}`,
+      companyId: input.companyId,
+      bucket: "soon",
+      rank: 2,
+      atMs: epochMs(issue.updatedAt),
+      issue,
+      interruption,
     });
   }
 
@@ -305,6 +331,7 @@ export type TicklerQueueKind =
   | "blockers"
   | "failed"
   | "heartbeats"
+  | "interrupted"
   | "routines"
   | "other";
 
@@ -313,6 +340,7 @@ const KIND_ORDER: ReadonlyArray<{ kind: TicklerQueueKind; label: string }> = [
   { kind: "confirmations", label: "Confirmations" },
   { kind: "approvals", label: "Approvals" },
   { kind: "heartbeats", label: "Heartbeats" },
+  { kind: "interrupted", label: "Interrupted" },
   { kind: "failed", label: "Failed runs" },
   { kind: "routines", label: "Routines" },
   { kind: "blockers", label: "Blockers" },
@@ -327,6 +355,8 @@ export function queueItemKind(item: TicklerQueueItem): TicklerQueueKind {
       return "heartbeats";
     case "routine":
       return "routines";
+    case "interruption":
+      return "interrupted";
     default: {
       const source = item.item.sourceKind;
       if (source === "issue_thread_interaction") {
@@ -399,7 +429,7 @@ export function isSnoozed(item: Pick<TicklerQueueItem, "snoozedUntil">, nowMs: n
  * monitor, or the check is already due. Read-only: Tickler never sets one.
  */
 export function agentCheckBackMs(item: TicklerQueueItem, nowMs: number): number | null {
-  const issue = item.kind === "approval" || item.kind === "attention" ? item.issue : null;
+  const issue = item.kind === "approval" || item.kind === "attention" || item.kind === "interruption" ? item.issue : null;
   const at = epochMs(issue?.monitorNextCheckAt);
   return at !== null && at > nowMs ? at : null;
 }
@@ -639,7 +669,7 @@ export function groupQueue(
       // project holding the most urgent item leads; no-project items last.
       const projectName = new Map((context.projects ?? []).map((project) => [project.id, project.name]));
       const projectOf = (item: TicklerQueueItem): string =>
-        item.kind === "attention" && item.issue?.projectId ? item.issue.projectId : "";
+        (item.kind === "attention" || item.kind === "interruption") && item.issue?.projectId ? item.issue.projectId : "";
       const order: Array<{ key: string; label: string }> = [];
       for (const item of sorted) {
         const key = projectOf(item);

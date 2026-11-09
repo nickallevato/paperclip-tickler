@@ -330,6 +330,41 @@ function buildProjects(key) {
   }));
 }
 
+/**
+ * Task interruptions (Paperclip v2026.1106.0+), by issue index — one of each
+ * kind the board draws. Acme's route solver waits on you to reconnect (queued,
+ * counted); its backfill also waits on you but already has a question in the
+ * feed, so it counts once; its flaky test is being retried by the host, and
+ * Initech's webhook ran out of retries — both quiet, neither counted. Every
+ * other issue carries `interruption: null`, as a 1106 host lists them.
+ */
+const INTERRUPTIONS = {
+  acme: {
+    0: ["user", "waiting_for_user", "choose_model", null],
+    3: ["user", "waiting_for_user", "reconnect", null],
+    6: ["system", "retry_scheduled", null, "+4m"],
+  },
+  initech: {
+    6: ["system", "failed", null, null],
+  },
+};
+
+function buildInterruption(key, i) {
+  const spec = INTERRUPTIONS[key]?.[i];
+  if (!spec) return null;
+  const [responsibility, state, userAction, retryAt] = spec;
+  return {
+    intentId: null,
+    responsibility,
+    state,
+    nextRetryAt: retryAt ? t(retryAt) : null,
+    canRetry: state === "failed",
+    userAction,
+    sourceRunIds: [id("run", `${key}-interrupted-${i}`)],
+    observedRunId: id("run", `${key}-interrupted-${i}`),
+  };
+}
+
 function buildIssues(key, prefix) {
   return (ISSUES[key] ?? []).map(([title, status, priority, projectIdx, agentIdx, updated], i) => ({
     id: issueId(key, i),
@@ -353,6 +388,7 @@ function buildIssues(key, prefix) {
     completedAt: status === "done" ? t(updated) : null,
     createdAt: t(`-${3 + i}d`),
     updatedAt: t(updated),
+    interruption: buildInterruption(key, i),
   }));
 }
 

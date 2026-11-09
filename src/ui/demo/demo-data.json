@@ -627,7 +627,19 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-3d",
-          "updatedAt": "@t:-6m"
+          "updatedAt": "@t:-6m",
+          "interruption": {
+            "intentId": null,
+            "responsibility": "user",
+            "state": "waiting_for_user",
+            "nextRetryAt": null,
+            "canRetry": false,
+            "userAction": "choose_model",
+            "sourceRunIds": [
+              "demo-run-acme-interrupted-0"
+            ],
+            "observedRunId": "demo-run-acme-interrupted-0"
+          }
         },
         {
           "id": "demo-issue-acme-1",
@@ -650,7 +662,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-4d",
-          "updatedAt": "@t:-22m"
+          "updatedAt": "@t:-22m",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-2",
@@ -673,7 +686,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-5d",
-          "updatedAt": "@t:-48m"
+          "updatedAt": "@t:-48m",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-3",
@@ -696,7 +710,19 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-6d",
-          "updatedAt": "@t:-14m"
+          "updatedAt": "@t:-14m",
+          "interruption": {
+            "intentId": null,
+            "responsibility": "user",
+            "state": "waiting_for_user",
+            "nextRetryAt": null,
+            "canRetry": false,
+            "userAction": "reconnect",
+            "sourceRunIds": [
+              "demo-run-acme-interrupted-3"
+            ],
+            "observedRunId": "demo-run-acme-interrupted-3"
+          }
         },
         {
           "id": "demo-issue-acme-4",
@@ -719,7 +745,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-7d",
-          "updatedAt": "@t:-3h"
+          "updatedAt": "@t:-3h",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-5",
@@ -742,7 +769,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-8d",
-          "updatedAt": "@t:-5h"
+          "updatedAt": "@t:-5h",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-6",
@@ -765,7 +793,19 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-9d",
-          "updatedAt": "@t:-11m"
+          "updatedAt": "@t:-11m",
+          "interruption": {
+            "intentId": null,
+            "responsibility": "system",
+            "state": "retry_scheduled",
+            "nextRetryAt": "@t:+4m",
+            "canRetry": false,
+            "userAction": null,
+            "sourceRunIds": [
+              "demo-run-acme-interrupted-6"
+            ],
+            "observedRunId": "demo-run-acme-interrupted-6"
+          }
         },
         {
           "id": "demo-issue-acme-7",
@@ -788,7 +828,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-10d",
-          "updatedAt": "@t:-2d"
+          "updatedAt": "@t:-2d",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-8",
@@ -811,7 +852,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-11d",
-          "updatedAt": "@t:-7h"
+          "updatedAt": "@t:-7h",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-9",
@@ -834,7 +876,8 @@
           "startedAt": "@t:-2d",
           "completedAt": "@t:-90m",
           "createdAt": "@t:-12d",
-          "updatedAt": "@t:-90m"
+          "updatedAt": "@t:-90m",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-10",
@@ -857,7 +900,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-13d",
-          "updatedAt": "@t:-1d"
+          "updatedAt": "@t:-1d",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-11",
@@ -880,7 +924,8 @@
           "startedAt": "@t:-2d",
           "completedAt": "@t:-4h",
           "createdAt": "@t:-14d",
-          "updatedAt": "@t:-4h"
+          "updatedAt": "@t:-4h",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-12",
@@ -903,7 +948,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-15d",
-          "updatedAt": "@t:-35m"
+          "updatedAt": "@t:-35m",
+          "interruption": null
         },
         {
           "id": "demo-issue-acme-13",
@@ -926,7 +972,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-16d",
-          "updatedAt": "@t:-9h"
+          "updatedAt": "@t:-9h",
+          "interruption": null
         }
       ],
       "agents": [
@@ -1972,7 +2019,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-3d",
-          "updatedAt": "@t:-9m"
+          "updatedAt": "@t:-9m",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-1",
@@ -1995,7 +2043,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-4d",
-          "updatedAt": "@t:-27m"
+          "updatedAt": "@t:-27m",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-2",
@@ -2018,7 +2067,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-5d",
-          "updatedAt": "@t:-2h"
+          "updatedAt": "@t:-2h",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-3",
@@ -2041,7 +2091,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-6d",
-          "updatedAt": "@t:-1h"
+          "updatedAt": "@t:-1h",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-4",
@@ -2064,7 +2115,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-7d",
-          "updatedAt": "@t:-6h"
+          "updatedAt": "@t:-6h",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-5",
@@ -2087,7 +2139,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-8d",
-          "updatedAt": "@t:-3d"
+          "updatedAt": "@t:-3d",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-6",
@@ -2110,7 +2163,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-9d",
-          "updatedAt": "@t:-52m"
+          "updatedAt": "@t:-52m",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-7",
@@ -2133,7 +2187,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-10d",
-          "updatedAt": "@t:-5d"
+          "updatedAt": "@t:-5d",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-8",
@@ -2156,7 +2211,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-11d",
-          "updatedAt": "@t:-2d"
+          "updatedAt": "@t:-2d",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-9",
@@ -2179,7 +2235,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-12d",
-          "updatedAt": "@t:-18m"
+          "updatedAt": "@t:-18m",
+          "interruption": null
         },
         {
           "id": "demo-issue-globex-10",
@@ -2202,7 +2259,8 @@
           "startedAt": "@t:-2d",
           "completedAt": "@t:-8h",
           "createdAt": "@t:-13d",
-          "updatedAt": "@t:-8h"
+          "updatedAt": "@t:-8h",
+          "interruption": null
         }
       ],
       "agents": [
@@ -3256,7 +3314,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-3d",
-          "updatedAt": "@t:-31m"
+          "updatedAt": "@t:-31m",
+          "interruption": null
         },
         {
           "id": "demo-issue-initech-1",
@@ -3279,7 +3338,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-4d",
-          "updatedAt": "@t:-4m"
+          "updatedAt": "@t:-4m",
+          "interruption": null
         },
         {
           "id": "demo-issue-initech-2",
@@ -3302,7 +3362,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-5d",
-          "updatedAt": "@t:-17m"
+          "updatedAt": "@t:-17m",
+          "interruption": null
         },
         {
           "id": "demo-issue-initech-3",
@@ -3325,7 +3386,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-6d",
-          "updatedAt": "@t:-1d"
+          "updatedAt": "@t:-1d",
+          "interruption": null
         },
         {
           "id": "demo-issue-initech-4",
@@ -3348,7 +3410,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-7d",
-          "updatedAt": "@t:-3h"
+          "updatedAt": "@t:-3h",
+          "interruption": null
         },
         {
           "id": "demo-issue-initech-5",
@@ -3371,7 +3434,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-8d",
-          "updatedAt": "@t:-2h"
+          "updatedAt": "@t:-2h",
+          "interruption": null
         },
         {
           "id": "demo-issue-initech-6",
@@ -3394,7 +3458,19 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-9d",
-          "updatedAt": "@t:-44m"
+          "updatedAt": "@t:-44m",
+          "interruption": {
+            "intentId": null,
+            "responsibility": "system",
+            "state": "failed",
+            "nextRetryAt": null,
+            "canRetry": true,
+            "userAction": null,
+            "sourceRunIds": [
+              "demo-run-initech-interrupted-6"
+            ],
+            "observedRunId": "demo-run-initech-interrupted-6"
+          }
         },
         {
           "id": "demo-issue-initech-7",
@@ -3417,7 +3493,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-10d",
-          "updatedAt": "@t:-6h"
+          "updatedAt": "@t:-6h",
+          "interruption": null
         },
         {
           "id": "demo-issue-initech-8",
@@ -3440,7 +3517,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-11d",
-          "updatedAt": "@t:-12h"
+          "updatedAt": "@t:-12h",
+          "interruption": null
         },
         {
           "id": "demo-issue-initech-9",
@@ -3463,7 +3541,8 @@
           "startedAt": "@t:-2d",
           "completedAt": "@t:-7h",
           "createdAt": "@t:-12d",
-          "updatedAt": "@t:-7h"
+          "updatedAt": "@t:-7h",
+          "interruption": null
         },
         {
           "id": "demo-issue-initech-10",
@@ -3486,7 +3565,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-13d",
-          "updatedAt": "@t:-4d"
+          "updatedAt": "@t:-4d",
+          "interruption": null
         }
       ],
       "agents": [
@@ -4430,7 +4510,8 @@
           "startedAt": "@t:-2d",
           "completedAt": null,
           "createdAt": "@t:-3d",
-          "updatedAt": "@t:-2h"
+          "updatedAt": "@t:-2h",
+          "interruption": null
         },
         {
           "id": "demo-issue-umbra-1",
@@ -4453,7 +4534,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-4d",
-          "updatedAt": "@t:-1d"
+          "updatedAt": "@t:-1d",
+          "interruption": null
         },
         {
           "id": "demo-issue-umbra-2",
@@ -4476,7 +4558,8 @@
           "startedAt": "@t:-2d",
           "completedAt": "@t:-20h",
           "createdAt": "@t:-5d",
-          "updatedAt": "@t:-20h"
+          "updatedAt": "@t:-20h",
+          "interruption": null
         },
         {
           "id": "demo-issue-umbra-3",
@@ -4499,7 +4582,8 @@
           "startedAt": null,
           "completedAt": null,
           "createdAt": "@t:-6d",
-          "updatedAt": "@t:-6d"
+          "updatedAt": "@t:-6d",
+          "interruption": null
         }
       ],
       "agents": [
@@ -4973,7 +5057,8 @@
         "startedAt": "@t:-2d",
         "completedAt": null,
         "createdAt": "@t:-3d",
-        "updatedAt": "@t:-9m"
+        "updatedAt": "@t:-9m",
+        "interruption": null
       },
       {
         "id": "demo-issue-globex-1",
@@ -4996,7 +5081,8 @@
         "startedAt": "@t:-2d",
         "completedAt": null,
         "createdAt": "@t:-4d",
-        "updatedAt": "@t:-27m"
+        "updatedAt": "@t:-27m",
+        "interruption": null
       }
     ],
     "demo-approval-initech-0": [
@@ -5021,7 +5107,8 @@
         "startedAt": "@t:-2d",
         "completedAt": null,
         "createdAt": "@t:-3d",
-        "updatedAt": "@t:-31m"
+        "updatedAt": "@t:-31m",
+        "interruption": null
       },
       {
         "id": "demo-issue-initech-1",
@@ -5044,7 +5131,8 @@
         "startedAt": "@t:-2d",
         "completedAt": null,
         "createdAt": "@t:-4d",
-        "updatedAt": "@t:-4m"
+        "updatedAt": "@t:-4m",
+        "interruption": null
       }
     ],
     "demo-approval-initech-1": [
@@ -5069,7 +5157,8 @@
         "startedAt": "@t:-2d",
         "completedAt": null,
         "createdAt": "@t:-4d",
-        "updatedAt": "@t:-4m"
+        "updatedAt": "@t:-4m",
+        "interruption": null
       },
       {
         "id": "demo-issue-initech-2",
@@ -5092,7 +5181,8 @@
         "startedAt": "@t:-2d",
         "completedAt": null,
         "createdAt": "@t:-5d",
-        "updatedAt": "@t:-17m"
+        "updatedAt": "@t:-17m",
+        "interruption": null
       }
     ]
   }

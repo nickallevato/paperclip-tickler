@@ -13,6 +13,7 @@ waiting on a human, in one list, in the order you should work it.
 | **Confirmations** | Other issue-thread interactions waiting on a response. |
 | **Approvals** | Pending approvals. |
 | **Heartbeats** | A CEO agent whose heartbeat is overdue. |
+| **Interrupted** | A task whose work is stopped until you act — reconnect an account, choose a model, assign an agent, and so on (Paperclip v2026.1106.0+). Open takes you to the task, where the action is. A task that already has a question or approval here is not listed twice. |
 | **Failed runs** | Failed runs and agent error alerts. |
 | **Routines** | Schedules that stopped firing or whose last run failed. |
 | **Blockers** | Blocker attention items. |
@@ -34,8 +35,8 @@ round.
   **Today · This week · Whenever** inline, so sorting it is one click a row.
 - **This week** — due by Sunday.
 - **Alerts** — conditions Tickler spots itself (an overdue CEO heartbeat, a
-  routine that stopped firing). They have no triage; they leave when the
-  condition clears.
+  routine that stopped firing, an interrupted task). They have no triage; they
+  leave when the condition clears.
 - **Whenever** — no deadline, or a date beyond this week. Starts folded.
 - **Snoozed** — hidden until the snooze ends. Starts folded, and appears in no
   other grouping.

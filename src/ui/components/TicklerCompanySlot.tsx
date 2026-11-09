@@ -12,6 +12,7 @@ import {
   type TicklerCompanyStats,
   type TicklerTokenThresholds,
 } from "../lib/tickler";
+import { deriveUserInterruptions } from "../lib/interruption";
 import { TicklerCompanyLine } from "./TicklerCompanyLine";
 import { useTicklerAlerts } from "./useTicklerAlerts";
 import { useTicklerCompanyData, type TicklerCompanyData } from "./useTicklerCompanyData";
@@ -63,7 +64,8 @@ export function TicklerCompanySlot({
 }) {
   const data = useTicklerCompanyData(company.id);
   const ceoOverdue = deriveCeoHeartbeat(selectCeo(data.agents), Date.now()).state === "overdue";
-  const actionable = deriveActionable({ approvals: data.approvals, attention: data.attention, ceoOverdue });
+  const interrupted = deriveUserInterruptions(data.issues, data.attention).length;
+  const actionable = deriveActionable({ approvals: data.approvals, attention: data.attention, ceoOverdue, interrupted });
 
   // An unavailable company must alert as red too (never alert an unreachable
   // company as healthy).
