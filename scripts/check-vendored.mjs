@@ -43,6 +43,7 @@ const VENDORED = {
   "src/ui/host/ui-kit/button.tsx": "ui/src/components/ui/button.tsx",
   "src/ui/host/ui-kit/card.tsx": "ui/src/components/ui/card.tsx",
   "src/ui/host/ui-kit/dropdown-menu.tsx": "ui/src/components/ui/dropdown-menu.tsx",
+  "src/ui/host/ui-kit/flyout-appearance.tsx": "ui/src/components/ui/flyout-appearance.tsx",
   "src/ui/host/ui-kit/popover.tsx": "ui/src/components/ui/popover.tsx",
   "src/ui/host/ui-kit/textarea.tsx": "ui/src/components/ui/textarea.tsx",
 };
