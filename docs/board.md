@@ -34,8 +34,9 @@ nowhere on the server to keep a preference of its own.
 
 Each company is one line: its name, its capacity strip (see below), its token
 usage by the hour, and **Need you** — pending approvals + undismissed attention
-items + an overdue CEO heartbeat, the same number the queue is showing for that
-company.
+items + an overdue CEO heartbeat + tasks whose work is stopped until you act
+(see [Interrupted](queue.md#what-lands-in-it)), the same number the queue is
+showing for that company.
 
 ### Token usage
 
@@ -132,6 +133,14 @@ was last touched.
 
 One row per task, not per run: a retry queued behind a run still finishing is one
 line, showing the attempt being worked.
+
+On Paperclip v2026.1106.0 or later, a task that was interrupted says so beside
+its age. **Interrupted · reconnect** (or *choose model*, *assign agent*,
+*approval*, *budget*, *resume*) in ochre means its work is stopped until you
+act; the task is in the queue too. **Recovering** and **Recovery failed** in
+grey mean Paperclip has a retry scheduled, or ran out of retries — nothing for
+you to do here, and neither counts toward Need you. Hover for the detail; the
+row opens the task, where Paperclip keeps the recovery actions.
 
 Hovering a row opens what the agent last said — the same narration the run
 detail shows — with the ticket's status and, when nothing has been reported yet,

@@ -58,6 +58,7 @@ import {
   TicklerInteractionActions,
   hasInlineInteraction,
 } from "./TicklerInteractionActions";
+import { TicklerInterruptionChip } from "./TicklerInterruptionChip";
 import { TicklerKindGlyph } from "./TicklerKindGlyph";
 import { TicklerListControls } from "./TicklerListControls";
 import { TicklerLink } from "./TicklerLink";
@@ -474,6 +475,16 @@ export function TicklerQueueItemRow({
           label="Open CEO"
         />
       );
+      break;
+    }
+    case "interruption": {
+      title = item.issue.title;
+      identifier = item.issue.identifier ?? null;
+      href = `/${company.issuePrefix}/issues/${item.issue.identifier ?? item.issue.id}`;
+      meta = <TicklerInterruptionChip interruption={item.interruption} />;
+      // Reconnect, choose a model, resume: the host owns every recovery
+      // action, so the row takes you there rather than copying them.
+      actions = <OpenLink to={href} companyId={company.id} />;
       break;
     }
     case "routine":

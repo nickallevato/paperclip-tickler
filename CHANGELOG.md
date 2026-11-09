@@ -5,6 +5,17 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **Tasks stopped until you act show up, once.** On Paperclip v2026.1106.0 or
+  later, a task interrupted until you reconnect an account, choose a model,
+  assign an agent and so on gets an **Interrupted · reconnect** chip (or
+  whichever action it is). It counts toward Need you, appears in the queue
+  under **Interrupted**, and links to the task, where Paperclip keeps the
+  recovery actions. A task that already has a question or approval waiting
+  counts once. A task with a retry scheduled by Paperclip says **Recovering**
+  quietly on its Recent row, and one whose retries ran out **Recovery
+  failed**; neither is counted.
+  (PLI-354)
+
 ## 0.21.0
 
 - **A question dismissed in Paperclip stops counting as needing you.**
