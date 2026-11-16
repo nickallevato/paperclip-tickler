@@ -5,6 +5,10 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The docs catch up with 0.21.0–0.22.0.** The README mentions Dismiss on a
+  queue question and tasks stopped until you act, and its screenshots show
+  both. (PLI-364)
+
 ## 0.22.0
 
 - **Tasks stopped until you act show up, once.** On Paperclip v2026.1106.0 or

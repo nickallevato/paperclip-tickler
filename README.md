@@ -30,7 +30,8 @@ you will deal with each thing — instead of visiting each org's dashboard in tu
 - 👀 **What agents are actually doing.** Hover any agent or task for its live narration — not
   just "3 running".
 - 🚦 **Trouble surfaces itself.** Blocked projects, stalled runs, runs stuck past their agent's
-  time limit, agents that failed setup, failed routines, overdue heartbeats.
+  time limit, agents that failed setup, failed routines, overdue heartbeats, tasks stopped until
+  you reconnect an account or choose a model.
 - ⬆️ **Updates itself from a button**, and rolls back from one too if a new version misbehaves.
 - 📱 **Works on a phone**, and 🧩 **changes nothing in core** — UI-only, prebuilt, and fits
   whichever Paperclip build it lands on.
@@ -52,12 +53,16 @@ same link lives behind the **?** in the Tickler page header.
 
 **Queue** — the main column. Every item across every org that wants a human: approvals, questions
 and confirmations awaiting a response, blockers, failed runs, overdue heartbeats, routine
-exceptions. Actions are inline — Approve, Reject, Reply, answer a question, choose on a
+exceptions, and tasks whose work is stopped until you act (reconnect an account, choose a model,
+assign an agent). Actions are inline — Approve, Reject, Reply, answer a question, choose on a
 confirmation — so you rarely need to open the org at all. A row's title opens it, and **Reject**
-asks twice, because a rejected approval cannot be undone. When an agent has said it will look
+asks twice, because a rejected approval cannot be undone. On Paperclip v2026.1106.0 or later, a
+question you would rather not answer yet can be **Dismissed** into the task's history, where it
+stays answerable; a question dismissed anywhere, here or in Paperclip, stops counting as needing
+you. [The queue guide](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/queue.md#what-lands-in-it) lists every kind. When an agent has said it will look
 at a task again at a set time, its row says so: *agent checks back 14:30*.
 
-![The Needs-you queue in its default grouping: a Today group with an overdue blocker, then Unsorted, where each new row offers Today, This week and Whenever beside its own Open, Approve, Reject or Reply](https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/needs-you.png)
+![The Needs-you queue in its default grouping: a Today group with an overdue blocker, then Unsorted, where each new row offers Today, This week and Whenever beside its own Open, Approve, Reject, or Answer and Dismiss](https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/needs-you.png)
 
 By default it groups by **when you said you'd decide** — Today (and anything overdue), Unsorted,
 This week, Alerts, Whenever, Snoozed. New items land in Unsorted with **Today · This week ·
@@ -75,10 +80,12 @@ asking for it, it keeps running in Paperclip, and **N hidden** in the header bri
 
 <img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/left-rail.png" alt="The left rail: the Orgs list with hourly token bars, then Recent, Portfolio and Routines" width="424">
 
-**Recent** — what's been touched lately, live rows first. Hover a row for the ticket, its status,
-and the agent's own last sentence about it.
+**Recent** — what's been touched lately, live rows first. A task stopped until you act says
+**Interrupted · reconnect** (or whichever action it needs) and is in the queue too; one Paperclip
+is retrying says **Recovering**. Hover a row for the ticket, its status, and the agent's own last
+sentence about it.
 
-<img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/recent-hover.png" alt="A Recent row's hover card: the ticket, its status, and what the agent last said" width="424">
+<img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/recent-hover.png" alt="Recent rows, two marked Interrupted and one Recovering, with a hover card: the ticket, its status, and what the agent last said" width="424">
 
 **Routines** — only the broken ones, plus any you pin with the **+**: a pinned routine stays on
 top with a ▶ to run it now (press twice; it links the issue the run made).
