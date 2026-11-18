@@ -11,7 +11,9 @@
  * The instance it drives is always in **demo mode** (`?demo=1`), so what lands
  * in `docs/` is Tickler's bundled fixture — invented companies, tickets and
  * agents. No real company name can reach a published image, and the shots stay
- * reproducible because the fixture does not change under us.
+ * reproducible because the fixture does not change under us. The one exception
+ * is `toolbar-button`: the Today count does not run in demo mode, so that shot
+ * turns demo mode off and answers the attention feed itself.
  *
  * Playwright is not a dependency of this repo. It is resolved at runtime from
  * the Paperclip checkout that already carries it, the same read-only-reference
@@ -296,8 +298,22 @@ const SHOTS = [
   },
   {
     name: "toolbar-button",
-    doc: "The Tickler mark the plugin adds to the host's breadcrumb bar.",
-    take: async (page) => ({ clip: await region(page, ['a[aria-label="Tickler — all orgs"]'], 16) }),
+    doc: "The Tickler button in the host's breadcrumb bar, carrying a Today count with one overdue.",
+    // The one shot not in demo mode: the button skips its fetch while demo mode
+    // is armed, so the fixture can never show a count. The Tickler page with
+    // demo mode off instead — a fresh instance covers the host's own pages with
+    // its onboarding — and every org's attention feed answered by `TODAY_FEED`.
+    route: (ctx) => `/${ctx.prefix}/tickler?demo=0`,
+    stub: async (page) => {
+      await page.route("**/api/companies/*/attention*", (route) =>
+        route.fulfill({ contentType: "application/json", body: JSON.stringify(TODAY_FEED) }),
+      );
+    },
+    before: async (page) => {
+      await page.waitForSelector("[data-tickler-today]", { timeout: 30_000 });
+      await page.waitForTimeout(400);
+    },
+    take: async (page) => ({ clip: await region(page, ['a[aria-label^="Tickler —"]'], 16) }),
   },
   {
     name: "board",
@@ -474,6 +490,25 @@ const SHOTS = [
   },
 ];
 
+/**
+ * The toolbar shot's attention feed: four rows in Today, one of them overdue.
+ * Only what the count reads is filled in; the button renders nothing else of
+ * them. The past date is in UTC, the timezone every capture context runs in.
+ */
+const TODAY_FEED = (() => {
+  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60_000).toISOString().slice(0, 10);
+  const row = (n, decideBy) => ({
+    id: `shot-${n}`,
+    sourceKind: "blocker_attention",
+    subject: { id: `shot-issue-${n}` },
+    severity: "high",
+    decideBy,
+    snoozedUntil: null,
+    dismissal: null,
+  });
+  return { items: [row(1, "today"), row(2, "today"), row(3, "today"), row(4, twoDaysAgo)] };
+})();
+
 async function groupQueueBy(page, label) {
   const queue = page.locator("[data-tickler-queue]").first();
   await queue.scrollIntoViewIfNeeded();
@@ -564,6 +599,7 @@ try {
         }
       }, { "paperclip.theme": theme, ...(shot.seed ? shot.seed(prefix) : {}) });
 
+      if (shot.stub) await shot.stub(page);
       const url = shot.route ? `${baseUrl}${shot.route({ prefix, pluginId })}` : ticklerUrl;
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90_000 });
       if (!shot.route) {

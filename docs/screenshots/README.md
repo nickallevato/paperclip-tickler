@@ -17,6 +17,13 @@ node scripts/capture-screenshots.mjs --only board,queue-by-company
 Refresh them whenever a UI change makes one wrong. A stale screenshot is the
 documentation defect nobody files a bug for.
 
+`toolbar-button.png` is the one scripted shot **not** in demo mode. The
+button's Today count skips its fetch while demo mode is armed, so the fixture
+can never show a number. The shot loads the Tickler page with `?demo=0` and
+answers every org's attention feed itself — four rows in Today, one overdue —
+so the crop is the button with a red **4**. Only the button is cropped, so
+nothing from the throwaway instance shows.
+
 `panes/` is the same kind of thing for the narrow stack's order (PLI-262): the
 Pane order menu as it opens, a drag in flight, the stack a reload later, and the
 wide board under a deliberately scrambled stored order — the shot that shows

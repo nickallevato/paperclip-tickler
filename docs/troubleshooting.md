@@ -144,6 +144,30 @@ The fixture is fetched from the plugin's own asset directory, so an error there
 means `dist/ui/demo-data.json` is missing. From source, run `pnpm build`; an npm
 install ships it, so reinstall the package.
 
+## The toolbar button's count is off, or missing
+
+The number on Tickler's button counts the queue's **Today** lane across the orgs
+you have not hidden, off each org's attention feed, once a minute. Where it and
+the lane disagree, it is one of these:
+
+- **One more than the lane.** A question on a closed issue, or one dismissed in
+  Paperclip, that still carries a decide-by of today or earlier. The page drops
+  such a question; the button cannot see that it should, because doing so needs
+  each org's issue list and thread lookups. It is a known gap, left in on
+  purpose: a reminder that errs should err toward one too many.
+- **A minute behind.** The button polls once a minute, the page every few
+  seconds, so a row you just sorted or snoozed takes up to a minute to leave the
+  count.
+- **No number at all,** though Today has items:
+  - **Demo mode is on.** The button does not fetch while demo mode is armed, so
+    the fixture never turns into a count on your real pages. It stays armed
+    after you leave a `?demo=1` page; open Tickler with `?demo=0`, or reload, to
+    get the count back.
+  - **One org's feed failed.** The button shows no number rather than a low one.
+    It retries on its next poll; a persistent failure shows on the page as
+    [polling degraded](#polling-degraded-in-the-header) or an unavailable org.
+  - **The badge is off.** Gear → **Toolbar badge** → **Today count**.
+
 ## "polling degraded" in the header
 
 At least one company's poll is erroring while still holding older data. Tickler

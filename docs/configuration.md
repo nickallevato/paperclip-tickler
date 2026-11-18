@@ -163,7 +163,9 @@ is grey, and turns red only when one of them is overdue; above nine it reads
 It comes off the attention feed alone, so it leaves out one thing the lane can
 hold: a question on a closed issue, or one dismissed in Paperclip, that still
 carries a decide-by. If one org's feed fails to load, the button shows no number
-rather than a low one.
+rather than a low one, and while [demo mode](#demo-mode) is on it shows none at
+all: the fixture is never counted. See
+[Troubleshooting](troubleshooting.md#the-toolbar-buttons-count-is-off-or-missing).
 
 Switch it in the **gear** panel under **Toolbar badge**: **Today count** (the
 default) or **Off**. Off stops the button fetching anything, not just the number.
