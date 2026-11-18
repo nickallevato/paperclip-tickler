@@ -26,6 +26,8 @@ you will deal with each thing — instead of visiting each org's dashboard in tu
   the row.
 - 🗓️ **Decide by.** Say *when* you'll deal with each item — Today, This week, Whenever — and the
   queue sorts itself. It's Paperclip's own decision triage, so the dates follow you there.
+- 🔢 **Today's count on every page.** Tickler's button in the top bar counts what you have to
+  decide today, and turns red when any of it is overdue. The gear turns it off.
 - 🏢 **Every org at a glance.** Who's working, token burn by the hour, what's waiting on you.
 - 👀 **What agents are actually doing.** Hover any agent or task for its live narration — not
   just "3 running".
@@ -38,7 +40,8 @@ you will deal with each thing — instead of visiting each org's dashboard in tu
 
 > **📦 Install from inside Paperclip — no terminal needed.**
 > **Settings → Plugins → Install Plugin**, enter **`paperclip-plugin-tickler`** as the npm Package
-> Name, and click **Install**. That's it — Tickler's button appears in the bar at the top of the page.
+> Name, and click **Install**. That's it — Tickler's button appears in the bar at the top of the page,
+> carrying a count of what you have to decide today.
 >
 > You need to be an instance admin, on a self-hosted Paperclip whose server can reach npm.
 > Prefer the command line, or building from source? See [Install](#install).
@@ -91,11 +94,14 @@ sentence about it.
 top with a ▶ to run it now (press twice; it links the issue the run made).
 
 **In the header** — the gear names the version you are on, offers the newer one in place
-when npm has it (or an earlier one, under **Install an earlier version**), and holds the [token thresholds](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#token-thresholds) that colour the spend
-figures; the bell turns on browser [alerts](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#alerts) for the edges worth knowing about (an org going
+when npm has it (or an earlier one, under **Install an earlier version**), holds the [token thresholds](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#token-thresholds) that colour the spend
+figures, and sets the **[Toolbar badge](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#toolbar-badge)** — **Today count** or **Off** — for the number on
+Tickler's button; the bell turns on browser [alerts](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#alerts) for the edges worth knowing about (an org going
 red, a critical item arriving); the expand control is [kiosk mode](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#kiosk-mode), for a wall display. On a phone the
 panes stack into one column, and **Pane order** in the header lets you drag them into the order
 you want.
+
+<img src="https://raw.githubusercontent.com/nickallevato/paperclip-tickler/main/docs/screenshots/toolbar-button.png" alt="Tickler's button in the breadcrumb bar, its count of 4 in red because one of the four is overdue" width="134">
 
 **When something breaks** — an error in one part of Tickler costs only that part: one org's line,
 one pane, or at worst the page shows a notice with the error, **Try again**, **Copy details** and
@@ -135,9 +141,8 @@ cd paperclip-tickler && pnpm install && pnpm build
 npx paperclipai plugin install /absolute/path/to/paperclip-tickler --local
 ```
 
-**Then find it.** Tickler adds a button carrying its mark to the breadcrumb bar above every page
-(with a [count of what you have to decide today](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#toolbar-badge), which the gear turns off),
-and a page at `/<COMPANY-PREFIX>/tickler` — `/ACME/tickler`, say, using any company's issue
+**Then find it.** Tickler adds its button, with today's count, to the breadcrumb bar above every
+page, and a page at `/<COMPANY-PREFIX>/tickler` — `/ACME/tickler`, say, using any company's issue
 prefix. The page shows every org whichever prefix you arrive through; the prefix is only there
 because Paperclip mounts plugin pages under a company route.
 

@@ -30,7 +30,9 @@ sets. A day chosen in Tickler is the day Paperclip shows, and the other way
 round.
 
 - **Today** — due today, or overdue. An item whose date has passed says
-  *overdue · was due …* in brick.
+  *overdue · was due …* in brick. This is the lane Tickler's button in the
+  breadcrumb bar counts, on every page; a snoozed item is not in it, so it is
+  not counted. See [Toolbar badge](configuration.md#toolbar-badge).
 - **Unsorted** — nothing set yet. This is the new pile: each row carries
   **Today · This week · Whenever** inline, so sorting it is one click a row.
 - **This week** — due by Sunday.

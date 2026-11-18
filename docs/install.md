@@ -134,7 +134,7 @@ breadcrumb bar, above every page in every company. A number on it counts what
 you have to decide today; see [Toolbar badge](configuration.md#toolbar-badge)
 to turn it off.
 
-![The Tickler launcher in the host's breadcrumb bar](screenshots/toolbar-button.png)
+![Tickler's button in the host's breadcrumb bar, its count of 4 in red because one of the four is overdue](screenshots/toolbar-button.png)
 
 **A page** at `/<COMPANY-PREFIX>/tickler` — for example `/ACME/tickler`. The prefix
 is the company's issue prefix. Tickler shows every company regardless of which

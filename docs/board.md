@@ -17,6 +17,14 @@ There is no **Edit** step: the rows are the setting rather than five commands,
 so the menu opens ready to drag. The grips are the ones Paperclip's own Orgs
 switcher uses.
 
+The **gear** in that row holds the per-browser settings, among them the
+**Toolbar badge**: **Today count** (the default) puts the number of items in
+the queue's **Today** lane on Tickler's button in the breadcrumb bar, on every
+page — grey, or red when one of them is overdue — and **Off** takes it away.
+See [Toolbar badge](configuration.md#toolbar-badge).
+
+<img src="screenshots/toolbar-button.png" alt="Tickler's button in the breadcrumb bar, its count of 4 in red because one of the four is overdue" width="134">
+
 Last in that row of toggles is a **?**. It opens one short panel: where to take
 a tweak, a change or a bug — the **Tickler thread** on the
 [Paperclip Discord](https://discord.com/channels/1478750559191302299/1532477301004959846) — and
