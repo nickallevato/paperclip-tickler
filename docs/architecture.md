@@ -12,7 +12,7 @@ src/
   ui/
     TicklerHud.tsx           root: owns the roster, sort mode, pins, token settings
     TicklerPage.tsx          host-mounted page slot
-    TicklerToolbarButton.tsx toolbar launcher
+    TicklerToolbarButton.tsx toolbar launcher, with its Today count
     components/            company lines, queue, recent tasks, portfolio, briefing
     lib/                   capacity, queue grouping, run derivation, drafts
     host/                  vendored Paperclip internals (read-only)

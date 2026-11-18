@@ -135,7 +135,8 @@ cd paperclip-tickler && pnpm install && pnpm build
 npx paperclipai plugin install /absolute/path/to/paperclip-tickler --local
 ```
 
-**Then find it.** Tickler adds a button carrying its mark to the breadcrumb bar above every page,
+**Then find it.** Tickler adds a button carrying its mark to the breadcrumb bar above every page
+(with a [count of what you have to decide today](https://github.com/nickallevato/paperclip-tickler/blob/main/docs/configuration.md#toolbar-badge), which the gear turns off),
 and a page at `/<COMPANY-PREFIX>/tickler` — `/ACME/tickler`, say, using any company's issue
 prefix. The page shows every org whichever prefix you arrive through; the prefix is only there
 because Paperclip mounts plugin pages under a company route.

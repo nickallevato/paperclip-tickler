@@ -45,8 +45,8 @@ const chrome = process.env.TICKLER_CHROME ?? "/usr/bin/google-chrome";
 const require_ = createRequire(join(process.env.TICKLER_PLAYWRIGHT ?? join(homedir(), "paperclip"), "noop.js"));
 const { chromium } = require_("playwright");
 
-/** Layout × screen × org-count triples worth a picture; the rest is one click away. */
-const SHOTS = [
+/** sidebar-v3: layout × screen × org-count triples worth a picture; the rest is one click away. */
+const SIDEBAR_SHOTS = [
   { layout: "current", screen: "1440x900" },
   { layout: "current", screen: "1512x790" },
   { layout: "current", screen: "1512x790", orgs: 12 },
@@ -60,6 +60,35 @@ const SHOTS = [
   { layout: "strip", screen: "1280x720" },
 ];
 
+/** toolbar-badge: every variant is on screen at once, so a shot is a state × width × theme. */
+const BADGE_SHOTS = [
+  { state: "new", width: "wide", theme: "dark" },
+  { state: "today", width: "wide", theme: "dark" },
+  { state: "overdue", width: "wide", theme: "dark" },
+  { state: "many", width: "wide", theme: "dark" },
+  { state: "overdue", width: "narrow", theme: "dark" },
+  { state: "overdue", width: "wide", theme: "light" },
+];
+
+/** Each study's shots, as the toggles to click and the file name to write. */
+const STUDIES = {
+  "sidebar-v3": SIDEBAR_SHOTS.map((shot) => {
+    const orgs = shot.orgs ?? 4;
+    return {
+      id: `${shot.layout}-${shot.screen}${orgs === 4 ? "" : `-${orgs}orgs`}`,
+      keys: [shot.layout],
+      clicks: [`[data-orgs="${orgs}"]`, `[data-screen="${shot.screen}"]`, `[data-layout="${shot.layout}"]`],
+    };
+  }),
+  "toolbar-badge": BADGE_SHOTS.map((shot) => ({
+    id: `${shot.state}-${shot.width}-${shot.theme}`,
+    keys: [shot.state, shot.width, shot.theme],
+    clicks: [`[data-state="${shot.state}"]`, `[data-width="${shot.width}"]`, `[data-theme-btn="${shot.theme}"]`],
+  })),
+};
+const SHOTS = STUDIES[name];
+if (!SHOTS) throw new Error(`no shot list for ${name}; add one to STUDIES`);
+
 const browser = await chromium.launch({ executablePath: chrome });
 const ctx = await browser.newContext({
   viewport: { width: 1700, height: 1200 },
@@ -69,14 +98,10 @@ const ctx = await browser.newContext({
 const tab = await ctx.newPage();
 await tab.goto(pathToFileURL(page).href);
 
-for (const shot of SHOTS) {
-  const orgs = shot.orgs ?? 4;
-  const id = `${shot.layout}-${shot.screen}${orgs === 4 ? "" : `-${orgs}orgs`}`;
-  if (only && !only.has(shot.layout) && !only.has(id)) continue;
-  await tab.click(`[data-orgs="${orgs}"]`);
-  await tab.click(`[data-screen="${shot.screen}"]`);
-  await tab.click(`[data-layout="${shot.layout}"]`);
-  // The budget pass runs in a rAF after the rail has a height; give it a frame.
+for (const { id, keys, clicks } of SHOTS) {
+  if (only && !keys.some((key) => only.has(key)) && !only.has(id)) continue;
+  for (const selector of clicks) await tab.click(selector);
+  // The sidebar's budget pass runs in a rAF after the rail has a height; give it a frame.
   await tab.waitForTimeout(200);
   const file = join(outDir, `${id}.png`);
   await tab.locator("#screen").screenshot({ path: file });

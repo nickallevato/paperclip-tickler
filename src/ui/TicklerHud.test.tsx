@@ -178,6 +178,32 @@ describe("TicklerHud", () => {
     act(() => root.unmount());
   });
 
+  it("turns the toolbar badge off from the settings panel and tells the button", async () => {
+    const heard = vi.fn();
+    window.addEventListener("tickler:toolbar-badge", heard);
+    const root = render();
+    await vi.waitFor(() => {
+      expect(container.querySelector('[aria-label="Token thresholds"]')).not.toBeNull();
+    });
+    await act(async () => {
+      (container.querySelector('[aria-label="Token thresholds"]') as HTMLButtonElement).dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+    // On until you say otherwise.
+    expect(container.querySelector('[data-toolbar-badge="today"]')).toHaveAttribute("aria-pressed", "true");
+    await act(async () => {
+      (container.querySelector('[data-toolbar-badge="off"]') as HTMLButtonElement).dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+    expect(localStorage.getItem("tickler.toolbarBadge")).toBe("off");
+    expect(container.querySelector('[data-toolbar-badge="off"]')).toHaveAttribute("aria-pressed", "true");
+    expect(heard).toHaveBeenCalledTimes(1);
+    window.removeEventListener("tickler:toolbar-badge", heard);
+    act(() => root.unmount());
+  });
+
   it("toggles alerts on and persists the choice", async () => {
     const root = render();
     await vi.waitFor(() => {

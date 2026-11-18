@@ -5,6 +5,12 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The toolbar button counts what you have to decide today.** The Tickler
+  button in the breadcrumb bar shows how many items are in the queue's Today
+  lane across the orgs you have not hidden: decide-by today, or a date that
+  has passed. Snoozed items do not count. The number is grey, turns red only
+  when one of them is overdue, and reads `9+` above nine. Turn it off under
+  **Toolbar badge** in the gear panel; off stops its polling too. (PLI-367)
 - **The docs catch up with 0.21.0–0.22.0.** The README mentions Dismiss on a
   queue question and tasks stopped until you act, and its screenshots show
   both. (PLI-364)

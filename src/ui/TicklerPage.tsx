@@ -66,9 +66,9 @@ export function TicklerPage() {
       // Deliberately does not call `deactivateDemoMode()`. Demo mode is armed
       // module-wide in `host/api`, and react-query can still have polls in
       // flight as this unmounts — disarming here would send those to the real
-      // server. Nothing outside this page reads `host/api` (the toolbar button
-      // fetches nothing), so leaving it armed costs nothing and the next mount
-      // re-resolves it anyway.
+      // server. The only other reader of `host/api` is the toolbar button's
+      // Today count, which skips its fetch while demo mode is armed, so leaving
+      // it armed costs nothing and the next mount re-resolves it anyway.
       cancelled = true;
     };
   }, []);

@@ -152,6 +152,22 @@ yet been asked. Tickler raises an alert on an *edge* — a company going red, a
 critical attention item arriving, a CEO heartbeat going overdue — not on every
 poll that finds the condition still true.
 
+## Toolbar badge
+
+The Tickler button in the breadcrumb bar carries a small number: how many items
+are in the queue's **Today** lane across the orgs you have not hidden — decide-by
+*today*, or a date that is today or already past. Snoozed items do not count. It
+is grey, and turns red only when one of them is overdue; above nine it reads
+`9+`. Hover the button (or ask a screen reader) for the exact count.
+
+It comes off the attention feed alone, so it leaves out one thing the lane can
+hold: a question on a closed issue, or one dismissed in Paperclip, that still
+carries a decide-by. If one org's feed fails to load, the button shows no number
+rather than a low one.
+
+Switch it in the **gear** panel under **Toolbar badge**: **Today count** (the
+default) or **Off**. Off stops the button fetching anything, not just the number.
+
 ## Kiosk mode
 
 The **expand** control in the header fullscreens the HUD and bumps its type
@@ -176,6 +192,7 @@ server, so it does not follow you between machines.
 | `tickler.queueAgeFilter` | Queue age chip. |
 | `tickler.portfolioSort` | Portfolio order. |
 | `tickler.alerts` | Alerts on/off. |
+| `tickler.toolbarBadge` | The toolbar button's Today count: `today` (default) or `off`. |
 | `tickler.tokenThresholds` | Token defaults and per-company overrides. |
 | `tickler.lastVisit` | Drives the briefing strip. Refreshed on mount and every 5 minutes. |
 
@@ -198,6 +215,9 @@ tab**:
 | 30s | Agents. |
 | 60s | Issues, projects, routines. |
 | 5m | Token spend. |
+
+The toolbar button keeps its own cache, apart from the page's: with its badge on,
+it fetches each shown org's attention feed once a minute, on every page.
 
 Countdowns and elapsed times are computed at render, so they stay live between
 fetches.

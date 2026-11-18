@@ -21,6 +21,7 @@ import { TicklerPaneOrder } from "./components/TicklerPaneOrder";
 import { TicklerReloadBadge } from "./components/TicklerReloadBadge";
 import { TicklerSelfUpdatePanel, TicklerUpdateChip } from "./components/TicklerSelfUpdate";
 import { TicklerTokenSettingsPanel } from "./components/TicklerTokenSettings";
+import { TicklerToolbarBadgeSettingPanel } from "./components/TicklerToolbarBadgeSetting";
 import type { TicklerCompanyData } from "./components/useTicklerCompanyData";
 import {
   TICKLER_EXPANDED_PANE_STORAGE_KEY,
@@ -64,6 +65,12 @@ import {
   type TicklerCompanyStats,
   type TicklerSortMode,
 } from "./lib/tickler";
+import {
+  TICKLER_TOOLBAR_BADGE_STORAGE_KEY,
+  normalizeToolbarBadgeSetting,
+  notifyToolbarBadge,
+  type TicklerToolbarBadgeSetting,
+} from "./lib/toolbar-badge";
 
 /** Preferences the retired classic views persisted; cleared once so they don't linger. */
 const LEGACY_STORAGE_KEYS = [
@@ -140,6 +147,18 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
     const next = hidden ? [...hiddenIds.filter((id) => id !== companyId), companyId] : hiddenIds.filter((id) => id !== companyId);
     setHiddenIds(next);
     writeStored(TICKLER_HIDDEN_STORAGE_KEY, JSON.stringify(next));
+    // The toolbar button counts the same orgs the board shows.
+    notifyToolbarBadge();
+  };
+
+  // The toolbar button's Today count (PLI-367); the button reads it from storage.
+  const [toolbarBadge, setToolbarBadge] = useState<TicklerToolbarBadgeSetting>(() =>
+    normalizeToolbarBadgeSetting(readStored(TICKLER_TOOLBAR_BADGE_STORAGE_KEY)),
+  );
+  const selectToolbarBadge = (setting: TicklerToolbarBadgeSetting) => {
+    setToolbarBadge(setting);
+    writeStored(TICKLER_TOOLBAR_BADGE_STORAGE_KEY, setting);
+    notifyToolbarBadge();
   };
 
   // Each company's slot owns the one data poll and reports up: a compact
@@ -476,6 +495,7 @@ export function TicklerHud({ demo = false }: TicklerHudProps = {}) {
               companies to threshold: "which Tickler am I on" is the question
               somebody opens this panel with when nothing else is wrong. */}
           <TicklerSelfUpdatePanel />
+          <TicklerToolbarBadgeSettingPanel value={toolbarBadge} onChange={selectToolbarBadge} />
           {hiddenCompanies.length > 0 && (
             <TicklerHiddenOrgs companies={hiddenCompanies} onShow={(companyId) => setHidden(companyId, false)} />
           )}
