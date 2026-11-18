@@ -3,6 +3,7 @@
 One page per version, written for someone deciding whether to upgrade: what
 changed, what it means for them, and anything they have to do by hand.
 
+- [0.23.1](0.23.1.md) — the toolbar button counts what arrived today.
 - [0.23.0](0.23.0.md) — the toolbar button counts what you have to decide today; the docs catch up with 0.21.0–0.22.0.
 - [0.22.0](0.22.0.md) — tasks stopped until you act show up, once.
 - [0.21.0](0.21.0.md) — a question dismissed in Paperclip stops counting as needing you; dismiss on a queue question; menus and popovers match Paperclip v2026.1106.0's components; the docs catch up with 0.20.0–0.20.3.

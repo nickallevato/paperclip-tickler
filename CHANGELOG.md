@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.23.1
+
 - **The toolbar button counts what arrived today.** Its number now matches the
   queue's **Today** age chip: items that arrived since local midnight across
   the orgs you have not hidden, whether or not they have a decide-by yet.
