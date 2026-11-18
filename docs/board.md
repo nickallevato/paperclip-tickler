@@ -18,9 +18,10 @@ so the menu opens ready to drag. The grips are the ones Paperclip's own Orgs
 switcher uses.
 
 The **gear** in that row holds the per-browser settings, among them the
-**Toolbar badge**: **Today count** (the default) puts the number of items in
-the queue's **Today** lane on Tickler's button in the breadcrumb bar, on every
-page — grey, or red when one of them is overdue — and **Off** takes it away.
+**Toolbar badge**: **Today count** (the default) puts the number of items that
+arrived today — the queue's **Today** age chip — on Tickler's button in the
+breadcrumb bar, on every page — grey, or red when something is overdue — and
+**Off** takes it away.
 See [Toolbar badge](configuration.md#toolbar-badge).
 
 <img src="screenshots/toolbar-button.png" alt="Tickler's button in the breadcrumb bar, its count of 4 in red because one of the four is overdue" width="134">

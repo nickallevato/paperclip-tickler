@@ -146,19 +146,21 @@ install ships it, so reinstall the package.
 
 ## The toolbar button's count is off, or missing
 
-The number on Tickler's button counts the queue's **Today** lane across the orgs
-you have not hidden, off each org's attention feed, once a minute. Where it and
-the lane disagree, it is one of these:
+The number on Tickler's button counts what arrived today across the orgs you
+have not hidden — the queue's **Today** age chip — off each org's attention
+feed, once a minute. Where it and the chip disagree, it is one of these:
 
-- **One more than the lane.** A question on a closed issue, or one dismissed in
-  Paperclip, that still carries a decide-by of today or earlier. The page drops
+- **Fewer than the chip.** The chip also counts agent alerts and routines raised
+  today; the button reads only the attention feed, which does not carry them.
+- **One more than the chip.** A question on a closed issue, or one dismissed in
+  Paperclip, that arrived today. The page drops
   such a question; the button cannot see that it should, because doing so needs
   each org's issue list and thread lookups. It is a known gap, left in on
   purpose: a reminder that errs should err toward one too many.
 - **A minute behind.** The button polls once a minute, the page every few
   seconds, so a row you just sorted or snoozed takes up to a minute to leave the
   count.
-- **No number at all,** though Today has items:
+- **No number at all,** though the Today chip has items:
   - **Demo mode is on.** The button does not fetch while demo mode is armed, so
     the fixture never turns into a count on your real pages. It stays armed
     after you leave a `?demo=1` page; open Tickler with `?demo=0`, or reload, to

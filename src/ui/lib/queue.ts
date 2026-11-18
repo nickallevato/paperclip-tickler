@@ -88,7 +88,7 @@ const BUCKET_ORDER: Record<TicklerQueueBucket, number> = { now: 0, soon: 1, late
 
 const PHASE_ORDER: Record<RunPhase, number> = { working: 0, queued: 1 };
 
-function epochMs(iso: string | Date | null | undefined): number | null {
+export function epochMs(iso: string | Date | null | undefined): number | null {
   if (!iso) return null;
   const ms = new Date(iso).getTime();
   return Number.isFinite(ms) ? ms : null;

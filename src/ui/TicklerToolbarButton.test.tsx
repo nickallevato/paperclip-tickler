@@ -15,8 +15,11 @@ vi.mock("./host/api", async (importOriginal) => ({
 }));
 
 const company = (id: string, status = "active") => ({ id, name: id, status });
-const row = (decideBy: string | null) => ({
+const NEW = new Date().toISOString();
+const OLD = new Date(Date.now() - 10 * 24 * 60 * 60_000).toISOString();
+const row = (decideBy: string | null, activityAt = NEW) => ({
   id: `a-${Math.random()}`,
+  activityAt,
   sourceKind: "blocker_attention",
   subject: { id: "issue-1" },
   severity: "high",
@@ -58,19 +61,19 @@ describe("TicklerToolbarButton", () => {
   });
 });
 
-describe("TicklerToolbarButton Today count", () => {
+describe("TicklerToolbarButton arrived-today count", () => {
   const feeds: Record<string, unknown[]> = {
-    c1: [row("today"), row("this_week")],
-    c2: [row("today"), row(null)],
+    c1: [row(null), row("this_week", OLD)],
+    c2: [row("today"), row(null, OLD)],
   };
   beforeEach(() => {
     mockCompaniesApi.list.mockResolvedValue([company("c1"), company("c2"), company("c3", "archived")]);
     mockAttentionApi.list.mockImplementation(async (id: string) => ({ items: feeds[id] ?? [] }));
   });
 
-  it("counts Today across the orgs the board shows, and names it in the label", async () => {
+  it("counts what arrived today across the orgs the board shows, decide-by or not, and names it in the label", async () => {
     const { container } = render(<TicklerToolbarButton context={{ companyPrefix: "LIOA" }} />);
-    await screen.findByRole("link", { name: "Tickler — 2 to decide today" });
+    await screen.findByRole("link", { name: "Tickler — 2 new today" });
     const pill = container.querySelector("[data-tickler-today]");
     expect(pill).toHaveTextContent("2");
     expect(pill).not.toHaveAttribute("data-overdue");
@@ -78,18 +81,18 @@ describe("TicklerToolbarButton Today count", () => {
     expect(mockAttentionApi.list.mock.calls.map(([id]) => id).sort()).toEqual(["c1", "c2"]);
   });
 
-  it("turns alarm-coloured when something in Today is overdue", async () => {
-    feeds.c2 = [row("2000-01-01")];
+  it("turns alarm-coloured when anything is overdue, whenever it arrived", async () => {
+    feeds.c2 = [row("2000-01-01", OLD)];
     const { container } = render(<TicklerToolbarButton />);
-    await screen.findByRole("link", { name: "Tickler — 2 to decide today (1 overdue)" });
+    await screen.findByRole("link", { name: "Tickler — 1 new today (1 overdue)" });
     expect(container.querySelector("[data-tickler-today]")).toHaveAttribute("data-overdue", "true");
-    feeds.c2 = [row("today"), row(null)];
+    feeds.c2 = [row("today"), row(null, OLD)];
   });
 
   it("skips hidden orgs", async () => {
     localStorage.setItem("tickler.hidden", JSON.stringify(["c2"]));
     render(<TicklerToolbarButton />);
-    await screen.findByRole("link", { name: "Tickler — 1 to decide today" });
+    await screen.findByRole("link", { name: "Tickler — 1 new today" });
     expect(mockAttentionApi.list).toHaveBeenCalledTimes(1);
   });
 
@@ -117,6 +120,6 @@ describe("TicklerToolbarButton Today count", () => {
       localStorage.setItem("tickler.toolbarBadge", "today");
       notifyToolbarBadge();
     });
-    await screen.findByRole("link", { name: "Tickler — 2 to decide today" });
+    await screen.findByRole("link", { name: "Tickler — 2 new today" });
   });
 });

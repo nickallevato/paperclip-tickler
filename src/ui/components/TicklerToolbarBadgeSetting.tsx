@@ -10,7 +10,7 @@ const OPTIONS: ReadonlyArray<{ value: TicklerToolbarBadgeSetting; label: string 
 ];
 
 /**
- * Whether the toolbar button carries the Today count (PLI-367). Lives in the
+ * Whether the toolbar button carries the count of what arrived today (PLI-367). Lives in the
  * gear's panel with the other per-browser settings. Off stops the button's
  * polling, not just the number.
  */
@@ -32,7 +32,7 @@ export function TicklerToolbarBadgeSettingPanel({
         optionProps={(option) => ({ "data-toolbar-badge": option })}
       />
       <span className={`${MICRO} text-muted-foreground`}>
-        How many items are in Today across your shown orgs. Red when one is overdue. Saved in this browser only.
+        How many items arrived today across your shown orgs, as on the Today age chip. Red when one is overdue. Saved in this browser only.
       </span>
     </div>
   );

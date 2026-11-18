@@ -152,7 +152,10 @@ All of it comes from the per-org attention feed, which carries `decideBy`,
 `snoozedUntil` and `createdAt` and already covers approvals through their
 attention twins — one request per visible org.
 
-C shipped, with an **Off / Today count** setting in the gear panel. The study
+C shipped, with an **Off / Today count** setting in the gear panel. It first
+counted the Today lane; that missed fresh items, which have no decide-by yet, so
+it now counts what arrived today — the queue's Today age chip — and stays red
+when anything is overdue. The study
 assumed the button could share the page's query cache; it cannot (the page owns
 its client, and the button is mounted outside it), so the button keeps its own
 and polls once a minute.

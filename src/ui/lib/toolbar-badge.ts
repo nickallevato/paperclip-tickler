@@ -1,9 +1,9 @@
 import type { AttentionFeed } from "@paperclipai/shared";
-import { decideLane, isDecideOverdue } from "./queue";
+import { epochMs, isDecideOverdue, isSnoozed, queueItemAge } from "./queue";
 
 /**
  * What the toolbar button says before you open Tickler (PLI-367): how many
- * items sit in the queue's Today lane across the orgs you have not hidden.
+ * items arrived today across the orgs you have not hidden.
  * Per browser, like pins and hidden orgs; on until you turn it off.
  */
 export const TICKLER_TOOLBAR_BADGE_STORAGE_KEY = "tickler.toolbarBadge";
@@ -31,33 +31,37 @@ export interface TicklerTodayCount {
 }
 
 /**
- * The Today lane, counted straight off the attention feeds.
+ * What arrived today, counted straight off the attention feeds: the same
+ * calendar-day rule as the queue's Today age chip (`queueItemAge`), so the
+ * button and the chip agree. The Today lane was the first rule, and it missed
+ * the case that matters — a fresh item has no decide-by, so it sat in
+ * Unsorted and never reached the count.
  *
- * Every row the lane can hold is a triage row — an approval or an attention
- * item — and both carry their decide-by and snooze on the feed (an approval's
- * on its attention twin), so the feed alone gives the lane's count without the
- * approvals, agents and routines the queue is otherwise built from. The rules
- * are `decideLane` and `isDecideOverdue` themselves, so the two cannot drift.
+ * Every row counted is a triage row — an approval (through its attention
+ * twin) or an attention item. Snoozed rows are away, as on the board; the
+ * queue keeps an approval whatever its twin's dismissal says and skips any
+ * other dismissed item. `overdue` counts every such row whose decide-by date
+ * has passed, whenever it arrived, so red still means something is late.
  *
- * Not applied: the page's pruning of questions on closed issues and of
- * dismissed questions, which needs each org's issue list and thread lookups.
- * Such a row rarely carries a decide-by, and when it does the badge counts one
- * the lane has dropped — the safe direction for a reminder to err in.
+ * Not counted: agent alerts and routines, which the chip includes but the
+ * feed does not carry. Not applied: the page's pruning of questions on
+ * closed issues and of dismissed questions, which needs each org's issue list
+ * and thread lookups — when it matters the badge counts one more than the
+ * chip, the safe direction for a reminder to err in.
  */
 export function countToolbarToday(feeds: ReadonlyArray<AttentionFeed>, nowMs: number): TicklerTodayCount {
   const count: TicklerTodayCount = { today: 0, overdue: 0 };
   for (const feed of feeds) {
     for (const item of feed.items) {
-      // The queue keeps an approval whatever its twin says; it skips any other dismissed item.
       if (item.dismissal && item.sourceKind !== "approval") continue;
       const row = {
         triage: { sourceKind: item.sourceKind, sourceId: item.subject.id },
         decideBy: item.decideBy ?? null,
         snoozedUntil: item.snoozedUntil ?? null,
       };
-      if (decideLane(row, nowMs) !== "today") continue;
-      count.today += 1;
+      if (isSnoozed(row, nowMs)) continue;
       if (isDecideOverdue(row, nowMs)) count.overdue += 1;
+      if (queueItemAge({ atMs: epochMs(item.activityAt) }, nowMs) === "today") count.today += 1;
     }
   }
   return count;
@@ -72,5 +76,5 @@ export function toolbarBadgeText(today: number): string {
 export function toolbarBadgeLabel(count: TicklerTodayCount | null): string {
   if (!count || count.today === 0) return "Tickler — all orgs";
   const overdue = count.overdue > 0 ? ` (${count.overdue} overdue)` : "";
-  return `Tickler — ${count.today} to decide today${overdue}`;
+  return `Tickler — ${count.today} new today${overdue}`;
 }

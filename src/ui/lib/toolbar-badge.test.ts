@@ -12,11 +12,13 @@ import {
 const NOW = new Date(2026, 8, 17, 12).getTime();
 const dayKey = (offset: number) => localDateKey(NOW + offset * 24 * 60 * 60_000);
 
+const at = (offsetHours: number) => new Date(NOW + offsetHours * 60 * 60_000).toISOString();
 const row = (overrides: Record<string, unknown> = {}) => ({
   id: `a-${Math.random()}`,
   sourceKind: "blocker_attention",
   subject: { id: "issue-1" },
   severity: "high",
+  activityAt: at(-1),
   decideBy: null,
   snoozedUntil: null,
   dismissal: null,
@@ -25,26 +27,37 @@ const row = (overrides: Record<string, unknown> = {}) => ({
 const feed = (...items: Array<Record<string, unknown>>) => ({ items }) as unknown as AttentionFeed;
 
 describe("countToolbarToday", () => {
-  it("counts the Today lane across every feed: decide-by today, or a date today or earlier", () => {
+  it("counts what arrived since local midnight across every feed, decide-by or not", () => {
     const count = countToolbarToday(
       [
-        feed(row({ decideBy: "today" }), row({ decideBy: dayKey(0) }), row({ decideBy: "this_week" })),
-        feed(row({ decideBy: dayKey(-2) }), row(), row({ decideBy: dayKey(5) })),
+        // 00:30 today, an hour ago, and 23:00 last night: the last is yesterday's.
+        feed(row({ activityAt: at(-11.5) }), row({ decideBy: "this_week" }), row({ activityAt: at(-13) })),
+        feed(row(), row({ activityAt: at(-5 * 24) })),
       ],
       NOW,
     );
-    expect(count).toEqual({ today: 3, overdue: 1 });
+    expect(count).toEqual({ today: 3, overdue: 0 });
+  });
+
+  it("reads an item with no timestamp as today's, as the age chip does", () => {
+    expect(countToolbarToday([feed(row({ activityAt: null }))], NOW)).toEqual({ today: 1, overdue: 0 });
+  });
+
+  it("is red for anything overdue, whenever it arrived", () => {
+    const count = countToolbarToday(
+      [feed(row({ activityAt: at(-5 * 24), decideBy: dayKey(-2) }), row({ decideBy: "today" }))],
+      NOW,
+    );
+    expect(count).toEqual({ today: 1, overdue: 1 });
   });
 
   it("leaves out snoozed and dismissed items, but not a lapsed snooze", () => {
-    const later = new Date(NOW + 60 * 60_000).toISOString();
-    const earlier = new Date(NOW - 60 * 60_000).toISOString();
     const count = countToolbarToday(
       [
         feed(
-          row({ decideBy: dayKey(-1), snoozedUntil: later }),
-          row({ decideBy: "today", dismissal: { dismissedAt: earlier } }),
-          row({ decideBy: "today", snoozedUntil: earlier }),
+          row({ decideBy: dayKey(-1), snoozedUntil: at(1) }),
+          row({ dismissal: { dismissedAt: at(-0.5) } }),
+          row({ snoozedUntil: at(-0.5) }),
         ),
       ],
       NOW,
@@ -75,8 +88,8 @@ describe("toolbar badge text", () => {
   it("puts the full count in the label, and says nothing extra at zero", () => {
     expect(toolbarBadgeLabel(null)).toBe("Tickler — all orgs");
     expect(toolbarBadgeLabel({ today: 0, overdue: 0 })).toBe("Tickler — all orgs");
-    expect(toolbarBadgeLabel({ today: 12, overdue: 0 })).toBe("Tickler — 12 to decide today");
-    expect(toolbarBadgeLabel({ today: 3, overdue: 1 })).toBe("Tickler — 3 to decide today (1 overdue)");
+    expect(toolbarBadgeLabel({ today: 12, overdue: 0 })).toBe("Tickler — 12 new today");
+    expect(toolbarBadgeLabel({ today: 3, overdue: 1 })).toBe("Tickler — 3 new today (1 overdue)");
   });
 
   it("defaults the setting on, and only an explicit off turns it off", () => {
