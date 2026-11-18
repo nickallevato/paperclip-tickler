@@ -439,7 +439,10 @@ export function isDecideOverdue(item: Pick<TicklerQueueItem, "decideBy">, nowMs:
   return !!item.decideBy && DATE_KEY.test(item.decideBy) && item.decideBy < localDateKey(nowMs);
 }
 
-export function decideLane(item: TicklerQueueItem, nowMs: number): TicklerDecideLane {
+export function decideLane(
+  item: Pick<TicklerQueueItem, "triage" | "decideBy" | "snoozedUntil">,
+  nowMs: number,
+): TicklerDecideLane {
   if (isSnoozed(item, nowMs)) return "snoozed";
   if (!item.triage) return "alerts";
   const decideBy = item.decideBy;

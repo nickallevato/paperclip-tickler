@@ -130,7 +130,9 @@ else.
 Tickler adds two things:
 
 **A button carrying the Tickler mark** — the folded-sheet caret — in the
-breadcrumb bar, above every page in every company.
+breadcrumb bar, above every page in every company. A number on it counts what
+you have to decide today; see [Toolbar badge](configuration.md#toolbar-badge)
+to turn it off.
 
 ![The Tickler launcher in the host's breadcrumb bar](screenshots/toolbar-button.png)
 
