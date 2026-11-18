@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.23.0
+
 - **The toolbar button counts what you have to decide today.** The Tickler
   button in the breadcrumb bar shows how many items are in the queue's Today
   lane across the orgs you have not hidden: decide-by today, or a date that
