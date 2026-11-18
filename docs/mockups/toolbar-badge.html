@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tickler toolbar button — badge studies (PLI-367)</title>
+<style>
+/* Same palette as board-v2.html and sidebar-v3.html. */
+:root{
+  --bg:#e9e7e3; --card:#f6f5f3; --border:#d5d2cd; --border-soft:#e2dfda; --rule:#cfccc6;
+  --fg:#22201d; --muted:#77736d; --muted-bg:#e4e1dc; --accent:#dedbd5;
+  --live:#5a7d9a; --wait:#9c8340; --alarm:#a1564e;
+  --shadow:0 1px 2px rgba(0,0,0,.06);
+}
+:root[data-theme="dark"]{
+  --bg:#121211; --card:#1b1a18; --border:#2c2a27; --border-soft:#232120; --rule:#332f2b;
+  --fg:#e8e5e0; --muted:#8f8a83; --muted-bg:#26241f; --accent:#2a2824;
+  --live:#7396b4; --wait:#b89b56; --alarm:#bd7d74;
+  --shadow:0 1px 2px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,sans-serif;
+  font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 20px 80px}
+header.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+h1{font-size:17px;font-weight:650;letter-spacing:-.01em;margin:0}
+.sub{color:var(--muted);font-size:12px}
+.spacer{flex:1}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:7px;padding:2px;background:var(--card);gap:2px}
+.seg .lbl{font-size:11px;color:var(--muted);padding:4px 6px 4px 8px;text-transform:uppercase;letter-spacing:.04em;align-self:center}
+.seg button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;padding:4px 9px;border-radius:5px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--muted-bg);color:var(--fg);font-weight:600}
+
+/* ---------- the study: one simulated breadcrumb bar per variant ---------- */
+#screen{border:1px solid var(--rule);border-radius:10px;background:var(--bg);box-shadow:var(--shadow);overflow:hidden}
+.variant{display:grid;grid-template-columns:200px 1fr;border-top:1px solid var(--border)}
+.variant:first-child{border-top:0}
+.vlabel{padding:12px 14px;border-right:1px solid var(--border-soft)}
+.vlabel b{display:block;font-size:13px}
+.vlabel span{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.vbody{min-width:0}
+/* The host's BreadcrumbBar: breadcrumbs left, plugin toolbar zone right
+   (`flex items-center gap-1`, no item wrapper). */
+.crumbbar{height:48px;display:flex;align-items:center;gap:4px;padding:0 14px;border-bottom:1px solid var(--border-soft);background:var(--card)}
+.crumbs{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.crumbs b{color:var(--fg);font-weight:500}
+.hostbtn{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--muted)}
+.hostbtn svg{width:15px;height:15px}
+.hint{padding:7px 14px 9px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hint code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:var(--fg)}
+
+/* ---------- the Tickler button, as it ships (TicklerToolbarButton.tsx) ---------- */
+.tk{position:relative;display:inline-flex;height:28px;align-items:center;gap:6px;border:1px solid var(--border);
+  border-radius:6px;padding:0 8px;font-size:12.5px;font-weight:500;color:var(--muted);text-decoration:none;flex:0 0 auto}
+.tk:hover{background:var(--accent);color:var(--fg)}
+.tk .mark{position:relative;width:14px;height:14px;flex:0 0 auto;display:inline-block}
+.tk .mark svg{width:14px;height:14px;display:block}
+[data-width="narrow"] .tk .label{display:none}
+
+/* Dot: sits on the mark's top-right, ringed in the bar colour so it reads as
+   a cut-out rather than a sticker. */
+.dot{position:absolute;top:-2px;right:-2px;width:6px;height:6px;border-radius:50%;background:var(--live);
+  box-shadow:0 0 0 2px var(--card)}
+/* Inline pill: part of the button's own row, so it never overhangs the bar. */
+.pill{min-width:17px;height:17px;padding:0 5px;border-radius:9px;display:inline-grid;place-items:center;
+  font-size:10.5px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1;
+  background:var(--muted-bg);color:var(--fg)}
+.pill.alarm{background:color-mix(in srgb,var(--alarm) 22%,transparent);color:var(--alarm)}
+/* Corner bubble: the familiar app-icon badge, overhanging the button. */
+.bubble{position:absolute;top:-6px;right:-7px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;
+  display:grid;place-items:center;font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;
+  background:var(--fg);color:var(--card);box-shadow:0 0 0 2px var(--card)}
+.bubble.alarm{background:var(--alarm);color:#fff}
+.bubble.new{background:var(--live);color:#fff}
+
+/* ---------- the setting, as it would sit on the Tickler page ---------- */
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.card{border:1px solid var(--border);border-radius:8px;background:var(--card);padding:12px 14px}
+.card h2{margin:0 0 8px;font-size:10px;font-weight:650;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.card p,.card li{font-size:12.5px;margin:0 0 6px}
+.card ul{margin:0;padding-left:18px}
+.setting{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.setting .seg button{font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Toolbar badge</h1>
+    <span class="sub">PLI-367 · what the Tickler button could say before you open it</span>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="State">
+      <span class="lbl">State</span>
+      <button data-state="quiet">Quiet</button>
+      <button data-state="new" aria-pressed="true">2 new</button>
+      <button data-state="today">3 today</button>
+      <button data-state="overdue">3 today, 1 overdue</button>
+      <button data-state="many">14 today</button>
+    </div>
+    <div class="seg" role="group" aria-label="Width">
+      <span class="lbl">Width</span>
+      <button data-width="wide" aria-pressed="true">≥ sm</button>
+      <button data-width="narrow">&lt; sm</button>
+    </div>
+    <div class="seg" role="group" aria-label="Theme">
+      <span class="lbl">Theme</span>
+      <button data-theme-btn="dark" aria-pressed="true">Dark</button>
+      <button data-theme-btn="light">Light</button>
+    </div>
+  </header>
+
+  <div id="screen" data-width="wide"></div>
+
+  <div class="notes">
+    <div class="card">
+      <h2>What the numbers mean</h2>
+      <ul>
+        <li><b>Today</b> — items in the queue's Today lane across every org you have not hidden: decide-by <i>today</i>, or a date today or already past. Snoozed items do not count. Same rule as <code>decideLane()</code>, so the badge and the lane cannot disagree.</li>
+        <li><b>Overdue</b> — the subset whose decide-by date has passed (<code>isDecideOverdue()</code>). Only this turns the badge alarm-coloured.</li>
+        <li><b>New</b> — attention items created since you last opened Tickler (<code>tickler.lastVisit</code>, which the briefing strip already records). Clears the moment you open the page.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>The setting — Tickler page, per browser</h2>
+      <div class="setting">
+        <div class="seg" role="group" aria-label="Toolbar badge">
+          <span class="lbl">Toolbar badge</span>
+          <button>Off</button>
+          <button>New dot</button>
+          <button aria-pressed="true">Today count</button>
+        </div>
+      </div>
+      <p style="margin-top:10px">Stored in <code>localStorage</code> like the sort, pins and hidden orgs. Off means the button stops polling, not just stops drawing.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const MARK = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6.75 12 10.5v7.25L6 14Z" fill="currentColor"/><path d="M18 6.75 12 10.5v7.25L18 14Z" fill="currentColor" fill-opacity=".42"/></svg>';
+const SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+
+/** today = Today lane (incl. overdue); overdue ⊂ today; fresh = created since last visit. */
+const STATES = {
+  quiet:   { today: 0,  overdue: 0, fresh: 0 },
+  new:     { today: 0,  overdue: 0, fresh: 2 },
+  today:   { today: 3,  overdue: 0, fresh: 0 },
+  overdue: { today: 3,  overdue: 1, fresh: 1 },
+  many:    { today: 14, overdue: 0, fresh: 3 },
+};
+
+const cap = (n) => (n > 9 ? "9+" : String(n));
+
+function titleFor(s, parts) {
+  const bits = [];
+  if (parts.includes("today") && s.today) bits.push(`${s.today} to decide today${s.overdue ? ` (${s.overdue} overdue)` : ""}`);
+  if (parts.includes("fresh") && s.fresh) bits.push(`${s.fresh} new since you last looked`);
+  return bits.length ? `Tickler — ${bits.join(" · ")}` : "Tickler — all orgs";
+}
+
+const VARIANTS = [
+  {
+    id: "off", name: "A · Off", note: "What ships today. Also what the setting's Off restores.",
+    parts: [], badge: () => "",
+  },
+  {
+    id: "dot", name: "B · New dot", note: "Something arrived since you last opened Tickler. No number.",
+    parts: ["fresh"], badge: (s) => (s.fresh ? '<span class="dot"></span>' : ""),
+  },
+  {
+    id: "pill", name: "C · Today count", note: "Inline pill. Neutral; alarm only when something is overdue.",
+    parts: ["today"],
+    badge: (s) => (s.today ? `<span class="pill${s.overdue ? " alarm" : ""}">${cap(s.today)}</span>` : ""),
+  },
+  {
+    id: "bubble", name: "D · Corner bubble", note: "Same count as C, as an app-icon badge on the corner.",
+    parts: ["today"],
+    badge: (s) => (s.today ? `<span class="bubble${s.overdue ? " alarm" : ""}">${cap(s.today)}</span>` : ""),
+  },
+  {
+    id: "both", name: "E · Count + dot", note: "C's count, plus B's dot when there is also something new.",
+    parts: ["today", "fresh"],
+    badge: (s) =>
+      (s.fresh ? '<span class="dot"></span>' : "") +
+      (s.today ? `<span class="pill${s.overdue ? " alarm" : ""}">${cap(s.today)}</span>` : ""),
+  },
+];
+
+function button(v, s) {
+  const html = v.badge(s);
+  // The dot belongs to the mark; pills follow the label; bubbles hang off the button.
+  const dot = html.match(/<span class="dot"><\/span>/)?.[0] ?? "";
+  const rest = html.replace(dot, "");
+  const title = titleFor(s, v.parts);
+  return `<a class="tk" href="#" title="${title}" aria-label="${title}">` +
+    `<span class="mark">${MARK}${dot}</span><span class="label">Tickler</span>${rest}</a>`;
+}
+
+let state = "new";
+function render() {
+  const s = STATES[state];
+  document.getElementById("screen").innerHTML = VARIANTS.map((v) => `
+    <section class="variant" data-variant="${v.id}">
+      <div class="vlabel"><b>${v.name}</b><span>${v.note}</span></div>
+      <div class="vbody">
+        <div class="crumbbar">
+          <span class="crumbs">Tickler Plugin › Issues › <b>PLI-367</b></span>
+          <span class="spacer"></span>
+          <span class="hostbtn">${SEARCH}</span>
+          ${button(v, s)}
+        </div>
+        <div class="hint">aria-label: <code>${titleFor(s, v.parts)}</code></div>
+      </div>
+    </section>`).join("");
+}
+
+function group(attr, apply) {
+  for (const b of document.querySelectorAll(`[${attr}]`)) {
+    b.addEventListener("click", () => {
+      for (const o of document.querySelectorAll(`[${attr}]`)) o.setAttribute("aria-pressed", String(o === b));
+      apply(b.getAttribute(attr));
+    });
+  }
+}
+group("data-state", (v) => { state = v; render(); });
+group("data-width", (v) => { document.getElementById("screen").dataset.width = v; });
+group("data-theme-btn", (v) => { document.documentElement.dataset.theme = v; });
+render();
+</script>
+</body>
+</html>
