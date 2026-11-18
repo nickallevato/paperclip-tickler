@@ -8,12 +8,14 @@ never a real company.
 | --- | --- |
 | [`board-v2.html`](board-v2.html) | The board ledger rebuild: one row per org, SCADA-muted palette, alarm colour reserved for alarms. Shipped. |
 | [`sidebar-v3.html`](sidebar-v3.html) | The left rail — how it spends height, and whether it should be configurable. PLI-246: A shipped, C is PLI-247, D is PLI-248. |
+| [`toolbar-badge.html`](toolbar-badge.html) | A count or dot on the toolbar button, and the setting that turns it off. PLI-367: C shipped, with an Off setting. |
 
 Pictures are captured with:
 
 ```
 node scripts/capture-mockup.mjs sidebar-v3
 node scripts/capture-mockup.mjs sidebar-v3 --only budget
+node scripts/capture-mockup.mjs toolbar-badge --only overdue
 ```
 
 They land in `docs/mockups/<name>/`. Playwright is resolved from the Paperclip
@@ -125,3 +127,32 @@ case a design rather than a fallback. Everything becomes a number, so it is the
 wrong default on a large screen: PLI-248 takes it below `64rem` only.
 
 ![Context strip](sidebar-v3/strip-1280x720.png)
+
+---
+
+## toolbar-badge — what the Tickler button says before you open it (PLI-367)
+
+Five variants of the toolbar button, drawn together in one simulated breadcrumb
+bar each, so a single state compares them all. The State, Width and Theme
+toggles drive the study; Width `< sm` is the host breakpoint below which the
+button drops its label and is just the mark.
+
+| Variant | Shows | Clears when |
+| --- | --- | --- |
+| A · Off | nothing — today's button | — |
+| B · New dot | attention items created since `tickler.lastVisit` | you open Tickler |
+| C · Today count | the queue's Today lane across visible orgs, inline pill | you decide or snooze the items |
+| D · Corner bubble | C's count, overhanging the corner | as C |
+| E · Count + dot | C, plus B's dot | each half as above |
+
+The count turns alarm-coloured only when something in it is overdue; the dot is
+the board's `live` blue. Above nine the count reads `9+`.
+
+All of it comes from the per-org attention feed, which carries `decideBy`,
+`snoozedUntil` and `createdAt` and already covers approvals through their
+attention twins — one request per visible org.
+
+C shipped, with an **Off / Today count** setting in the gear panel. The study
+assumed the button could share the page's query cache; it cannot (the page owns
+its client, and the button is mounted outside it), so the button keeps its own
+and polls once a minute.
