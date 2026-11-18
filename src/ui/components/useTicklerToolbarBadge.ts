@@ -42,8 +42,8 @@ function useStored(key: string): string | null {
 }
 
 /**
- * Once a minute, and not at all in a hidden tab: the badge is a reminder, and
- * a decide-by date moves on a scale of days.
+ * Once a minute, and not at all in a hidden tab: the badge is a reminder, not
+ * a live feed.
  */
 const BADGE_POLL = { refetchInterval: TICKLER_FREEZE ? false : 60_000, staleTime: 59_000 } as const;
 
@@ -54,7 +54,7 @@ export interface TicklerToolbarBadge {
 }
 
 /**
- * The toolbar button's Today count (PLI-367): one attention-feed request per
+ * The toolbar button's count of what arrived today (PLI-367): one attention-feed request per
  * org the board would show. Off means nothing is fetched at all, not that the
  * result is hidden.
  *

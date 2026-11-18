@@ -155,14 +155,16 @@ poll that finds the condition still true.
 ## Toolbar badge
 
 The Tickler button in the breadcrumb bar carries a small number: how many items
-are in the queue's **Today** lane across the orgs you have not hidden — decide-by
-*today*, or a date that is today or already past. Snoozed items do not count. It
-is grey, and turns red only when one of them is overdue; above nine it reads
-`9+`. Hover the button (or ask a screen reader) for the exact count.
+arrived today, since local midnight, across the orgs you have not hidden — the
+same rule as the queue's **Today** [age chip](queue.md). An item counts whether
+or not it has a decide-by yet; snoozed items do not count. It is grey, and turns
+red when anything in those orgs is overdue, whenever it arrived; above nine it
+reads `9+`. Hover the button (or ask a screen reader) for the exact count.
 
-It comes off the attention feed alone, so it leaves out one thing the lane can
-hold: a question on a closed issue, or one dismissed in Paperclip, that still
-carries a decide-by. If one org's feed fails to load, the button shows no number
+It comes off the attention feed alone, so it differs from the chip in two ways:
+it leaves out agent alerts and routines, which the feed does not carry, and it
+still counts a question on a closed issue, or one dismissed in Paperclip, that
+the page drops. If one org's feed fails to load, the button shows no number
 rather than a low one, and while [demo mode](#demo-mode) is on it shows none at
 all: the fixture is never counted. See
 [Troubleshooting](troubleshooting.md#the-toolbar-buttons-count-is-off-or-missing).
@@ -194,7 +196,7 @@ server, so it does not follow you between machines.
 | `tickler.queueAgeFilter` | Queue age chip. |
 | `tickler.portfolioSort` | Portfolio order. |
 | `tickler.alerts` | Alerts on/off. |
-| `tickler.toolbarBadge` | The toolbar button's Today count: `today` (default) or `off`. |
+| `tickler.toolbarBadge` | The toolbar button's count of what arrived today: `today` (default) or `off`. |
 | `tickler.tokenThresholds` | Token defaults and per-company overrides. |
 | `tickler.lastVisit` | Drives the briefing strip. Refreshed on mount and every 5 minutes. |
 

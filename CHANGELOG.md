@@ -5,6 +5,13 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The toolbar button counts what arrived today.** Its number now matches the
+  queue's **Today** age chip: items that arrived since local midnight across
+  the orgs you have not hidden, whether or not they have a decide-by yet.
+  0.23.0 counted the Today lane, so a fresh item, still in Unsorted, never
+  showed. It is still red when anything is overdue, and agent alerts and
+  routines are still not counted. (PLI-367)
+
 ## 0.23.0
 
 - **The toolbar button counts what you have to decide today.** The Tickler

@@ -131,7 +131,7 @@ Tickler adds two things:
 
 **A button carrying the Tickler mark** — the folded-sheet caret — in the
 breadcrumb bar, above every page in every company. A number on it counts what
-you have to decide today; see [Toolbar badge](configuration.md#toolbar-badge)
+arrived today; see [Toolbar badge](configuration.md#toolbar-badge)
 to turn it off.
 
 ![Tickler's button in the host's breadcrumb bar, its count of 4 in red because one of the four is overdue](screenshots/toolbar-button.png)

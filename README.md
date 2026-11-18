@@ -41,7 +41,7 @@ you will deal with each thing — instead of visiting each org's dashboard in tu
 > **📦 Install from inside Paperclip — no terminal needed.**
 > **Settings → Plugins → Install Plugin**, enter **`paperclip-plugin-tickler`** as the npm Package
 > Name, and click **Install**. That's it — Tickler's button appears in the bar at the top of the page,
-> carrying a count of what you have to decide today.
+> carrying a count of what arrived today.
 >
 > You need to be an instance admin, on a self-hosted Paperclip whose server can reach npm.
 > Prefer the command line, or building from source? See [Install](#install).
