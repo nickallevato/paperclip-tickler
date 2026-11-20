@@ -102,6 +102,32 @@ describe("resolveDemoMode", () => {
     await expect(resolveDemoMode("")).resolves.toEqual({ enabled: true, source: "config" });
   });
 
+  it("asks every company's config at once rather than one after another", async () => {
+    let inFlight = 0;
+    let peak = 0;
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      if (url === "/api/companies") {
+        return { ok: true, json: async () => [{ id: "c1" }, { id: "c2" }, { id: "c3" }] };
+      }
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight -= 1;
+      return { ok: true, json: async () => ({ configJson: { demoMode: false } }) };
+    }) as unknown as typeof fetch);
+    await expect(resolveDemoMode("")).resolves.toEqual({ enabled: false, source: "config" });
+    expect(peak).toBe(3);
+  });
+
+  it("still finds the box when another company's lookup fails", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      if (url === "/api/companies") return { ok: true, json: async () => [{ id: "c1" }, { id: "c2" }] };
+      if (url.includes("companyId=c1")) throw new Error("offline");
+      return { ok: true, json: async () => ({ configJson: { demoMode: true } }) };
+    }) as unknown as typeof fetch);
+    await expect(resolveDemoMode("")).resolves.toEqual({ enabled: true, source: "config" });
+  });
+
   it("stays off — not stuck — when the config lookup fails outright", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => {
       throw new Error("offline");

@@ -4,8 +4,9 @@ import { TicklerHud } from "./TicklerHud";
 import { TicklerErrorBoundary } from "./components/TicklerErrorBoundary";
 import { LastGoodVersionRecorder } from "./components/TicklerRollback";
 import { useRepairRememberedTicklerPaths } from "./host/company-path-memory";
-import { activateDemoMode, deactivateDemoMode } from "./demo/demo-runtime";
+import { activateDemoMode, deactivateDemoMode, isDemoActive } from "./demo/demo-runtime";
 import { resolveDemoMode } from "./demo/demo-mode";
+import { indexedDbSnapshotStore, persistTicklerCache, restoreTicklerCache } from "./lib/query-persist";
 
 /**
  * Root of the Tickler plugin page.
@@ -14,6 +15,11 @@ import { resolveDemoMode } from "./demo/demo-mode";
  * react-query client and cache. That cache is deliberately independent of the
  * host's: Tickler polls its own cross-company aggregates and never needs to
  * invalidate host queries.
+ *
+ * The client lives as long as the document, not the page component, so a hop
+ * to another host page and back serves the board from cache and refreshes it
+ * in place (PLI-371). A full reload starts from the snapshot in
+ * `lib/query-persist` instead.
  *
  * It also owns the demo-mode gate. Demo mode has to be settled *before* the
  * HUD mounts, because the HUD starts polling on its first render — so this
@@ -27,25 +33,72 @@ type GateState =
   | { phase: "ready"; demo: boolean }
   | { phase: "failed"; message: string };
 
+const client = new QueryClient({
+  defaultOptions: {
+    // Half an hour of cache for a board nobody is looking at: long enough to
+    // cover a trip to another host page and back.
+    queries: { refetchOnWindowFocus: false, retry: 1, gcTime: 30 * 60_000 },
+  },
+});
+const snapshotStore = indexedDbSnapshotStore();
+/** Which board the cache holds — demo or real — so a switch between them starts empty. */
+let cachedDemo: boolean | null = null;
+/** The user whose snapshot this document has restored and is writing. */
+let persistingFor: { userId: string; stop: () => void } | null = null;
+
+/**
+ * Who is signed in, read with a bare fetch: `authApi` answers from demo data
+ * whenever demo mode is still armed from an earlier mount, and the snapshot
+ * must be matched against the real user. Null when signed out or unreachable.
+ */
+async function signedInUserId(): Promise<string | null> {
+  try {
+    const res = await fetch("/api/auth/get-session", { credentials: "include", headers: { Accept: "application/json" } });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { user?: { id?: unknown } | null; session?: { userId?: unknown } | null } | null;
+    const id = body?.user?.id ?? body?.session?.userId;
+    return typeof id === "string" ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Puts this user's last board in the cache, once per document, and keeps it written. */
+async function restoreBoard(userIdRead: Promise<string | null>): Promise<void> {
+  if (!snapshotStore) return;
+  const userId = await userIdRead;
+  if (!userId || persistingFor?.userId === userId) return;
+  persistingFor?.stop();
+  persistingFor = null;
+  await restoreTicklerCache(client, snapshotStore, userId, Date.now());
+  persistingFor = { userId, stop: persistTicklerCache(client, snapshotStore, userId, { paused: isDemoActive }) };
+}
+
 export function TicklerPage() {
-  const [client] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: { refetchOnWindowFocus: false, retry: 1 },
-    },
-  }));
   const [gate, setGate] = useState<GateState>({ phase: "resolving" });
   useRepairRememberedTicklerPaths();
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Started alongside the demo check, not after it, so the snapshot costs
+      // the gate no round trip of its own. Only used once demo mode is off.
+      const userIdRead = snapshotStore ? signedInUserId() : Promise.resolve(null);
       const decision = await resolveDemoMode(
         typeof window === "undefined" ? "" : window.location.search,
       );
       if (cancelled) return;
+      if (cachedDemo !== null && cachedDemo !== decision.enabled) {
+        // Written out before the clear, while the cache still holds the real board.
+        persistingFor?.stop();
+        persistingFor = null;
+        client.clear();
+      }
+      cachedDemo = decision.enabled;
       if (!decision.enabled) {
         deactivateDemoMode();
-        setGate({ phase: "ready", demo: false });
+        await restoreBoard(userIdRead);
+        if (!cancelled) setGate({ phase: "ready", demo: false });
         return;
       }
       try {

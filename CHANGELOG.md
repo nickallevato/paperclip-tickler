@@ -5,6 +5,15 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The board comes up at once.** Tickler keeps the last board you saw in your
+  browser and shows it as soon as the page opens, then refreshes every org in
+  place, so a reload or a cross-company link no longer opens on blank rows.
+  The copy is yours only: it is thrown away if someone else signs in, after
+  12 hours, and is never kept or shown in demo mode. A trip to another page
+  and back now serves the board from memory too. Before the board loads,
+  Tickler also checks the demo-mode setting for every org at once rather
+  than one org after another. (PLI-371)
+
 ## 0.23.1
 
 - **The toolbar button counts what arrived today.** Its number now matches the

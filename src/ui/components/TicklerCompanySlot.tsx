@@ -75,8 +75,9 @@ export function TicklerCompanySlot({
     .map((item) => item.id);
   // Withhold the snapshot until data has actually arrived — see useTicklerAlerts:
   // baselining a placeholder would turn every pre-existing red/critical/
-  // overdue condition into a "new" edge on the first real poll.
-  const dataReady = !data.isLoading && data.summary !== undefined;
+  // overdue condition into a "new" edge on the first real poll. A board
+  // restored from the last visit is a placeholder too, for the same reason.
+  const dataReady = !data.isLoading && data.summary !== undefined && data.fresh;
   const alertSnapshot: TicklerAlertSnapshot | null = dataReady ? { health, criticalAttentionIds, ceoOverdue } : null;
   const pulse = useTicklerAlerts(company.name, alertsEnabled, alertSnapshot);
 
