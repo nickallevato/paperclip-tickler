@@ -5,6 +5,8 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+## 0.23.2
+
 - **The board comes up at once.** Tickler keeps the last board you saw in your
   browser and shows it as soon as the page opens, then refreshes every org in
   place, so a reload or a cross-company link no longer opens on blank rows.
