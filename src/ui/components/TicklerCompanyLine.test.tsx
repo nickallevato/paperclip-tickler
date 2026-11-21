@@ -23,6 +23,7 @@ const data = (agents: Agent[], over: Partial<TicklerCompanyData> = {}) =>
     needsBreakdown: undefined,
     tokens: undefined,
     isLoading: false,
+    fresh: true,
     unavailable: false,
     staleSince: null,
     invalidate: async () => {},

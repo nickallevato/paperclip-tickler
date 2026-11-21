@@ -110,14 +110,17 @@ async function readConfiguredDemoMode(): Promise<boolean> {
   const companies = (await get("/api/companies")) as Array<{ id?: unknown }> | null;
   if (!Array.isArray(companies) || companies.length === 0) return false;
 
-  for (const entry of companies) {
-    if (typeof entry?.id !== "string") continue;
-    const row = (await get(
-      `/api/plugins/${encodeURIComponent(PLUGIN_ID)}/config?companyId=${encodeURIComponent(entry.id)}`,
-    )) as { configJson?: Record<string, unknown> } | null;
-    if (row?.configJson?.demoMode === true) return true;
-  }
-  return false;
+  // All at once, not one after another: the page shows nothing until this
+  // settles, and in turn it cost one round trip per org before the board could
+  // start loading (PLI-371). One org's lookup failing does not hide another's.
+  const rows = await Promise.all(
+    companies.flatMap((entry) =>
+      typeof entry?.id === "string"
+        ? [get(`/api/plugins/${encodeURIComponent(PLUGIN_ID)}/config?companyId=${encodeURIComponent(entry.id)}`).catch(() => null)]
+        : [],
+    ),
+  );
+  return rows.some((row) => (row as { configJson?: Record<string, unknown> } | null)?.configJson?.demoMode === true);
 }
 
 export interface DemoModeDecision {

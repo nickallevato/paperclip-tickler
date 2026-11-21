@@ -60,6 +60,12 @@ export interface TicklerCompanyData {
   tokens: number | undefined;
   isLoading: boolean;
   /**
+   * False while what the alerts read — summary, attention, approvals, agents —
+   * is still the copy restored from the last visit (lib/query-persist) or the
+   * cache, rather than a fetch made since this pane mounted.
+   */
+  fresh: boolean;
+  /**
    * True when the pane's core summary query has failed and has never
    * received data (i.e. the very first poll failed) — as opposed to a
    * later poll failing after we already have something to show, which is
@@ -293,6 +299,7 @@ export function useTicklerCompanyData(companyId: string): TicklerCompanyData {
     needsBreakdown,
     tokens: tokens.isSuccess ? sumAgentTokens(tokens.data) : undefined,
     isLoading: queries.some((query) => query.isLoading),
+    fresh: [summary, attention, approvals, agents].every((query) => query.isFetchedAfterMount),
     unavailable: summary.isError && summary.dataUpdatedAt === 0,
     staleSince,
     invalidate,
