@@ -184,8 +184,9 @@ means Tickler never sees.
 
 ## What Tickler remembers
 
-All of this lives in `localStorage`, per browser. Nothing is stored on the
-server, so it does not follow you between machines.
+All of this lives in the browser: settings in `localStorage`, and a copy of the
+last board in IndexedDB. Nothing is stored on the server, so it does not follow
+you between machines.
 
 | Key | What |
 | --- | --- |
@@ -203,6 +204,13 @@ server, so it does not follow you between machines.
 Two things are deliberately **not** remembered: the board's company focus (a
 glance, not a habit — a new visit should start on the whole portfolio) and
 kiosk mode.
+
+**The last board** is kept in IndexedDB (database `tickler-cache`) so a reload,
+or a link into another org, paints at once from what you last saw while every
+org refreshes in place. It is written at most every 30 seconds, and when you
+leave or hide the tab. It is yours only: Tickler throws it away if someone
+else signs in on that browser, or once it is 12 hours old, and it is never
+written or shown in demo mode. Version checks are not kept in it.
 
 Clearing site data resets all of it to defaults. Nothing breaks; the page just
 starts over.
