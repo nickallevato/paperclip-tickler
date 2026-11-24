@@ -5,6 +5,10 @@ Short-form. The reader-facing write-up for each version is in
 
 ## Unreleased
 
+- **The docs catch up with 0.23.1–0.23.2.** The README says the toolbar button
+  counts what arrived today, and Configuration lists the copy of the last board
+  Tickler keeps in your browser. (PLI-375)
+
 ## 0.23.2
 
 - **The board comes up at once.** Tickler keeps the last board you saw in your

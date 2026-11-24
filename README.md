@@ -26,8 +26,8 @@ you will deal with each thing — instead of visiting each org's dashboard in tu
   the row.
 - 🗓️ **Decide by.** Say *when* you'll deal with each item — Today, This week, Whenever — and the
   queue sorts itself. It's Paperclip's own decision triage, so the dates follow you there.
-- 🔢 **Today's count on every page.** Tickler's button in the top bar counts what you have to
-  decide today, and turns red when any of it is overdue. The gear turns it off.
+- 🔢 **Today's count on every page.** Tickler's button in the top bar counts what arrived
+  today, and turns red when anything is overdue. The gear turns it off.
 - 🏢 **Every org at a glance.** Who's working, token burn by the hour, what's waiting on you.
 - 👀 **What agents are actually doing.** Hover any agent or task for its live narration — not
   just "3 running".

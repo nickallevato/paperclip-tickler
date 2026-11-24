@@ -266,5 +266,6 @@ paperclipai plugin uninstall nickallevato.plugin-tickler
 
 Or the **Uninstall** button on Tickler's row in the Plugin Manager. Add `--force`
 to the CLI form to purge its stored config as well. Tickler's per-browser
-preferences live in `localStorage` and are not touched by either; see
+preferences (in `localStorage`) and its copy of the last board (in IndexedDB)
+are not touched by either; see
 [Configuration](configuration.md#what-tickler-remembers).
